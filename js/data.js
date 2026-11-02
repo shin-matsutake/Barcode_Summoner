@@ -9,9 +9,9 @@ export async function loadData() {
     if (!res.ok) throw new Error(`${file} を読み込めません`);
     return res.json();
   };
-  const [m, s] = await Promise.all([get('monsters.json'), get('skills.json')]);
+  const [m, s, t] = await Promise.all([get('monsters.json'), get('skills.json'), get('tower.json').catch(() => ({ stages: [] }))]);
   const monsters = Array.isArray(m) ? m : m.monsters;
   const skills = Array.isArray(s) ? s : s.skills;
   if (!monsters || !skills) throw new Error('データの形式が想定と違います');
-  return { version, monsters, skills };
+  return { version, monsters, skills, tower: { stages: (t && t.stages) || [] } };
 }

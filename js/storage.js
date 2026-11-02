@@ -6,6 +6,7 @@ const defaults = () => ({
   stock: [],      // { jan:'13桁', nick:'ニックネーム', date:'2026-11-02' }
   fav: [],        // お気に入り（最大10体）のJANコード
   options: { bgm: 70, se: 70, tempo: 'normal', fx: true, showFoeNick: true },
+  tower: { cleared: 0 },   // クリアした最大のステージ番号
   tutorialDone: false,
 });
 let state = defaults();
@@ -19,6 +20,7 @@ function migrate(o) {
     ...d, ...o, schema: SCHEMA,
     options: { ...d.options, ...(o.options || {}) },
     stock: Array.isArray(o.stock) ? o.stock.filter(validItem).map(it => ({ jan: it.jan, nick: String(it.nick || '').slice(0, 10), date: String(it.date || '') })) : [],
+    tower: { cleared: Math.max(0, Math.min(99, Math.floor(Number(o.tower && o.tower.cleared)) || 0)) },
     fav: Array.isArray(o.fav) ? o.fav.filter(j => /^\d{13}$/.test(j)).slice(0, 10) : [],
   };
 }

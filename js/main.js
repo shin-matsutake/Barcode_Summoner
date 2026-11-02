@@ -5,7 +5,7 @@ import { closeAllDialogs } from './ui/dialog.js';
 import { h } from './ui/dom.js';
 
 const root = document.getElementById('screen');
-const ctx = { data: null, store, go };
+const ctx = { data: null, store, go, session: {} };
 let cleanup = null;
 
 export function go(name, params = {}) {

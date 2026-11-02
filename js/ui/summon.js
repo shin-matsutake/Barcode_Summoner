@@ -11,7 +11,7 @@ const pct = v => Math.round(v * 100) + '%';
 const today = () => { const d = new Date(), z = n => String(n).padStart(2, '0'); return `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())}`; };
 const inStock = (ctx, jan) => ctx.store.get().stock.find(s => s.jan === jan);
 
-function randomJan() { // テスト用：チェックデジットが正しい13桁をランダムに作る
+export function randomJan() { // テスト用：チェックデジットが正しい13桁をランダムに作る
   let s = ''; for (let i = 0; i < 12; i++) s += Math.floor(Math.random() * 10);
   const sum = [...s].reduce((a, v, i) => a + v * (i % 2 ? 3 : 1), 0);
   return s + ((10 - (sum % 10)) % 10);
@@ -76,12 +76,12 @@ export function detail(root, ctx, { jan, isNew = false }) {
   const saved = inStock(ctx, jan);
   const wrap = h('div', 'page detail');
   const bar = h('header', 'bar');
-  const back = h('button', 'btn small', isNew ? 'やめる' : '戻る');
-  back.onclick = async () => {
-    if (isNew && !(await confirmDialog('ストックに入れずに戻ります。よろしいですか？', '戻る', '続ける'))) return;
-    ctx.go(isNew ? 'summon' : 'stock');
-  };
-  bar.append(back, h('h1', '', isNew ? '召喚した仲間' : 'ストックの仲間'));
+  if (!isNew) {
+    const back = h('button', 'btn small', '戻る');
+    back.onclick = () => ctx.go('stock');
+    bar.append(back);
+  }
+  bar.append(h('h1', '', isNew ? '召喚した仲間' : 'ストックの仲間'));
 
   const body = h('div', 'list detail-body');
   const head = h('div', 'panel d-head');
@@ -111,26 +111,25 @@ export function detail(root, ctx, { jan, isNew = false }) {
   body.append(head, st, sk);
 
   const foot = h('div', 'detail-foot');
-  const save = h('button', 'btn primary big-btn', isNew ? 'ストックに入れる' : 'ニックネームを保存');
+  const save = h('button', 'btn primary big-btn', isNew ? '仲間に加える' : 'ニックネームを保存');
   save.onclick = () => {
     const n = nick.value.trim().slice(0, 10);
     ctx.store.update(s => {
       const it = s.stock.find(x => x.jan === jan);
       if (it) it.nick = n; else s.stock.push({ jan, nick: n, date: today() });
     });
-    toast(isNew ? 'ストックに入れました' : '保存しました');
+    toast(isNew ? '仲間に加えました' : '保存しました');
     ctx.go('stock');
   };
   foot.append(save);
-  if (!isNew) {
-    const del = h('button', 'btn small danger', 'ストックから外す');
-    del.onclick = async () => {
-      if (!(await confirmDialog('このモンスターをストックから外します。同じ番号で、また召喚できます。', '外す'))) return;
-      ctx.store.update(s => { s.stock = s.stock.filter(x => x.jan !== jan); s.fav = s.fav.filter(x => x !== jan); });
-      toast('外しました'); ctx.go('stock');
-    };
-    foot.append(del);
-  }
+  const del = h('button', 'btn small danger', '魔界に戻す');
+  del.onclick = async () => {
+    const msg = isNew ? '魔界に戻します。この仲間は保存されません。\n同じ番号で、また召喚できます。' : 'この仲間を魔界に戻します。ストックから消えます。\n同じ番号で、また召喚できます。';
+    if (!(await confirmDialog(msg, '魔界に戻す', 'やめる'))) return;
+    if (!isNew) ctx.store.update(s => { s.stock = s.stock.filter(x => x.jan !== jan); s.fav = s.fav.filter(x => x !== jan); });
+    toast('魔界に戻しました'); ctx.go(isNew ? 'summon' : 'stock');
+  };
+  foot.append(del);
   wrap.append(bar, body, foot);
   root.append(wrap);
 }

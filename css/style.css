@@ -121,12 +121,12 @@ input:checked+.sw::after{transform:translateX(20px);background:#06263d}
 .sk-name{font-size:16px;flex:1}
 .sk-pow{font-size:12px;font-variant-numeric:tabular-nums}
 .sk-meta{font-size:11px;color:var(--sub);margin-top:2px}
-.sk-text{font-size:11px;line-height:1.4;margin-top:2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.sk-text{font-size:11px;line-height:1.35;margin-top:2px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 
 /* ダメージの揺れと数字 */
 .shake .pt{animation:shake .4s}
 @keyframes shake{0%,100%{transform:translateX(0)}15%{transform:translateX(-12px)}35%{transform:translateX(11px)}55%{transform:translateX(-8px)}75%{transform:translateX(5px)}}
-.dmg{position:absolute;left:50%;top:30%;transform:translateX(-50%);font-size:34px;font-weight:800;color:#ff4d3d;-webkit-text-stroke:2px #1a0806;paint-order:stroke fill;text-shadow:0 2px 0 #1a0806;animation:dmg .9s ease-out both;pointer-events:none}
+.dmg{position:absolute;left:50%;top:30%;transform:translateX(-50%);font-size:34px;font-weight:800;color:var(--fx,#ff4d3d);-webkit-text-stroke:3px #0a0a10;paint-order:stroke fill;text-shadow:0 2px 0 #0a0a10;animation:dmg .9s ease-out both;pointer-events:none}
 @keyframes dmg{from{opacity:1;top:40%}to{opacity:0;top:12%}}
 @media (prefers-reduced-motion:reduce){.shake .pt,.mag .pt,.bars .scan,.dmg{animation-duration:.01s}}
 
@@ -143,7 +143,14 @@ input:checked+.sw::after{transform:translateX(20px);background:#06263d}
 .boot-error h2{margin:0;font-size:18px}.boot-error p{margin:0;font-size:14px;line-height:1.6}
 
 /* 背が低い画面では技ボタンを少し詰めて、絵の場所を確保する */
-@media (max-height:800px){.skill{min-height:50px}.sk-text{-webkit-line-clamp:1}}
+@media (max-height:800px){
+  #screen{padding-top:calc(env(safe-area-inset-top) + 1dvh);padding-bottom:calc(env(safe-area-inset-bottom) + 1dvh);gap:0}
+  .bt{gap:5px}.bt-title{display:none}.bt-top .btn{min-height:30px;font-size:12px}
+  .hud{padding:5px 8px}.hud .pt.sm{width:52px;height:52px}
+  .skills{gap:4px}.skill{min-height:0;padding:4px 10px 4px 14px}
+  .sk-text{font-size:10px;line-height:1.28}.sk-name{font-size:14px}
+  .msg{min-height:34px;padding:4px 10px;font-size:14px}.timer{height:18px}
+}
 
 /* 召喚 */
 .summon-box{padding:18px 14px;display:flex;flex-direction:column;gap:12px}
@@ -206,3 +213,44 @@ input:checked+.sw::after{transform:translateX(20px);background:#06263d}
 .st-cell{display:flex;flex-direction:column;background:#07131f;border:1px solid #1d4660;border-radius:3px;padding:2px 4px;font-size:10px;color:var(--sub)}
 .st-cell b{font-size:13px;color:var(--text);font-variant-numeric:tabular-nums}
 .st-cell.up b{color:var(--green)}.st-cell.down b{color:var(--red)}
+
+/* HUD（勝ち抜き戦の残り数・登場の入れ替え） */
+.hud-icon{flex:none;display:flex}
+.dots{margin-left:auto;font-size:11px;letter-spacing:2px;color:var(--cyan)}
+.hud-name .hud-hint{margin-left:0}
+.watch-ctl{display:flex;gap:8px}.watch-ctl .btn{flex:1}
+/* ピッカー（モンスターを選ぶ） */
+.pick{max-height:86dvh;overflow:auto;display:flex;flex-direction:column;gap:10px}
+.pick-body{display:flex;flex-direction:column;gap:8px;max-height:46dvh;overflow:auto}
+.pick-row{display:flex;align-items:center;gap:10px;padding:6px 8px;border:1px solid var(--line);background:var(--panel2);border-radius:4px;text-align:left;cursor:pointer;color:var(--text)}
+.pick-row .name{font-weight:600;font-size:14px}
+.pt.xs{flex:none;width:44px;height:44px;border:1px solid var(--line);border-radius:6px;background:#081a2c;overflow:hidden}
+.pt.xs .pt-ph b{height:70%;font-size:16px}
+.pt.xs img{object-fit:cover;object-position:50% 12%}
+/* 選出画面 */
+.sel{min-height:0}
+.sel-body{flex:1;min-height:0}
+.sel-sec{padding:10px}
+.sec-l{font-size:12px;color:var(--sub);margin-bottom:8px}
+.pool{display:grid;grid-template-columns:repeat(var(--n,3),1fr);gap:6px}
+.pcard{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 2px;border:1px solid var(--line);background:var(--panel2);border-radius:4px;color:var(--text);cursor:pointer;min-width:0}
+.pcard.on{border-color:var(--cyan)}
+.pcard.in{background:#1a4a6e}
+.pcard.empty{border-style:dashed;justify-content:center;min-height:86px;color:var(--sub)}
+.pcard .pn{font-size:10px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.plus{font-size:20px}
+.ord{position:absolute;top:2px;right:2px;min-width:18px;height:18px;border-radius:9px;background:var(--cyan);color:#06263d;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.sel-detail{padding:10px;display:flex;flex-direction:column;gap:8px}
+.sd-head{display:flex;align-items:center;gap:10px}
+.stats.mini .stat{padding:5px 4px}.stats.mini .stat b{font-size:14px}
+.dskill.mini{border:1px solid var(--line);border-left:5px solid var(--el);border-radius:4px;padding:5px 8px}
+.dskill.mini.uniq{border-color:var(--amber);border-left-color:var(--el)}
+.party{display:flex;gap:8px}
+.slot{position:relative;flex:1;min-height:64px;display:flex;align-items:center;justify-content:center;border:1px dashed var(--line);background:transparent;border-radius:4px;color:var(--sub);cursor:pointer}
+.slot.on{border-style:solid;border-color:var(--cyan);background:var(--panel2)}
+/* タワー・クイックバトル */
+.stage{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;padding:14px;text-align:left;color:var(--text);cursor:pointer}
+.stage .name{font-size:17px;font-weight:700}
+.stage.locked{opacity:.45;cursor:default}
+.st-tag{font-size:12px;color:var(--cyan)}.stage.done .st-tag{color:var(--green)}.stage.locked .st-tag{color:var(--sub)}
+.qpick{padding:12px;display:flex;flex-direction:column;gap:8px}

@@ -2,7 +2,9 @@ import { h } from './dom.js';
 import { dialog, confirmDialog, toast } from './dialog.js';
 import { portrait } from './portrait.js';
 import { analyze } from '../core/jan.js';
-import { battleDemo } from './battleView.js';
+import { match } from './matchView.js';
+import { select } from './select.js';
+import { tower, quick } from './modes.js';
 import { summon, summonFx, detail } from './summon.js';
 
 const TITLE = 'バーコード・サモナー';
@@ -38,7 +40,8 @@ function top(root, ctx) {
   const items = [
     ['召喚する', 'summon', '番号を入れて仲間を呼ぶ'],
     ['対戦する', null, '友達と合言葉で対戦'],
-    ['CPUタワー', null, '5つのステージに挑戦'],
+    ['CPUタワー', 'tower', '5つのステージに挑戦'],
+    ['クイックバトル', 'quick', 'CPUどうしの対戦を観戦'],
     ['ストック', 'stock', '召喚した仲間を見る'],
     ['オプション', 'options', '音量・演出・データ'],
   ];
@@ -49,9 +52,7 @@ function top(root, ctx) {
     menu.append(b);
   }
   wrap.append(menu);
-  const demo = h('button', 'btn demo-btn', 'バトル画面を試す（サンプル）');
-  demo.onclick = () => ctx.go('battleDemo');
-  wrap.append(demo, h('p', 'ver', `データ v${ctx.data.version}`));
+  wrap.append(h('p', 'ver', `データ v${ctx.data.version}`));
   root.append(wrap);
 }
 
@@ -149,4 +150,4 @@ function options(root, ctx) {
   root.append(wrap);
 }
 
-export const screens = { top, stock, options, battleDemo, summon, summonFx, detail };
+export const screens = { top, stock, options, summon, summonFx, detail, tower, quick, select, match };
