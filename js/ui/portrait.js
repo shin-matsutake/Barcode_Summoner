@@ -27,7 +27,6 @@ export function portrait(monster, { view = 'front', cls = '' } = {}) {
   box.style.setProperty('--el', EL[monster.el].c);
   const ph = h('div', 'pt-ph');
   ph.append(h('b', '', EL[monster.el].ja));
-  if (view !== 'icon') ph.append(h('span', '', monster.name));
   box.append(ph);
   const f = `images/monsters/monster_${pad(monster.id)}`;
   const list = view === 'back' ? [`${f}_back.png`, `${f}.png`] : view === 'icon' ? [`${f}_icon.png`, `${f}.png`] : [`${f}.png`];

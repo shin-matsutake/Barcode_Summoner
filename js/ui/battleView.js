@@ -4,7 +4,7 @@ import { dialog, confirmDialog } from './dialog.js';
 import { portrait, elemIcon, EL } from './portrait.js';
 import { analyze } from '../core/jan.js';
 import { Rng } from '../core/rng.js';
-import { createFighter, newBattle, resolveTurn, allowedSlots, aiChoose, rageMult, CONFIG } from '../core/battle.js';
+import { createFighter, newBattle, resolveTurn, allowedSlots, aiChoose, rageMult, effStat, CONFIG } from '../core/battle.js';
 
 const SAMPLE_ME = '4901234567894';
 const SAMPLE_FOE = '4549131234567';
@@ -40,9 +40,17 @@ export function battleDemo(root, ctx) {
     const meta = h('div', 'hud-meta');
     meta.append(elemIcon(f.el, 'sm'), h('span', '', `物理耐性 ${pct(f.profile.res.phys)}　魔法耐性 ${pct(f.profile.res.mag)}`));
     info.append(nameRow, hpRow, meta);
-    if (side === 'me') info.append(h('div', 'hud-spd', `SPD ${f.base.spd}`)); // 相手のSPDは見せない
-    p.append(icon, info);
-    return { el: p, fill, num };
+    let stats = null;
+    if (side === 'me') { // 自分のパネルをタップすると能力値が開く（相手の能力値は見せない）
+      stats = h('div', 'hud-stats');
+      nameRow.append(h('small', 'hud-hint', 'タップで能力値'));
+      p.classList.add('tappable'); p.tabIndex = 0; p.setAttribute('role', 'button');
+      const tog = () => { stats.classList.toggle('open'); p.classList.toggle('open'); };
+      p.onclick = tog; p.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); tog(); } };
+      info.append(stats);
+    }
+    p.prepend(icon); p.append(info);
+    return { el: p, fill, num, stats };
   };
   const foeHud = hud(st.b, 'foe'), meHud = hud(st.a, 'me');
   // 場
@@ -72,15 +80,33 @@ export function battleDemo(root, ctx) {
     u.fill.className = r > 0.5 ? 'g' : r > 0.25 ? 'y' : 'r';
     u.num.textContent = `${Math.max(0, hp)}/${f.maxHp}`;
   }
+  function renderStats() {
+    const u = meHud.stats; if (!u) return;
+    const f = st.a, t = st.turn;
+    const rows = [['攻撃', 'atk', f.base.atk], ['魔法攻撃', 'mat', f.base.mat], ['SPD', 'spd', f.base.spd]]
+      .map(([l, k, b]) => [l, Math.round(effStat(f, k, t)), b, false])
+      .concat([['物理耐性', 'pres', f.base.pres], ['魔法耐性', 'mres', f.base.mres]].map(([l, k, b]) => [l, effStat(f, k, t), b, true]));
+    u.replaceChildren();
+    for (const [l, v, b, isRes] of rows) {
+      const c = h('div', 'st-cell' + (v > b ? ' up' : v < b ? ' down' : ''));
+      c.append(h('span', '', l), h('b', '', isRes ? pct(v) : String(v)));
+      u.append(c);
+    }
+  }
   function setTurn(t) {
     turnNum.textContent = t;
     rage.textContent = t >= CONFIG.RAGE_START ? `RAGE ×${rageMult(t).toFixed(1)}` : '';
+    renderStats();
     warn.textContent = t >= CONFIG.WARN_TURN ? `あと${CONFIG.MAX_TURNS - t + 1}ターンで相打ち` : '';
   }
   const say = t => { msg.textContent = t; };
-  function hitFx(side, dmg) {
+  function hitFx(side, dmg, type, elColor) {
     const el = side === 'a' ? meSide : foeSide;
-    if (opts.fx) { el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake'); }
+    if (opts.fx) {
+      el.classList.remove('shake', 'mag'); void el.offsetWidth;
+      el.style.setProperty('--fx', elColor);
+      el.classList.add(type === 'mag' ? 'mag' : 'shake');
+    }
     const n = h('div', 'dmg', String(dmg)); el.append(n); setTimeout(() => n.remove(), 900);
   }
 
@@ -92,12 +118,13 @@ export function battleDemo(root, ctx) {
       b.style.setProperty('--el', EL[s.el].c);
       if (s.kind === 'U') b.classList.add('uniq');
       const head = h('div', 'sk-head');
-      head.append(h('span', 'sk-kind', KIND[i]), h('b', 'sk-name', s.name), h('span', 'sk-pow', `威力 ${s.power}`));
-      const meta = h('div', 'sk-meta', `${EL[s.el].ja}属性・${TYPE[s.type]}${ok.includes(i) ? '' : '　連続して使えません'}`);
-      const text = h('div', 'sk-text', s.text);
-      b.append(head, meta, text);
+      head.append(h('span', 'sk-kind', KIND[i]), h('b', 'sk-name', s.name), elemIcon(s.el, 'sm'),
+        h('span', `tbadge tb-${s.type}`, TYPE[s.type]), h('span', 'sk-pow', `威力 ${s.power}`));
+      b.append(head);
+      if (!ok.includes(i)) b.append(h('div', 'sk-meta', '連続して使えません'));
+      b.append(h('div', 'sk-text', s.text));
       let pressed = false, pt = 0;
-      b.onpointerdown = () => { pressed = false; pt = setTimeout(() => { pressed = true; dialog({ title: s.name, text: `${EL[s.el].ja}属性・${TYPE[s.type]}・威力 ${s.power}\n${s.text}` }); }, 500); };
+      b.onpointerdown = () => { pressed = false; pt = setTimeout(() => { pressed = true; dialog({ title: s.name, text: `${EL[s.el].ja}属性・${TYPE[s.type]}攻撃・威力 ${s.power}\n${s.text}` }); }, 500); };
       b.onpointerup = b.onpointerleave = b.onpointercancel = () => clearTimeout(pt);
       b.oncontextmenu = e => e.preventDefault();
       b.onclick = () => { if (pressed) { pressed = false; return; } if (!locked && ok.includes(i)) commit(i); };
@@ -106,10 +133,11 @@ export function battleDemo(root, ctx) {
   }
 
   function stopTimer() { clearInterval(timerId); }
-  function startTimer(ok) {
+  let tLeft = TIMER_SEC;
+  function startTimer(ok, from = TIMER_SEC) {
     const t0 = performance.now();
     const tick = () => {
-      const left = Math.max(0, TIMER_SEC - (performance.now() - t0) / 1000);
+      const left = tLeft = Math.max(0, from - (performance.now() - t0) / 1000);
       tfill.style.width = (left / TIMER_SEC * 100) + '%';
       tnum.textContent = Math.ceil(left) + 's';
       if (left <= 0) { stopTimer(); if (!locked) commit(ok[Math.floor(Math.random() * ok.length)]); } // 時間切れは本人側でランダムに選ぶ
@@ -130,15 +158,30 @@ export function battleDemo(root, ctx) {
     const ev = resolveTurn(st, slotA, slotB, rng);
     const d = DELAY[opts.tempo] || 1000;
     const nm = w => hpOf(w).name;
+    // ヒットの種別（物理／魔法）。追加攻撃で種別が変わる技にも対応する（打ち消された技は追加攻撃だけが通る）
+    const hitN = { a: 0, b: 0 }, nul = { a: false, b: false };
+    const hitType = e => {
+      const slot = hpOf(e.who).profile.slots.find(x => x.name === e.skill);
+      const n = hitN[e.who]++;
+      if (!slot) return 'phys';
+      const extras = (slot.effects || []).filter(o => o.op === 'extra' && (!nul[e.who] || o.cond === 'clash'));
+      if (nul[e.who]) return (extras[n] || extras[0] || slot).type;
+      return n === 0 ? slot.type : (extras[n - 1] || slot).type;
+    };
     for (const e of ev) {
       if (!alive) return;
       let wait = d;
       switch (e.t) {
         case 'turn': setTurn(e.turn); say(`ターン${e.turn}`); wait = d * 0.6; break;
         case 'clash': say('属性がぶつかり合った！'); break;
-        case 'nullified': say(`${nm(e.who)}の${e.skill}は打ち消された！`); break;
+        case 'nullified': nul[e.who] = true; say(`${nm(e.who)}の${e.skill}は打ち消された！`); break;
         case 'stunned': say(`${nm(e.who)}は動けない！`); break;
-        case 'hit': { const tgt = e.who === 'a' ? 'b' : 'a'; say(`${nm(e.who)}の${e.skill}！　${e.dmg}ダメージ`); hitFx(tgt, e.dmg); setHp(tgt, e.foeHp); break; }
+        case 'hit': {
+          const tgt = e.who === 'a' ? 'b' : 'a', ty = hitType(e);
+          const slot = hpOf(e.who).profile.slots.find(x => x.name === e.skill);
+          say(`${nm(e.who)}の${e.skill}！（${TYPE[ty]}攻撃）　${e.dmg}ダメージ`);
+          hitFx(tgt, e.dmg, ty, EL[slot ? slot.el : hpOf(e.who).el].c); setHp(tgt, e.foeHp); break;
+        }
         case 'heal': say(`${nm(e.who)}はHPを${e.n}回復した`); setHp(e.who, e.hp); break;
         case 'selfDamage': say(`${nm(e.who)}は${e.n}のダメージを受けた`); setHp(e.who, e.hp); break;
         case 'hpSet': say(`${nm(e.target)}のHPが0になった`); setHp(e.target, e.hp); break;
@@ -148,7 +191,7 @@ export function battleDemo(root, ctx) {
       }
       if (wait) await sleep(wait);
     }
-    setHp('a', st.a.hp); setHp('b', st.b.hp);
+    setHp('a', st.a.hp); setHp('b', st.b.hp); renderStats();
     skills.classList.remove('lock');
     if (st.over) return finish();
     beginTurn();
@@ -162,9 +205,9 @@ export function battleDemo(root, ctx) {
   }
 
   menuBtn.onclick = async () => {
-    stopTimer(); const wasLocked = locked; locked = true;
+    stopTimer(); const remain = tLeft; const wasLocked = locked; locked = true;
     if (await confirmDialog('バトルをやめて、トップに戻りますか？', 'ギブアップ', '続ける')) { alive = false; ctx.go('top'); return; }
-    locked = wasLocked; if (!wasLocked && alive) startTimer(allowedSlots(st.a, st.turn));
+    locked = wasLocked; if (!wasLocked && alive) startTimer(allowedSlots(st.a, st.turn), remain);
   };
 
   setHp('a', st.a.hp); setHp('b', st.b.hp);

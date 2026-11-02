@@ -3,6 +3,7 @@ import { dialog, confirmDialog, toast } from './dialog.js';
 import { portrait } from './portrait.js';
 import { analyze } from '../core/jan.js';
 import { battleDemo } from './battleView.js';
+import { summon, summonFx, detail } from './summon.js';
 
 const TITLE = 'バーコード・サモナー';
 
@@ -35,7 +36,7 @@ function top(root, ctx) {
   wrap.append(logo);
   const menu = h('nav', 'menu');
   const items = [
-    ['召喚する', null, 'バーコードを読み取る'],
+    ['召喚する', 'summon', '番号を入れて仲間を呼ぶ'],
     ['対戦する', null, '友達と合言葉で対戦'],
     ['CPUタワー', null, '5つのステージに挑戦'],
     ['ストック', 'stock', '召喚した仲間を見る'],
@@ -61,12 +62,13 @@ function stock(root, ctx) {
   const items = ctx.store.get().stock;
   if (!items.length) {
     const e = h('div', 'panel empty');
-    e.append(h('p', 'big', 'まだ誰も召喚していません'), h('p', 'sub', 'トップの「召喚する」からバーコードを読み取ると、ここに仲間が並びます。（召喚機能はこれから追加します）'));
+    e.append(h('p', 'big', 'まだ誰も召喚していません'), h('p', 'sub', 'トップの「召喚する」から番号を入れると、ここに仲間が並びます。'));
     list.append(e);
   }
   for (const it of items) {
     let p; try { p = analyze(it.jan, ctx.data); } catch (e) { continue; }
-    const row = h('div', 'panel row');
+    const row = h('button', 'panel row row-btn');
+    row.onclick = () => ctx.go('detail', { jan: it.jan });
     row.append(portrait(p.monster, { view: 'icon', cls: 'sm' }));
     const info = h('div', 'info');
     info.append(h('div', 'name', it.nick ? `${it.nick}（${p.monster.name}）` : p.monster.name), h('div', 'sub', `HP ${p.stats.hp}　召喚日 ${it.date || '-'}`));
@@ -147,4 +149,4 @@ function options(root, ctx) {
   root.append(wrap);
 }
 
-export const screens = { top, stock, options, battleDemo };
+export const screens = { top, stock, options, battleDemo, summon, summonFx, detail };

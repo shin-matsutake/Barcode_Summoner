@@ -126,9 +126,9 @@ input:checked+.sw::after{transform:translateX(20px);background:#06263d}
 /* ダメージの揺れと数字 */
 .shake .pt{animation:shake .4s}
 @keyframes shake{0%,100%{transform:translateX(0)}15%{transform:translateX(-12px)}35%{transform:translateX(11px)}55%{transform:translateX(-8px)}75%{transform:translateX(5px)}}
-.dmg{position:absolute;left:50%;top:30%;transform:translateX(-50%);font-size:34px;font-weight:800;color:#fff;text-shadow:0 0 6px var(--red),0 2px 0 #000;animation:dmg .9s ease-out both;pointer-events:none}
+.dmg{position:absolute;left:50%;top:30%;transform:translateX(-50%);font-size:34px;font-weight:800;color:#ff4d3d;-webkit-text-stroke:2px #1a0806;paint-order:stroke fill;text-shadow:0 2px 0 #1a0806;animation:dmg .9s ease-out both;pointer-events:none}
 @keyframes dmg{from{opacity:1;top:40%}to{opacity:0;top:12%}}
-@media (prefers-reduced-motion:reduce){.shake .pt,.bars .scan,.dmg{animation-duration:.01s}}
+@media (prefers-reduced-motion:reduce){.shake .pt,.mag .pt,.bars .scan,.dmg{animation-duration:.01s}}
 
 /* ダイアログ・トースト */
 #dialog .dlg-back{position:absolute;inset:0;z-index:20;background:rgba(2,7,13,.72);display:flex;align-items:center;justify-content:center;padding:24px}
@@ -143,4 +143,66 @@ input:checked+.sw::after{transform:translateX(20px);background:#06263d}
 .boot-error h2{margin:0;font-size:18px}.boot-error p{margin:0;font-size:14px;line-height:1.6}
 
 /* 背が低い画面では技ボタンを少し詰めて、絵の場所を確保する */
-@media (max-height:800px){.sk-meta{display:none}.skill{min-height:50px}.hud-meta{display:none}}
+@media (max-height:800px){.skill{min-height:50px}.sk-text{-webkit-line-clamp:1}}
+
+/* 召喚 */
+.summon-box{padding:18px 14px;display:flex;flex-direction:column;gap:12px}
+.summon-box .big{font-size:16px;font-weight:600;margin:0}
+.jan-input{width:100%;min-height:56px;padding:0 14px;border:1px solid var(--cyan);background:#07131f;color:var(--text);border-radius:4px;font-size:24px;letter-spacing:.12em;text-align:center;font-variant-numeric:tabular-nums}
+.jan-count{text-align:right;font-size:12px;color:var(--sub);margin-top:-6px}
+.big-btn{min-height:52px;font-size:17px}
+.btn:disabled{opacity:.4;cursor:default}
+.row-btn{width:100%;text-align:left;cursor:pointer;color:var(--text)}
+.row-btn:active{background:var(--panel2)}
+.sfx{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--ink);overflow:hidden;cursor:pointer}
+.sfx .ring{position:absolute;left:50%;top:44%;width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:50%;border:3px solid var(--el);opacity:0;animation:ring 1.6s ease-out .2s both}
+.sfx .r2{animation-delay:.7s}
+@keyframes ring{0%{opacity:.9;transform:scale(1)}100%{opacity:0;transform:scale(22)}}
+.sfx .flash{position:absolute;inset:0;background:var(--el);opacity:0;animation:flash .5s ease-out 1.5s both}
+@keyframes flash{0%{opacity:.75}100%{opacity:0}}
+.sfx-pic{position:relative;width:min(72%,300px);height:36dvh;filter:brightness(0);opacity:0;transform:scale(.7);animation:rise 1.4s ease-out .5s both,lit .4s linear 1.5s both}
+@keyframes rise{to{opacity:1;transform:scale(1)}}
+@keyframes lit{to{filter:brightness(1)}}
+.sfx-name{margin-top:18px;text-align:center;opacity:0;animation:fadein .5s ease-out 1.9s both}
+.sfx-name span{display:block;font-size:13px;color:var(--amber);letter-spacing:.2em}
+.sfx-name b{font-size:26px}
+.sfx-skip{position:absolute;bottom:calc(env(safe-area-inset-bottom) + 5dvh);background:none;border:0;color:var(--sub);font-size:12px;opacity:0;animation:fadein .5s ease-out 2.4s both}
+@keyframes fadein{to{opacity:1}}
+@media (prefers-reduced-motion:reduce){.sfx *{animation-duration:.01s!important;animation-delay:0s!important}}
+
+/* 詳細 */
+.detail{min-height:0}
+.detail-body{flex:1;min-height:0}
+.d-head{padding:12px;display:flex;flex-direction:column;gap:10px;align-items:center}
+.d-pic{width:min(62%,220px);height:24dvh}
+.d-name{display:flex;align-items:center;gap:8px;font-size:20px}
+.nick{width:100%;display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--sub)}
+.nick input{min-height:44px;padding:0 12px;border:1px solid var(--line);background:#07131f;color:var(--text);border-radius:4px;font-size:16px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);padding:0}
+.stat{background:var(--panel);padding:8px 6px;text-align:center;display:flex;flex-direction:column;gap:2px}
+.stat span{font-size:11px;color:var(--sub)}.stat b{font-size:16px;font-variant-numeric:tabular-nums}
+.detail-skills{display:flex;flex-direction:column;gap:8px}
+.dskill{padding:8px 12px 8px 16px;border-left:5px solid var(--el)}
+.dskill.uniq{border-color:var(--amber);border-left-color:var(--el)}
+.dskill::before,.dskill::after{display:none}
+.dtext{font-size:12px;line-height:1.5;margin-top:4px}
+.detail-foot{display:flex;flex-direction:column;gap:8px;padding-top:8px}
+.sfx-pic .pt{width:100%;height:100%}
+
+/* 魔法のヒット：技の属性色で光ってはねる */
+.mag .pt{animation:mag .6s}
+@keyframes mag{0%,100%{transform:translateY(0);filter:none}20%{transform:translateY(-16px);filter:brightness(2.2) drop-shadow(0 0 16px var(--fx))}45%{transform:translateY(0);filter:brightness(1.3) drop-shadow(0 0 8px var(--fx))}65%{transform:translateY(-7px);filter:brightness(1.9) drop-shadow(0 0 14px var(--fx))}}
+/* 物理／魔法の札と、能力値の展開 */
+.tbadge{flex:none;font-size:11px;font-weight:700;padding:1px 6px;border-radius:3px;color:#06101c}
+.tb-phys{background:#f0a24a}.tb-mag{background:#8fa8ff}
+.sk-head .eic.sm{width:18px;height:18px;font-size:10px}
+.sk-head{align-items:center}
+.sk-meta{color:var(--amber)}
+.hud.tappable{cursor:pointer}
+.hud-hint{margin-left:auto;font-size:10px;color:var(--sub);font-weight:400}
+.hud.open .hud-hint{color:var(--cyan)}
+.hud-stats{display:none;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:4px}
+.hud-stats.open{display:grid}
+.st-cell{display:flex;flex-direction:column;background:#07131f;border:1px solid #1d4660;border-radius:3px;padding:2px 4px;font-size:10px;color:var(--sub)}
+.st-cell b{font-size:13px;color:var(--text);font-variant-numeric:tabular-nums}
+.st-cell.up b{color:var(--green)}.st-cell.down b{color:var(--red)}
