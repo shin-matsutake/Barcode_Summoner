@@ -1,7 +1,7 @@
 // 勝ち抜き戦（1v1の連戦）の進行管理。
 // ルール：
 //  - 勝った個体は残り、HPは持ち越す（回復なし）。負けた側は次の個体が全回復で登場する
-//  - 相打ち（同時に倒れる／10ターンで決着なし）は両者退場
+//  - 相打ち（同時に倒れる／10ターンで決着なし）は両者退場。反動などで同時に倒れて判定勝ちになった場合も両者退場（勝者はHP1で残るが交代する）
 //  - 戦闘ごとにターン数・レイジ・「前のターンに使った枠」はリセットする
 //  - 威力アップなどの効果はリセットしない：倒れるまで続く能力変化と、最後のターンに付いた「次のターン効果」は
 //    次の戦闘の1ターン目に持ち越す。行動不能（反動の拘束など）は持ち越さない
@@ -34,11 +34,12 @@ export function resolveSeriesTurn(s, slotA, slotB, rng) {
   if (s.battle.over) {
     const r = s.battle.result, lastTurn = s.battle.turn;
     out.push({ t: 'battleEnd', result: r, no: s.battleNo });
-    const fainted = { a: r !== 'a', b: r !== 'b' };   // 相打ち（draw）は両方退場
+    const judged = out.find(e => e.t === 'judgeWin');  // 同時に倒れ、自分の効果で倒れた側の負けと判定された
+    const fainted = judged ? { a: true, b: true } : { a: r !== 'a', b: r !== 'b' };   // 相打ち（draw）・判定勝ちは両方退場
     for (const w of ['a', 'b']) if (fainted[w]) s.idx[w]++;
     const remain = { a: s.idx.a < s.teams.a.length, b: s.idx.b < s.teams.b.length };
     if (!remain.a || !remain.b) {
-      s.over = true; s.result = !remain.a && !remain.b ? 'draw' : (remain.a ? 'a' : 'b');
+      s.over = true; s.result = !remain.a && !remain.b ? (judged ? judged.who : 'draw') : (remain.a ? 'a' : 'b'); // 最後の1体どうしの判定勝ちは、判定勝ちの側が試合の勝ち
       out.push({ t: 'matchEnd', result: s.result });
     } else {
       s.battleNo++;

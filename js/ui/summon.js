@@ -88,6 +88,7 @@ export function detail(root, ctx, { jan, isNew = false }) {
   head.append(portrait(p.monster, { view: 'front', cls: 'd-pic' }));
   const nm = h('div', 'd-name'); nm.append(elemIcon(p.monster.el), h('b', '', p.monster.name));
   head.append(nm);
+  if (p.monster.desc) head.append(h('p', 'sub desc', p.monster.desc));
   const nickRow = h('label', 'nick');
   nickRow.append(h('span', '', 'ニックネーム'));
   const nick = h('input'); nick.type = 'text'; nick.maxLength = 10; nick.placeholder = '10文字まで（なくてもOK）';

@@ -33,7 +33,7 @@ export function calcDamage(att, skill, def, turn, opts = {}) {
   const match = skill.el === att.el, adv = beats(skill.el, def.el);
   const mult = match && adv ? C.COMBO : (match || adv ? 1.5 : 1);
   const phys = skill.type === 'phys';
-  const stat = effStat(att, phys ? 'atk' : 'mat', turn);
+  const stat = effStat(att, opts.stat || (phys ? 'atk' : 'mat'), turn); // opts.stat='spd' なら、素早さを攻撃力として使う
   const res = opts.ignoreRes ? 0 : effStat(def, phys ? 'pres' : 'mres', turn);
   const ls = (C.LASTSTAND_THR && att.hp <= att.maxHp * C.LASTSTAND_THR) ? C.LASTSTAND_MULT : 1;
   const raw = (stat + power) * C.DAMAGE_K * mult * (1 - res) * rageMult(turn) * ls;
@@ -65,59 +65,82 @@ function condOk(cond, c) {
   if (cond === 'nullifiedFoe') return !!c.foeNullified;            // 自分の技が相手の攻撃を打ち消した
   if (cond === 'clash') return !!c.clash;                          // このターン打ち消しが発生した（自分が打ち消された場合も含む）
   if (cond.startsWith('foeSkillEl:')) return !!c.foeSk && c.foeSk.el === cond.slice(11); // 相手の技の属性
+  if (cond === 'afterFoeHpHigher') { const l = c.live(); return l.foe > l.me; }   // 攻撃後（その時点のHP）で相手が多い
+  if (cond === 'afterFoeHpLower') { const l = c.live(); return l.foe < l.me; }    // 攻撃後（その時点のHP）で相手が少ない
   return false;
 }
 function perform(me, foe, sk, isFirst, turn, ev, who, orderOff, x = {}) {
-  const c = { isFirst, orderOff, foe, pre: { me: me.hp, foe: foe.hp }, ...x };
+  const live = () => ({ me: me.hp, foe: foe.hp });
+  const c = { isFirst, orderOff, foe, pre: { me: me.hp, foe: foe.hp }, live, ...x };
   const flags = { ignoreRes: !!hasOp(sk, 'ignoreRes') };
-  const pb = me.cur.powBonus || 0;
-  let power = sk.power + pb;
+  // 技の威力：「次のターンの威力加算」と「このターンの威力追加」は技本体だけに乗る（追加攻撃は別の攻撃なので乗らない）
+  let power = sk.power + (me.cur.powBonus || 0);
   for (const o of ops(sk)) if (o.op === 'bonus' && condOk(o.cond, c)) power += o.power;
-  const hits = [{ type: sk.type, power }];
-  for (const o of ops(sk)) if (o.op === 'extra' && condOk(o.cond, c)) hits.push({ type: o.type, power: o.power + pb });
+  for (const e of (me.cur.powBonusEl || [])) if (e.el === sk.el) power += e.n;      // 次の攻撃が指定属性なら加算
+  const hits = [{ type: sk.type, power, main: true }];
+  for (const o of ops(sk)) if (o.op === 'extra') {
+    if (o.cond && o.cond.startsWith('after')) hits.push({ type: o.type, power: o.power, stat: o.stat, lazy: o.cond }); // 攻撃後に判定
+    else if (condOk(o.cond, c)) hits.push({ type: o.type, power: o.power, stat: o.stat });
+  }
+  if (x.foeSk) for (const o of ops(sk)) if (o.op === 'copyFoe' && condOk(o.cond, c)) hits.push({ type: x.foeSk.type, power: x.foeSk.power, el: x.foeSk.el }); // 相手の攻撃をコピー
   if (x.nulled) { // 打ち消された技：「打消しが発生した場合」の追加攻撃だけが通る
     hits.length = 0;
-    for (const o of ops(sk)) if (o.op === 'extra' && o.cond === 'clash') hits.push({ type: o.type, power: o.power + pb });
-  } else if (me.cur.powMult) hits[0].power *= me.cur.powMult; // 「次のターンの攻撃の威力を倍」：技本体のみ（追加攻撃は倍にしない）
-  let total = 0;
-  const factor = foe.cur.half ? 0.5 : foe.cur.double ? 2 : 1;
-  for (const h of hits) {
-    if (foe.hp <= 0) break;
-    let d = calcDamage(me, { el: sk.el, type: h.type, power: h.power }, foe, turn, flags);
+    for (const o of ops(sk)) if (o.op === 'extra' && o.cond === 'clash') hits.push({ type: o.type, power: o.power, stat: o.stat });
+  } else if (me.cur.powMult) hits[0].power *= me.cur.powMult; // 「次のターンの技の威力を倍」：技本体のみ
+  let total = 0, mainTotal = 0;
+  const factor = Math.pow(0.5, foe.cur.halfN || 0) * Math.pow(2, foe.cur.doubleN || 0); // 半減は重ねがけ（半分×半分＝4分の1）
+  const dealt = (h, d) => {
     if (factor !== 1) d = Math.max(C.MIN_DMG, Math.round(d * factor));
     if (me.cur.guts > 1) d = Math.round(d * me.cur.guts);
     if (C.CRIT_CHANCE && x.rng && x.rng.chance(C.CRIT_CHANCE)) d = Math.round(d * C.CRIT_MULT);
     if (C.DMG_CAP_RATIO) d = Math.min(d, Math.max(C.MIN_DMG, Math.round(foe.maxHp * C.DMG_CAP_RATIO)));
     if (C.MIN_DMG_RATIO) d = Math.max(d, Math.round(foe.maxHp * C.MIN_DMG_RATIO));
     const wasFull = foe.hp === foe.maxHp;
-    foe.hp = Math.max(0, foe.hp - d); total += d; foe.takenThis += d;
+    foe.hp = Math.max(0, foe.hp - d); total += d; if (h.main) mainTotal += d; foe.takenThis += d;
     if (foe.hp <= 0 && C.ENDURE_FULL_HP && wasFull && !foe.endured) { foe.hp = 1; foe.endured = true; }
     ev.push({ t: 'hit', who, skill: sk.name, dmg: d, foeHp: foe.hp });
+  };
+  for (const h of hits) {
+    if (foe.hp <= 0) break;
+    if (h.lazy && !condOk(h.lazy, c)) continue;
+    dealt(h, calcDamage(me, { el: h.el || sk.el, type: h.type, power: h.power }, foe, turn, { ...flags, stat: h.stat }));
   }
   if (x.nulled) return;
   // 画面のログ・HPバー用に、HPが変わる効果は量つきのイベントを出す
   const heal = n => { const b = me.hp; me.hp = Math.min(me.maxHp, me.hp + n); if (me.hp > b) ev.push({ t: 'heal', who, n: me.hp - b, hp: me.hp }); };
-  const hurt = (n, cause) => { const d = Math.max(0, Math.min(n, me.hp)); me.hp -= n; if (d > 0) ev.push({ t: 'selfDamage', who, n: d, hp: Math.max(0, me.hp), cause }); };
-  const setHp = (target, who2, cause) => { if (target.hp > 0) { target.hp = 0; ev.push({ t: 'hpSet', target: who2, hp: 0, cause }); } };
+  const hurt = (n, cause) => { const d = Math.max(0, Math.min(n, me.hp)); me.hp -= n; if (d > 0) ev.push({ t: 'selfDamage', who, n: d, hp: Math.max(0, me.hp), cause }); if (me.hp <= 0) me.selfKO = true; };
+  const setHp = (target, who2, cause) => { if (target.hp > 0) { target.hp = 0; if (target === me) me.selfKO = true; ev.push({ t: 'hpSet', target: who2, hp: 0, cause }); } };
+  const base = o => (o.excludeExtras ? mainTotal : total);   // 回復・反動の計算に、追加攻撃のダメージを含めるか
   for (const o of ops(sk)) {
     if (o.cond && !condOk(o.cond, c)) continue;
     switch (o.op) {
-      case 'drain': heal(Math.round(total * o.ratio)); break;
-      case 'recoil': hurt(Math.round(total * o.ratio), 'recoil'); break;
+      case 'drain': heal(Math.round(base(o) * o.ratio)); break;
+      case 'recoil': hurt(Math.round(base(o) * o.ratio), 'recoil'); break;
       case 'selfDamage': hurt(o.n, 'selfDamage'); break;
       case 'selfAttack': hurt(calcDamage(me, { el: sk.el, type: o.type || sk.type, power: o.power }, me, turn), 'selfAttack'); break;
-      case 'heal': if (condOk(o.cond, c)) heal(o.n === 'full' ? me.maxHp : o.n); break;
+      case 'selfKO': setHp(me, who, 'selfKO'); break;
+      case 'heal': heal(o.n === 'full' ? me.maxHp : o.n); break;
       case 'drainIfFoeLower': if (foe.hp < me.hp) heal(total); break;
       case 'duel': if (foe.hp < me.hp) setHp(foe, who === 'a' ? 'b' : 'a', 'duel'); else if (foe.hp > me.hp) setHp(me, who, 'duel'); break;
-      case 'ohko': if (condOk(o.cond, c)) setHp(foe, who === 'a' ? 'b' : 'a', 'ohko'); break;
+      case 'ohko': setHp(foe, who === 'a' ? 'b' : 'a', 'ohko'); break;
       case 'onKill': if (foe.hp <= 0) { heal(o.heal || 0); if (o.nextPower) me.pending.powBonus = (me.pending.powBonus || 0) + o.nextPower; } break;
+      case 'counterOnSelfKO': // 自分の効果（反動など）で倒れた場合の反撃。相手を倒したらHPが回復して生き残る
+        if (me.hp <= 0 && me.selfKO && foe.hp > 0) {
+          let d = calcDamage(me, { el: sk.el, type: o.type, power: o.power }, foe, turn, flags);
+          if (factor !== 1) d = Math.max(C.MIN_DMG, Math.round(d * factor));
+          foe.hp = Math.max(0, foe.hp - d); total += d; foe.takenThis += d;
+          ev.push({ t: 'hit', who, skill: sk.name, dmg: d, foeHp: foe.hp, counter: true });
+          if (foe.hp <= 0 && o.healOnKill) { me.hp = o.healOnKill; me.selfKO = false; ev.push({ t: 'heal', who, n: o.healOnKill, hp: me.hp }); }
+        }
+        break;
       case 'nextFirst': me.pending.first = true; break;
       case 'nextPower': me.pending.powBonus = (me.pending.powBonus || 0) + o.n; break;
-      case 'nextHalf': me.pending.half = true; break;
-      case 'nextDouble': me.pending.double = true; break;
+      case 'nextPowerEl': (me.pending.powBonusEl = me.pending.powBonusEl || []).push({ el: o.el, n: o.n }); break;
+      case 'nextHalf': me.pending.halfN = (me.pending.halfN || 0) + 1; break;
+      case 'nextDouble': me.pending.doubleN = (me.pending.doubleN || 0) + 1; break;
       case 'stun': if (foe.hp > 0) foe.stunTurn = turn + 1; break;
       case 'selfStun': if (foe.hp > 0) me.stunTurn = turn + 1; break; // 相手を倒した場合は行動不能にならない
-      case 'halfNow': me.cur.half = true; break;            // このターン、相手から受けるダメージを半減
+      case 'halfNow': me.cur.halfN = (me.cur.halfN || 0) + 1; break; // このターン、相手から受けるダメージを半減
       case 'nextPowerDouble': me.pending.powMult = 2; break;
       case 'stat': { const tgt = o.target === 'self' ? me : foe;
         if (tgt.hp > 0) tgt.mods.push({ stat: o.stat, mult: o.mult, add: o.add, from: turn + 1, until: o.duration === 'perm' ? Infinity : turn + 1 }); break; }
@@ -129,7 +152,7 @@ function perform(me, foe, sk, isFirst, turn, ev, who, orderOff, x = {}) {
 // 1ターンを処理。slotA/slotB は技の枠(0〜2)。行動不能なら null
 export function resolveTurn(st, slotA, slotB, rng) {
   const { a, b, turn } = st; const ev = [];
-  for (const f of [a, b]) { f.cur = f.pending; f.pending = {}; f.cur.guts = C.GUTS_K ? 1 + C.GUTS_K * Math.min(1, f.takenLast / f.maxHp) : 1; }
+  for (const f of [a, b]) { f.selfKO = false; f.cur = f.pending; f.pending = {}; f.cur.guts = C.GUTS_K ? 1 + C.GUTS_K * Math.min(1, f.takenLast / f.maxHp) : 1; }
   const actA = a.stunTurn !== turn && slotA != null;
   const actB = b.stunTurn !== turn && slotB != null;
   const sa = actA ? a.profile.slots[slotA] : null, sb = actB ? b.profile.slots[slotB] : null;
@@ -158,11 +181,16 @@ export function resolveTurn(st, slotA, slotB, rng) {
     if (nulled) ev.push({ t: 'nullified', who: w, skill: sk.name });
     perform(me, foe, sk, idx === 0, turn, ev, w, orderOff, x);
   });
-  for (const w of ['a', 'b']) if (st[w].hp <= 0) ev.push({ t: 'faint', who: w });
   a.prevSlot = actA ? slotA : null; b.prevSlot = actB ? slotB : null;
   for (const f of [a, b]) { f.takenLast = f.takenThis; f.takenThis = 0; }
   if (a.hp <= 0 || b.hp <= 0) {
-    st.over = true; st.result = a.hp <= 0 && b.hp <= 0 ? 'draw' : (b.hp <= 0 ? 'a' : 'b');
+    st.over = true;
+    if (a.hp <= 0 && b.hp <= 0) { // 同時に倒れた：原則は相打ち。ただし反動など自分の効果で倒れた側がいれば、その側の負け
+      if (a.selfKO && !b.selfKO) { st.result = 'b'; b.hp = 1; ev.push({ t: 'judgeWin', who: 'b', reason: 'selfKO' }); }
+      else if (b.selfKO && !a.selfKO) { st.result = 'a'; a.hp = 1; ev.push({ t: 'judgeWin', who: 'a', reason: 'selfKO' }); }
+      else st.result = 'draw';
+    } else st.result = b.hp <= 0 ? 'a' : 'b';
+    for (const w of ['a', 'b']) if (st[w].hp <= 0) ev.push({ t: 'faint', who: w });
   } else if (turn >= C.MAX_TURNS) { // 相打ち：両者戦闘不能
     a.hp = 0; b.hp = 0; st.over = true; st.result = 'draw'; ev.push({ t: 'mutualKO' });
   } else st.turn++;

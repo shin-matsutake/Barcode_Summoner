@@ -174,15 +174,19 @@ export function match(root, ctx, params) {
     const ev = resolveSeriesTurn(s, slotA, slotB, rng);
     const d = DELAY[opts.tempo] || 1000;
     const nm = w => view[w].name;
-    // ヒットの種別（物理／魔法）。追加攻撃で種別が変わる技にも対応（打ち消された技は追加攻撃だけが通る）
+    // ヒットの種別と属性（物理／魔法）。追加攻撃・反撃・相手技のコピーで変わる場合に対応する（表示用の推定）
     const hitN = { a: 0, b: 0 }, nul = { a: false, b: false };
     const slotOf = e => view[e.who].profile.slots.find(x => x.name === e.skill);
-    const hitType = e => {
-      const sk = slotOf(e), n = hitN[e.who]++;
-      if (!sk) return 'phys';
-      const extras = (sk.effects || []).filter(o => o.op === 'extra' && (!nul[e.who] || o.cond === 'clash'));
-      if (nul[e.who]) return (extras[n] || extras[0] || sk).type;
-      return n === 0 ? sk.type : (extras[n - 1] || sk).type;
+    const hitInfo = e => {
+      const sk = slotOf(e), n = hitN[e.who]++, att = view[e.who];
+      const dflt = { type: sk ? sk.type : 'phys', el: sk ? sk.el : att.el };
+      if (!sk) return dflt;
+      const ef = sk.effects || [];
+      if (e.counter) { const o = ef.find(x => x.op === 'counterOnSelfKO'); return { type: o ? o.type : sk.type, el: sk.el }; }
+      const extras = ef.filter(o => o.op === 'extra' && (!nul[e.who] || o.cond === 'clash')).map(o => ({ type: o.type, el: sk.el }));
+      const foeIdx = e.who === 'a' ? slotB : slotA, foeSk = foeIdx != null ? view[e.who === 'a' ? 'b' : 'a'].profile.slots[foeIdx] : null;
+      const list = nul[e.who] ? extras : [{ type: sk.type, el: sk.el }, ...extras, ...(ef.some(o => o.op === 'copyFoe') && foeSk ? [{ type: foeSk.type, el: foeSk.el }] : [])];
+      return list[n] || dflt;
     };
     for (const e of ev) {
       if (!alive) return;
@@ -193,13 +197,14 @@ export function match(root, ctx, params) {
         case 'nullified': nul[e.who] = true; say(`${nm(e.who)}の${e.skill}は打ち消された！`); break;
         case 'stunned': say(`${nm(e.who)}は動けない！`); break;
         case 'hit': {
-          const tgt = e.who === 'a' ? 'b' : 'a', ty = hitType(e), sk = slotOf(e);
-          say(`${nm(e.who)}の${e.skill}！（${TYPE[ty]}攻撃）　${e.dmg}ダメージ`);
-          hitFx(tgt, e.dmg, ty, EL[sk ? sk.el : view[e.who].el].c); setHp(tgt, e.foeHp, view[tgt]); break;
+          const tgt = e.who === 'a' ? 'b' : 'a', hi = hitInfo(e);
+          say(e.counter ? `${nm(e.who)}の反撃！（${TYPE[hi.type]}攻撃）　${e.dmg}ダメージ` : `${nm(e.who)}の${e.skill}！（${TYPE[hi.type]}攻撃）　${e.dmg}ダメージ`);
+          hitFx(tgt, e.dmg, hi.type, EL[hi.el].c); setHp(tgt, e.foeHp, view[tgt]); break;
         }
         case 'heal': say(`${nm(e.who)}はHPを${e.n}回復した`); setHp(e.who, e.hp, view[e.who]); break;
         case 'selfDamage': say(`${nm(e.who)}は${e.n}のダメージを受けた`); setHp(e.who, e.hp, view[e.who]); break;
         case 'hpSet': say(`${nm(e.target)}のHPが0になった`); setHp(e.target, e.hp, view[e.target]); break;
+        case 'judgeWin': say(`${nm(e.who === 'a' ? 'b' : 'a')}は自分の効果で倒れた！`); break;
         case 'faint': say(`${nm(e.who)}は倒れた！`); break;
         case 'mutualKO': say(`${CONFIG.MAX_TURNS}ターンが終わり、相打ちになった`); break;
         case 'enter': view[e.who] = s.fighters[e.who]; showFighter(e.who, view[e.who]); say(`${e.name}が登場！`); break;

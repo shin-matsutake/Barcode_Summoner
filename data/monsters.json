@@ -11,8 +11,8 @@
     "spd": 50
    },
    "res": {
-    "phys": 0.2,
-    "mag": 0.2
+    "phys": 0.3,
+    "mag": 0.3
    },
    "unique": {
     "name": "神秘結界",
@@ -27,13 +27,12 @@
       "op": "nullifyFoe"
      },
      {
-      "op": "extra",
-      "type": "mag",
-      "power": 40
+      "op": "copyFoe"
      }
     ],
-    "text": "必ず先制できる条件、属性に関係なく相手の攻撃を無効化し、同じ条件の追加攻撃をする"
+    "text": "必ず先攻になる\n条件、属性に関係なく相手の攻撃を無効化し、無効化した攻撃と同じ条件の追加攻撃をする"
    },
+   "desc": "額に幸運の宝石を持つ、小動物の姿をした幻獣\nモノマネが得意でよく学園テレビドラマの先生のモノマネをする",
    "image": "images/monsters/monster_00.png"
   },
   {
@@ -62,8 +61,9 @@
       "cond": "last"
      }
     ],
-    "text": "後攻攻撃なら威力30追加"
+    "text": "後攻なら威力+30"
    },
+   "desc": "ちょっとだけ魔法が苦手な火属性のスライム\n冬は重宝される",
    "image": "images/monsters/monster_01.png"
   },
   {
@@ -92,8 +92,9 @@
       "cond": "last"
      }
     ],
-    "text": "後攻攻撃なら威力30追加"
+    "text": "後攻なら威力+30"
    },
+   "desc": "ちょっとだけ魔法が得意な火属性のスライム\nお風呂が大嫌い",
    "image": "images/monsters/monster_02.png"
   },
   {
@@ -122,8 +123,9 @@
       "cond": "last"
      }
     ],
-    "text": "後攻攻撃なら威力30追加"
+    "text": "後攻なら威力+30"
    },
+   "desc": "ちょっとだけ魔法が苦手な水属性のスライム\n歩くと地面が濡れる",
    "image": "images/monsters/monster_03.png"
   },
   {
@@ -152,8 +154,9 @@
       "cond": "last"
      }
     ],
-    "text": "後攻攻撃なら威力30追加"
+    "text": "後攻なら威力+30"
    },
+   "desc": "ちょっとだけ魔法が得意な水属性のスライム\n雨が降りそうな日は機嫌がいい",
    "image": "images/monsters/monster_04.png"
   },
   {
@@ -182,8 +185,9 @@
       "cond": "last"
      }
     ],
-    "text": "後攻攻撃なら威力30追加"
+    "text": "後攻なら威力+30"
    },
+   "desc": "ちょっとだけ魔法が苦手な土属性のスライム\n穴を掘るのが好き",
    "image": "images/monsters/monster_05.png"
   },
   {
@@ -212,8 +216,9 @@
       "cond": "last"
      }
     ],
-    "text": "後攻攻撃なら威力30追加"
+    "text": "後攻なら威力+30"
    },
+   "desc": "ちょっとだけ魔法が得意な土属性のスライム\n石のように固くなりたい",
    "image": "images/monsters/monster_06.png"
   },
   {
@@ -242,8 +247,9 @@
       "cond": "last"
      }
     ],
-    "text": "後攻攻撃なら威力30追加"
+    "text": "後攻なら威力+30"
    },
+   "desc": "ちょっとだけ魔法が苦手な風属性のスライム\nよく風邪をひく",
    "image": "images/monsters/monster_07.png"
   },
   {
@@ -272,8 +278,9 @@
       "cond": "last"
      }
     ],
-    "text": "後攻攻撃なら威力30追加"
+    "text": "後攻なら威力+30"
    },
+   "desc": "ちょっとだけ魔法が得意な風属性のスライム\nパクチーが苦手",
    "image": "images/monsters/monster_08.png"
   },
   {
@@ -299,11 +306,12 @@
      {
       "op": "extra",
       "type": "mag",
-      "power": 20
+      "power": 40
      }
     ],
-    "text": "魔法威力20の攻撃を追加"
+    "text": "威力40の追加魔法攻撃"
    },
+   "desc": "ちょっとだけ珍しい光属性のスライム\n妖精に間違われることがある",
    "image": "images/monsters/monster_09.png"
   },
   {
@@ -329,11 +337,12 @@
      {
       "op": "extra",
       "type": "phys",
-      "power": 20
+      "power": 40
      }
     ],
-    "text": "物理威力20の攻撃を追加"
+    "text": "威力40追加物理攻撃"
    },
+   "desc": "ちょっとだけ珍しい闇属性のスライム\n特技はつまみ食い",
    "image": "images/monsters/monster_10.png"
   },
   {
@@ -358,12 +367,18 @@
     "effects": [
      {
       "op": "selfAttack",
-      "power": 20,
+      "power": 10,
       "type": "mag"
+     },
+     {
+      "op": "nextPowerEl",
+      "el": "fire",
+      "n": 100
      }
     ],
-    "text": "自分にも威力20の魔法火属性ダメージ"
+    "text": "自分にも威力10の魔法火属性ダメージ\n次のターン自分の攻撃が火属性なら技の威力を+100する"
    },
+   "desc": "火の扱いに慣れていないが火が大好きなゴブリン\n結構なプレイボーイ",
    "image": "images/monsters/monster_11.png"
   },
   {
@@ -393,8 +408,9 @@
       "cond": "nullifiedFoe"
      }
     ],
-    "text": "相手の攻撃を打消した場合威力80の追加物理攻撃"
+    "text": "相手の攻撃を打消した場合\n威力80の追加物理攻撃"
    },
+   "desc": "火の扱いに慣れてきたゴブリン\n中華料理を作るのが誰よりもうまい",
    "image": "images/monsters/monster_12.png"
   },
   {
@@ -421,10 +437,16 @@
       "op": "selfAttack",
       "power": 20,
       "type": "mag"
+     },
+     {
+      "op": "nextPowerEl",
+      "el": "water",
+      "n": 100
      }
     ],
-    "text": "自分にも威力20の魔法水属性ダメージ"
+    "text": "自分にも威力20の魔法水属性ダメージ\n次のターン自分の攻撃が水属性なら技の威力を+100する"
    },
+   "desc": "水の扱いに慣れていないが水が大好きなゴブリン\n極度の晴れ男",
    "image": "images/monsters/monster_13.png"
   },
   {
@@ -454,8 +476,9 @@
       "cond": "nullifiedFoe"
      }
     ],
-    "text": "相手の攻撃を打消した場合威力80の追加物理攻撃"
+    "text": "相手の攻撃を打消した場合、威力80の追加物理攻撃"
    },
+   "desc": "水の扱いに慣れてきたゴブリン\n山火事の時は誰よりも頼りになる",
    "image": "images/monsters/monster_14.png"
   },
   {
@@ -482,10 +505,16 @@
       "op": "selfAttack",
       "power": 20,
       "type": "mag"
+     },
+     {
+      "op": "nextPowerEl",
+      "el": "earth",
+      "n": 100
      }
     ],
-    "text": "自分にも威力20の魔法土属性ダメージ"
+    "text": "自分にも威力20の魔法土属性ダメージ\n次のターン自分の攻撃が土属性なら技の威力を+100する"
    },
+   "desc": "土の扱いに慣れていないが土が大好きなゴブリン\nきんぴらごぼうが大好き",
    "image": "images/monsters/monster_15.png"
   },
   {
@@ -515,8 +544,9 @@
       "cond": "nullifiedFoe"
      }
     ],
-    "text": "相手の攻撃を打消した場合威力80の追加物理攻撃"
+    "text": "相手の攻撃を打消した場合、威力80の追加物理攻撃"
    },
+   "desc": "土の扱いに慣れてきたゴブリン\n泥団子を作るのが誰よりも上手",
    "image": "images/monsters/monster_16.png"
   },
   {
@@ -543,10 +573,16 @@
       "op": "selfAttack",
       "power": 20,
       "type": "mag"
+     },
+     {
+      "op": "nextPowerEl",
+      "el": "wind",
+      "n": 100
      }
     ],
-    "text": "自分にも威力20の魔法風属性ダメージ"
+    "text": "自分にも威力20の魔法風属性ダメージ\n次のターン自分の攻撃が風属性なら技の威力を+100する"
    },
+   "desc": "風の扱いに慣れていないが風が大好きなゴブリン\n木登りが好き",
    "image": "images/monsters/monster_17.png"
   },
   {
@@ -576,8 +612,9 @@
       "cond": "nullifiedFoe"
      }
     ],
-    "text": "相手の攻撃を打消した場合威力80の追加物理攻撃"
+    "text": "相手の攻撃を打消した場合、威力80の追加物理攻撃"
    },
+   "desc": "風の扱いに慣れてきたゴブリン\n紙飛行機を誰よりも遠くに飛ばす",
    "image": "images/monsters/monster_18.png"
   },
   {
@@ -602,11 +639,25 @@
     "effects": [
      {
       "op": "drain",
-      "ratio": 0.25
+      "ratio": 0.25,
+      "excludeExtras": true
+     },
+     {
+      "op": "extra",
+      "type": "phys",
+      "power": 40,
+      "cond": "afterFoeHpHigher"
+     },
+     {
+      "op": "extra",
+      "type": "mag",
+      "power": 40,
+      "cond": "afterFoeHpHigher"
      }
     ],
-    "text": "与えたダメージの4分の1HPを回復"
+    "text": "与えたダメージの1/4のHPを回復\n攻撃後相手のHPが自分より多ければ威力40の追加物理攻撃と威力40の追加魔法攻撃を与える\n（追加攻撃ではHPは回復しない）"
    },
+   "desc": "光の扱いに慣れてきたゴブリン\n趣味はアイドルのライブでオタ芸をすること",
    "image": "images/monsters/monster_19.png"
   },
   {
@@ -632,10 +683,23 @@
      {
       "op": "recoil",
       "ratio": 0.125
+     },
+     {
+      "op": "extra",
+      "type": "phys",
+      "power": 40,
+      "cond": "afterFoeHpHigher"
+     },
+     {
+      "op": "extra",
+      "type": "mag",
+      "power": 40,
+      "cond": "afterFoeHpHigher"
      }
     ],
-    "text": "与えたダメージの8分の1HPのダメージを受ける"
+    "text": "相手に与えたダメージの1/8を自分も受ける\n攻撃後相手のHPが自分より多ければ威力40の追加物理攻撃と威力40の追加魔法攻撃を与える\n（追加攻撃も反動ダメージを受ける）"
    },
+   "desc": "闇の扱いに慣れていないが闇が大好きなゴブリン\n左手に悪魔が封印されているらしい",
    "image": "images/monsters/monster_20.png"
   },
   {
@@ -659,11 +723,17 @@
     "power": 60,
     "effects": [
      {
+      "op": "bonus",
+      "power": 40,
+      "cond": "foeHpHigher"
+     },
+     {
       "op": "nextFirst"
      }
     ],
-    "text": "次のターン自分が先制できる"
+    "text": "相手のHPが自分より多ければ威力40追加\n次のターン自分が先攻になる"
    },
+   "desc": "火魔法が得意なコボルド\n足が速く、子供のころはモテモテだった　今は微妙",
    "image": "images/monsters/monster_21.png"
   },
   {
@@ -688,11 +758,17 @@
     "effects": [
      {
       "op": "nextPower",
-      "n": 20
+      "n": 30
+     },
+     {
+      "op": "bonus",
+      "power": 30,
+      "cond": "foeHpHigher"
      }
     ],
-    "text": "次のターン自分の攻撃の威力を＋20"
+    "text": "次のターン自分の技の威力を+30\n相手のHPが自分より多ければさらに威力+30"
    },
+   "desc": "強化魔法が得意な火属性のコボルド\nバーベキューが好き　火起こしなら任せろ",
    "image": "images/monsters/monster_22.png"
   },
   {
@@ -716,11 +792,17 @@
     "power": 60,
     "effects": [
      {
+      "op": "bonus",
+      "power": 40,
+      "cond": "foeHpHigher"
+     },
+     {
       "op": "nextFirst"
      }
     ],
-    "text": "次のターン自分が先制できる"
+    "text": "相手のHPが自分より多ければ威力40追加\n次のターン自分が先攻になる"
    },
+   "desc": "水魔法が得意なコボルド\n泳ぐのが得意だが背泳ぎはできない",
    "image": "images/monsters/monster_23.png"
   },
   {
@@ -745,11 +827,17 @@
     "effects": [
      {
       "op": "nextPower",
-      "n": 20
+      "n": 30
+     },
+     {
+      "op": "bonus",
+      "power": 30,
+      "cond": "foeHpHigher"
      }
     ],
-    "text": "次のターン自分の攻撃の威力を＋20"
+    "text": "次のターン自分の技の威力を+30\n相手のHPが自分より多ければさらに威力+30"
    },
+   "desc": "強化魔法が得意な水属性のコボルド\n実は泳げない",
    "image": "images/monsters/monster_24.png"
   },
   {
@@ -773,11 +861,17 @@
     "power": 60,
     "effects": [
      {
+      "op": "bonus",
+      "power": 40,
+      "cond": "foeHpHigher"
+     },
+     {
       "op": "nextFirst"
      }
     ],
-    "text": "次のターン自分が先制できる"
+    "text": "相手のHPが自分より多ければ威力40追加\n次のターン自分が先攻になる"
    },
+   "desc": "土魔法が得意なコボルド\n数分後に来る地震を予知できる　但し、止めることはできない",
    "image": "images/monsters/monster_25.png"
   },
   {
@@ -802,11 +896,17 @@
     "effects": [
      {
       "op": "nextPower",
-      "n": 20
+      "n": 30
+     },
+     {
+      "op": "bonus",
+      "power": 30,
+      "cond": "foeHpHigher"
      }
     ],
-    "text": "次のターン自分の攻撃の威力を＋20"
+    "text": "次のターン自分の技の威力を+30\n相手のHPが自分より多ければさらに威力+30"
    },
+   "desc": "強化魔法が得意な土属性のコボルド\n砂風呂屋でアルバイトしている",
    "image": "images/monsters/monster_26.png"
   },
   {
@@ -830,11 +930,17 @@
     "power": 60,
     "effects": [
      {
+      "op": "bonus",
+      "power": 40,
+      "cond": "foeHpHigher"
+     },
+     {
       "op": "nextFirst"
      }
     ],
-    "text": "次のターン自分が先制できる"
+    "text": "相手のHPが自分より多ければ威力を+40\n次のターン自分が先攻になる"
    },
+   "desc": "風魔法が得意なコボルド\n走る時は肉体強化ではなく追い風を起こす方が楽",
    "image": "images/monsters/monster_27.png"
   },
   {
@@ -859,11 +965,17 @@
     "effects": [
      {
       "op": "nextPower",
-      "n": 20
+      "n": 30
+     },
+     {
+      "op": "bonus",
+      "power": 30,
+      "cond": "foeHpHigher"
      }
     ],
-    "text": "次のターン自分の攻撃の威力を＋20"
+    "text": "次のターン自分の技の威力を+30\n相手のHPが自分より多ければさらに威力+30"
    },
+   "desc": "強化魔法が得意な風属性のコボルド\n回っている扇風機を見るとつい歌ってしまう",
    "image": "images/monsters/monster_28.png"
   },
   {
@@ -884,14 +996,19 @@
     "name": "シャイン・プリズム",
     "el": "light",
     "type": "mag",
-    "power": 60,
+    "power": 50,
     "effects": [
      {
       "op": "nextHalf"
+     },
+     {
+      "op": "nextPower",
+      "n": 30
      }
     ],
-    "text": "次のターン受けるダメージを半減する"
+    "text": "次のターン受けるダメージを半減する\n次のターン自分の技の威力を+30"
    },
+   "desc": "光魔法が得意なコボルド\nキラキラしたシールを集めている",
    "image": "images/monsters/monster_29.png"
   },
   {
@@ -909,17 +1026,22 @@
     "mag": 0
    },
    "unique": {
-    "name": "シャドー・プリズム",
+    "name": "シャドウ・プリズム",
     "el": "dark",
     "type": "mag",
-    "power": 60,
+    "power": 50,
     "effects": [
      {
       "op": "nextHalf"
+     },
+     {
+      "op": "nextPower",
+      "n": 30
      }
     ],
-    "text": "次のターン受けるダメージを半減する"
+    "text": "次のターン受けるダメージを半減する\n次のターン自分の技の威力を+30"
    },
+   "desc": "闇魔法が得意なコボルド\n最近の悩みは、休日に電気をつけっぱなしで眠ってしまうこと",
    "image": "images/monsters/monster_30.png"
   },
   {
@@ -944,6 +1066,7 @@
     "effects": [],
     "text": "斧を振り下ろして攻撃（追加効果なし）"
    },
+   "desc": "力が自慢な火属性のオーク\n歌を歌うのが好きで情熱的な歌を歌う　音痴だけど",
    "image": "images/monsters/monster_31.png"
   },
   {
@@ -964,15 +1087,16 @@
     "name": "爆炎突撃",
     "el": "fire",
     "type": "phys",
-    "power": 100,
+    "power": 120,
     "effects": [
      {
       "op": "recoil",
       "ratio": 0.25
      }
     ],
-    "text": "与えたダメージの4分の1HPのダメージを受ける"
+    "text": "相手に与えたダメージの1/4を自分も受ける"
    },
+   "desc": "頭が悪い火属性のオーク\n寒い日はとりあえず走りこむ　火属性なのに",
    "image": "images/monsters/monster_32.png"
   },
   {
@@ -997,6 +1121,7 @@
     "effects": [],
     "text": "斧を振り下ろして攻撃（追加効果なし）"
    },
+   "desc": "力が自慢な水属性のオーク\n水の重さを使い筋力と属性攻撃を同時に鍛えている",
    "image": "images/monsters/monster_33.png"
   },
   {
@@ -1017,15 +1142,16 @@
     "name": "爆流突撃",
     "el": "water",
     "type": "phys",
-    "power": 100,
+    "power": 120,
     "effects": [
      {
       "op": "recoil",
       "ratio": 0.25
      }
     ],
-    "text": "与えたダメージの4分の1HPのダメージを受ける"
+    "text": "相手に与えたダメージの1/4を自分も受ける"
    },
+   "desc": "頭が悪い水属性のオーク\n運動の時は水を飲んではいけないといまだに信じている",
    "image": "images/monsters/monster_34.png"
   },
   {
@@ -1050,6 +1176,7 @@
     "effects": [],
     "text": "斧を振り下ろして攻撃（追加効果なし）"
    },
+   "desc": "力が自慢な土属性のオーク\n穴掘りをすることで体を鍛えている",
    "image": "images/monsters/monster_35.png"
   },
   {
@@ -1070,15 +1197,16 @@
     "name": "爆塵突撃",
     "el": "earth",
     "type": "phys",
-    "power": 100,
+    "power": 120,
     "effects": [
      {
       "op": "recoil",
       "ratio": 0.25
      }
     ],
-    "text": "与えたダメージの4分の1HPのダメージを受ける"
+    "text": "相手に与えたダメージの1/4を自分も受ける"
    },
+   "desc": "頭が悪い土属性のオーク\n壊れた電化製品は叩けば直ると思っている",
    "image": "images/monsters/monster_36.png"
   },
   {
@@ -1103,6 +1231,7 @@
     "effects": [],
     "text": "斧を振り下ろして攻撃（追加効果なし）"
    },
+   "desc": "力が自慢な風属性のオーク\n力と風の相性が悪いと思っている",
    "image": "images/monsters/monster_37.png"
   },
   {
@@ -1123,15 +1252,16 @@
     "name": "爆風突撃",
     "el": "wind",
     "type": "phys",
-    "power": 100,
+    "power": 120,
     "effects": [
      {
       "op": "recoil",
       "ratio": 0.25
      }
     ],
-    "text": "与えたダメージの4分の1HPのダメージを受ける"
+    "text": "相手に与えたダメージの1/4を自分も受ける"
    },
+   "desc": "頭が悪い風属性のオーク\n去年の冬に裸で寝たため風邪を引いたらしい",
    "image": "images/monsters/monster_38.png"
   },
   {
@@ -1152,17 +1282,26 @@
     "name": "ホーリードレイン",
     "el": "light",
     "type": "phys",
-    "power": 50,
+    "power": 60,
     "effects": [
      {
       "op": "forceLast"
      },
      {
-      "op": "drainIfFoeLower"
+      "op": "drain",
+      "ratio": 1.0,
+      "cond": "afterFoeHpHigher"
+     },
+     {
+      "op": "extra",
+      "type": "phys",
+      "power": 100,
+      "cond": "afterFoeHpLower"
      }
     ],
-    "text": "このターン必ず後攻になる攻撃後相手のHPが自分より少なければ与えたダメージ分自分のHPを回復する"
+    "text": "このターン必ず後攻になる\n攻撃後相手のHPが自分より多ければ与えたダメージ分自分のHPを回復する\n少なければ威力100の物理攻撃を与える"
    },
+   "desc": "頭がいい光属性のオーク\n他のオークの頭が悪すぎるので　子供のころから大臣を務めている",
    "image": "images/monsters/monster_39.png"
   },
   {
@@ -1189,11 +1328,25 @@
       "op": "forceLast"
      },
      {
-      "op": "duel"
+      "op": "extra",
+      "type": "phys",
+      "power": 90,
+      "cond": "afterFoeHpLower"
+     },
+     {
+      "op": "extra",
+      "type": "mag",
+      "power": 90,
+      "cond": "afterFoeHpLower"
+     },
+     {
+      "op": "selfKO",
+      "cond": "afterFoeHpHigher"
      }
     ],
-    "text": "このターン必ず後攻になる攻撃後相手のHPが自分より少なければ相手のHPをOにするHPが自分より多ければ自分のHPをOにする"
+    "text": "このターン必ず後攻になる\n攻撃後相手のHPが自分より少なければ威力90の物理攻撃と威力90の魔法攻撃を与える\nHPが自分より多ければ自分のHPを0にする"
    },
+   "desc": "力が自慢な闇属性のオーク\n弱いものいじめが大好き　相手に勝てないと思うと逃走する",
    "image": "images/monsters/monster_40.png"
   },
   {
@@ -1214,17 +1367,18 @@
     "name": "フレアファング",
     "el": "fire",
     "type": "phys",
-    "power": 50,
+    "power": 20,
     "effects": [
      {
       "op": "extra",
       "type": "phys",
-      "power": 30,
-      "cond": "first"
+      "power": 100,
+      "stat": "spd"
      }
     ],
-    "text": "先制攻撃なら威力30の追加物理攻撃"
+    "text": "攻撃後、素早さを攻撃力変換し、威力100の追加物理攻撃"
    },
+   "desc": "速さが自慢の火属性のウルフ\n全力で走ると高速移動する人魂のように見える",
    "image": "images/monsters/monster_41.png"
   },
   {
@@ -1252,10 +1406,17 @@
       "type": "mag",
       "power": 50,
       "cond": "first"
+     },
+     {
+      "op": "extra",
+      "type": "phys",
+      "power": 50,
+      "cond": "afterFoeHpHigher"
      }
     ],
-    "text": "先制攻撃なら威力50の追加魔法攻撃"
+    "text": "先攻なら威力50の追加魔法攻撃\n攻撃後相手のHPが自分より多ければさらに威力50の追加物理攻撃"
    },
+   "desc": "少し魔法が使える火属性のウルフ\n子供の姿はペットとして雪国のギャルに大人気らしい",
    "image": "images/monsters/monster_42.png"
   },
   {
@@ -1276,17 +1437,18 @@
     "name": "アクアファング",
     "el": "water",
     "type": "phys",
-    "power": 50,
+    "power": 20,
     "effects": [
      {
       "op": "extra",
       "type": "phys",
-      "power": 30,
-      "cond": "first"
+      "power": 100,
+      "stat": "spd"
      }
     ],
-    "text": "先制攻撃なら威力30の追加物理攻撃"
+    "text": "攻撃後、素早さを攻撃力変換し、威力100の追加物理攻撃"
    },
+   "desc": "速さが自慢の水属性のウルフ\n400mくらいなら水の上を走れる",
    "image": "images/monsters/monster_43.png"
   },
   {
@@ -1314,10 +1476,17 @@
       "type": "mag",
       "power": 50,
       "cond": "first"
+     },
+     {
+      "op": "extra",
+      "type": "phys",
+      "power": 50,
+      "cond": "afterFoeHpHigher"
      }
     ],
-    "text": "先制攻撃なら威力50の追加魔法攻撃"
+    "text": "先攻なら威力50の追加魔法攻撃\n攻撃後相手のHPが自分より多ければさらに威力50の追加物理攻撃"
    },
+   "desc": "少し魔法が使える水属性のウルフ\n子供の姿はペットとして南国のサーファーに人気らしい",
    "image": "images/monsters/monster_44.png"
   },
   {
@@ -1338,17 +1507,18 @@
     "name": "サンドファング",
     "el": "earth",
     "type": "phys",
-    "power": 50,
+    "power": 20,
     "effects": [
      {
       "op": "extra",
       "type": "phys",
-      "power": 30,
-      "cond": "first"
+      "power": 100,
+      "stat": "spd"
      }
     ],
-    "text": "先制攻撃なら威力30の追加物理攻撃"
+    "text": "攻撃後、素早さを攻撃力変換し、威力100の追加物理攻撃"
    },
+   "desc": "速さが自慢の土属性のウルフ\n強敵から穴を掘って隠れる姿が動画サイトでバズった",
    "image": "images/monsters/monster_45.png"
   },
   {
@@ -1376,10 +1546,17 @@
       "type": "mag",
       "power": 50,
       "cond": "first"
+     },
+     {
+      "op": "extra",
+      "type": "phys",
+      "power": 50,
+      "cond": "afterFoeHpHigher"
      }
     ],
-    "text": "先制攻撃なら威力50の追加魔法攻撃"
+    "text": "先攻なら威力50の追加魔法攻撃\n攻撃後相手のHPが自分より多ければさらに威力50の追加物理攻撃"
    },
+   "desc": "少し魔法が使える土属性のウルフ\n魔法でサラサラの土を出すため、走りにくくなり速度が落ちることがある",
    "image": "images/monsters/monster_46.png"
   },
   {
@@ -1400,17 +1577,18 @@
     "name": "エアファング",
     "el": "wind",
     "type": "phys",
-    "power": 50,
+    "power": 20,
     "effects": [
      {
       "op": "extra",
       "type": "phys",
-      "power": 30,
-      "cond": "first"
+      "power": 100,
+      "stat": "spd"
      }
     ],
-    "text": "先制攻撃なら威力30の追加物理攻撃"
+    "text": "攻撃後、素早さを攻撃力変換し、威力100の追加物理攻撃"
    },
+   "desc": "速さが自慢の風属性のウルフ\n本気で走る時は速すぎて息が吸えないらしい",
    "image": "images/monsters/monster_47.png"
   },
   {
@@ -1438,10 +1616,17 @@
       "type": "mag",
       "power": 50,
       "cond": "first"
+     },
+     {
+      "op": "extra",
+      "type": "phys",
+      "power": 50,
+      "cond": "afterFoeHpHigher"
      }
     ],
-    "text": "先制攻撃なら威力50の追加魔法攻撃"
+    "text": "先攻なら威力50の追加魔法攻撃\n攻撃後相手のHPが自分より多ければさらに威力50の追加物理攻撃"
    },
+   "desc": "少し魔法が使える風属性のウルフ\n落ち着きがなくいつも飛び跳ねている",
    "image": "images/monsters/monster_48.png"
   },
   {
@@ -1462,17 +1647,23 @@
     "name": "光の一閃",
     "el": "light",
     "type": "phys",
-    "power": 70,
+    "power": 50,
     "effects": [
      {
       "op": "extra",
       "type": "phys",
-      "power": 10,
+      "power": 60,
+      "stat": "spd",
+      "cond": "first"
+     },
+     {
+      "op": "nullifyFoe",
       "cond": "first"
      }
     ],
-    "text": "先制攻撃なら威力10の追加物理攻撃"
+    "text": "先攻なら相手の攻撃を無効化し、素早さを攻撃力変換し、威力60の追加物理攻撃"
    },
+   "desc": "速さが自慢の光属性のウルフ\n光速を目指しているが音速にもたどり着けていない",
    "image": "images/monsters/monster_49.png"
   },
   {
@@ -1500,10 +1691,17 @@
       "type": "mag",
       "power": 120,
       "cond": "last"
+     },
+     {
+      "op": "extra",
+      "type": "phys",
+      "power": 50,
+      "cond": "afterFoeHpHigher"
      }
     ],
-    "text": "後攻攻撃なら威力120の追加魔法攻撃"
+    "text": "後攻なら威力120の追加魔法攻撃\n攻撃後相手のHPが自分より多ければさらに威力50の追加物理攻撃"
    },
+   "desc": "結構魔法が使える闇属性のウルフ\n速度に対しての執着があまりない珍しいウルフ",
    "image": "images/monsters/monster_50.png"
   },
   {
@@ -1527,13 +1725,18 @@
     "power": 80,
     "effects": [
      {
+      "op": "halfNow",
+      "cond": "first"
+     },
+     {
       "op": "bonus",
       "power": 100,
       "cond": "first"
      }
     ],
-    "text": "先制攻撃なら威力100追加"
+    "text": "先攻なら威力100追加し、受けるダメージを半減する"
    },
+   "desc": "赤いゴーレム　北の火山の守護者\n特別に熱に強く作られているわけではなく、正直熱いらしい",
    "image": "images/monsters/monster_51.png"
   },
   {
@@ -1557,13 +1760,18 @@
     "power": 80,
     "effects": [
      {
+      "op": "halfNow",
+      "cond": "first"
+     },
+     {
       "op": "bonus",
       "power": 100,
       "cond": "first"
      }
     ],
-    "text": "先制攻撃なら威力100追加"
+    "text": "先攻なら威力100追加し、受けるダメージを半減する"
    },
+   "desc": "青いゴーレム　氷の洞窟の守護者\n体についた氷でかき氷を作って冒険者にふるまう",
    "image": "images/monsters/monster_52.png"
   },
   {
@@ -1587,13 +1795,18 @@
     "power": 80,
     "effects": [
      {
+      "op": "halfNow",
+      "cond": "first"
+     },
+     {
       "op": "bonus",
       "power": 100,
       "cond": "first"
      }
     ],
-    "text": "先制攻撃なら威力100追加"
+    "text": "先攻なら威力100追加し、受けるダメージを半減する"
    },
+   "desc": "茶色いゴーレム　東の洞窟の守護者\n体にコケや草がへばりついている",
    "image": "images/monsters/monster_53.png"
   },
   {
@@ -1617,13 +1830,18 @@
     "power": 80,
     "effects": [
      {
+      "op": "halfNow",
+      "cond": "first"
+     },
+     {
       "op": "bonus",
       "power": 100,
       "cond": "first"
      }
     ],
-    "text": "先制攻撃なら威力100追加"
+    "text": "先攻なら威力100追加し、受けるダメージを半減する"
    },
+   "desc": "緑色のゴーレム　エルフの森の守護者\n小鳥や小動物の友達がいっぱいいる",
    "image": "images/monsters/monster_54.png"
   },
   {
@@ -1647,18 +1865,23 @@
     "power": 80,
     "effects": [
      {
+      "op": "halfNow",
+      "cond": "first"
+     },
+     {
       "op": "bonus",
       "power": 120,
       "cond": "first"
      }
     ],
-    "text": "先制攻撃なら威力120追加"
+    "text": "先攻なら威力120追加し、受けるダメージを半減する"
    },
+   "desc": "輝いているゴーレム　天界の門の守護者\n頭の輪っかはピクシーのいたずらでつけたアクセサリー",
    "image": "images/monsters/monster_55.png"
   },
   {
    "id": 56,
-   "name": "シャドーゴーレム",
+   "name": "シャドウゴーレム",
    "el": "dark",
    "init": {
     "hp": 2500,
@@ -1677,13 +1900,18 @@
     "power": 80,
     "effects": [
      {
+      "op": "halfNow",
+      "cond": "first"
+     },
+     {
       "op": "bonus",
       "power": 120,
       "cond": "first"
      }
     ],
-    "text": "先制攻撃なら威力120追加"
+    "text": "先攻なら威力120追加し、受けるダメージを半減する"
    },
+   "desc": "黒いゴーレム　終焉ノ魔王の城の守護者\nすべてのゴーレムの制作者は同一人物らしい　なお魔王ではない",
    "image": "images/monsters/monster_56.png"
   },
   {
@@ -1711,8 +1939,9 @@
       "ratio": 0.25
      }
     ],
-    "text": "与えたダメージの4分の1HPのダメージを受ける"
+    "text": "相手に与えたダメージの1/4を自分も受ける"
    },
+   "desc": "火属性のワイバーン\n得意げに火を噴きほかの魔物を追っ払うが、他属性のワイバーンもそれくらいはできる",
    "image": "images/monsters/monster_57.png"
   },
   {
@@ -1740,8 +1969,9 @@
       "ratio": 0.25
      }
     ],
-    "text": "与えたダメージの4分の1HPのダメージを受ける"
+    "text": "相手に与えたダメージの1/4を自分も受ける"
    },
+   "desc": "水属性のワイバーン\n仕留めた獲物を凍らせて得意げに持ち帰ってくるが、解凍に時間がかかるためやめてほしいと思われている",
    "image": "images/monsters/monster_58.png"
   },
   {
@@ -1769,8 +1999,9 @@
       "ratio": 0.25
      }
     ],
-    "text": "与えたダメージの4分の1HPのダメージを受ける"
+    "text": "相手に与えたダメージの1/4を自分も受ける"
    },
+   "desc": "土属性のワイバーン\n得意げに砂嵐を起こして空中の獲物をしとめるが、他属性のワイバーンもそれくらいはできる",
    "image": "images/monsters/monster_59.png"
   },
   {
@@ -1798,8 +2029,9 @@
       "ratio": 0.25
      }
     ],
-    "text": "与えたダメージの4分の1HPのダメージを受ける"
+    "text": "相手に与えたダメージの1/4を自分も受ける"
    },
+   "desc": "風属性のワイバーン\n得意げに翼を羽ばたかせ竜巻を起こすが、他属性のワイバーンもそれくらいはできる",
    "image": "images/monsters/monster_60.png"
   },
   {
@@ -1827,13 +2059,14 @@
       "ratio": 0.5
      }
     ],
-    "text": "与えたダメージの2分の1HPのダメージを受ける"
+    "text": "相手に与えたダメージの半分を自分も受ける"
    },
+   "desc": "光属性のワイバーン　夜に空の散歩をするのが好き\n素早く飛行する姿は流れ星のようで美しい",
    "image": "images/monsters/monster_61.png"
   },
   {
    "id": 62,
-   "name": "シャドーワイバーン",
+   "name": "シャドウワイバーン",
    "el": "dark",
    "init": {
     "hp": 1000,
@@ -1856,8 +2089,9 @@
       "ratio": 0.5
      }
     ],
-    "text": "与えたダメージの2分の1HPのダメージを受ける"
+    "text": "相手に与えたダメージの半分を自分も受ける"
    },
+   "desc": "闇属性のワイバーン　夜は誰よりも狩りがうまいのに\n昼間に狩りをするとなぜかうまくいかないのが悩み",
    "image": "images/monsters/monster_62.png"
   },
   {
@@ -1887,6 +2121,7 @@
     ],
     "text": "自分に500ダメージ"
    },
+   "desc": "炎を司る、トカゲのような姿の火の精霊\n料理の手伝いで火力を上げすぎて、毎回鍋を黒焦げにする",
    "image": "images/monsters/monster_63.png"
   },
   {
@@ -1911,17 +2146,21 @@
     "effects": [
      {
       "op": "onKill",
-      "heal": 1000,
-      "nextPower": 100
+      "heal": 1000
+     },
+     {
+      "op": "nextPower",
+      "n": 100
      }
     ],
-    "text": "この攻撃で相手を倒した場合自分のHPを1000回復次のターン自分の攻撃の威力を＋100"
+    "text": "この攻撃で相手を倒した場合、自分のHPを1000回復\n次のターン自分の攻撃の威力を+100"
    },
+   "desc": "水を司り、美しい女性の姿をした水の精霊\nお風呂上がりの保湿に熱心すぎて、床を水浸しにする",
    "image": "images/monsters/monster_64.png"
   },
   {
    "id": 65,
-   "name": "アウラウネ",
+   "name": "ノーム",
    "el": "earth",
    "init": {
     "hp": 1000,
@@ -1944,8 +2183,9 @@
       "ratio": 0.5
      }
     ],
-    "text": "与えたダメージの2分の1HPを回復"
+    "text": "相手に与えたダメージの半分、自分のHPを回復する"
    },
+   "desc": "地を司る、小人の姿をした土の精霊\n庭いじりに没頭するあまり、置物のように動かなくなる。",
    "image": "images/monsters/monster_65.png"
   },
   {
@@ -1973,8 +2213,9 @@
       "n": 60
      }
     ],
-    "text": "次のターン自分の攻撃の威力を＋60"
+    "text": "次のターン自分の攻撃の威力を+60"
    },
+   "desc": "空気を司り、風を操る羽の生えた美しい姿の風の精霊\n風で一気に部屋を掃除しようとして、逆に散らかす。",
    "image": "images/monsters/monster_66.png"
   },
   {
@@ -1998,12 +2239,13 @@
     "power": 120,
     "effects": [
      {
-      "op": "recoil",
-      "ratio": 0.25
+      "op": "heal",
+      "n": 1000
      }
     ],
-    "text": "与えたダメージの4分の1HPのダメージを受ける"
+    "text": "自分のHPを1000回復"
    },
+   "desc": "光や輝きを象徴する、聖なる存在\n最近の人間界は夜でも明るいことが悩み",
    "image": "images/monsters/monster_67.png"
   },
   {
@@ -2033,6 +2275,7 @@
     ],
     "text": "自分のHPを1000回復"
    },
+   "desc": "男を惑わす妖艶な姿をした悪魔の祖…だがまだ子供なため相手にされないことも多い",
    "image": "images/monsters/monster_68.png"
   },
   {
@@ -2059,8 +2302,9 @@
       "op": "nextFirst"
      }
     ],
-    "text": "次のターン自分が先制できる"
+    "text": "次のターン自分が先攻になる"
    },
+   "desc": "上半身は人間の女性のような姿で下半身は蛇の姿をした怪物\n最近、蛇が反抗期でよく兄弟喧嘩をする",
    "image": "images/monsters/monster_69.png"
   },
   {
@@ -2090,11 +2334,12 @@
     ],
     "text": "自分のHPを1000回復"
    },
+   "desc": "美しい歌声で航海士を惑わせ、海に沈める半人半魚の怪物\n持っているハープは母の形見だが弾く技術はない",
    "image": "images/monsters/monster_70.png"
   },
   {
    "id": 71,
-   "name": "ノーム",
+   "name": "アウラウネ",
    "el": "earth",
    "init": {
     "hp": 1000,
@@ -2117,8 +2362,9 @@
       "ratio": 0.25
      }
     ],
-    "text": "与えたダメージの4分の1HPのダメージを受ける"
+    "text": "相手に与えたダメージの1/4を自分も受ける"
    },
+   "desc": "根が人間の姿をしている植物の魔物\n森でかくれんぼをすると強すぎて、誰も見つけることができない",
    "image": "images/monsters/monster_71.png"
   },
   {
@@ -2146,8 +2392,9 @@
       "ratio": 0.25
      }
     ],
-    "text": "与えたダメージの4分の1HPのダメージを受ける"
+    "text": "相手に与えたダメージの1/4を自分も受ける"
    },
+   "desc": "人間の女性の顔と体、そして鳥の翼と鋭い爪を持つ怪鳥\nファンクラブがあるが女性メンバーが9割を超える",
    "image": "images/monsters/monster_72.png"
   },
   {
@@ -2179,8 +2426,9 @@
       "op": "ignoreRes"
      }
     ],
-    "text": "威力50の追加魔法攻撃相手の物理、魔法耐久を無視してダメージ"
+    "text": "威力50の追加魔法攻撃\n相手の物理、魔法耐久を無視してダメージを与える"
    },
+   "desc": "いたずら好きで、羽の生えた小さな子供のような姿をした妖精\nピンポンダッシュの下調べに余念がない",
    "image": "images/monsters/monster_73.png"
   },
   {
@@ -2208,13 +2456,14 @@
       "ratio": 0.5
      }
     ],
-    "text": "与えたダメージの2分の1HPを回復"
+    "text": "相手に与えたダメージの半分、自分のHPを回復する"
    },
+   "desc": "悪知恵が働き、人間に小さないたずらを仕掛ける小悪魔\n落書きをしすぎて絵がうまくなった",
    "image": "images/monsters/monster_74.png"
   },
   {
    "id": 75,
-   "name": "アイトーン",
+   "name": "キマイラ",
    "el": "fire",
    "init": {
     "hp": 1200,
@@ -2230,15 +2479,21 @@
     "name": "トリニティ・レイド",
     "el": "fire",
     "type": "phys",
-    "power": 120,
+    "power": 100,
     "effects": [
+     {
+      "op": "extra",
+      "type": "mag",
+      "power": 80
+     },
      {
       "op": "recoil",
       "ratio": 0.25
      }
     ],
-    "text": "与えたダメージの4分の1HPのダメージを受ける"
+    "text": "威力80の追加魔法攻撃\n与えたダメージの1/4を自分も受ける"
    },
+   "desc": "ライオンの頭、胴体に山羊の頭、蛇の尾を併せ持つ複合獣\n山羊はいつか食われるんじゃないかと気が気でない",
    "image": "images/monsters/monster_75.png"
   },
   {
@@ -2266,8 +2521,9 @@
       "n": 100
      }
     ],
-    "text": "次のターン自分の攻撃の威力を＋100"
+    "text": "次のターン自分の技の威力を+100"
    },
+   "desc": "何本もの首を持ち、1つの首を斬っても次々と再生する強力な猛毒の蛇\n再生した後はちゃんと前の記憶を保持している",
    "image": "images/monsters/monster_76.png"
   },
   {
@@ -2298,13 +2554,14 @@
       "op": "nextHalf"
      }
     ],
-    "text": "HP1000回復する次のターン受けるダメージを半減する"
+    "text": "自分のHP1000回復する\n次のターンに受けるダメージを半減する"
    },
+   "desc": "王の墓を守る怪物\nおじいちゃんくらいまでは人間のような顔つきだったらしい",
    "image": "images/monsters/monster_77.png"
   },
   {
    "id": 78,
-   "name": "キマイラ",
+   "name": "ペガサス",
    "el": "wind",
    "init": {
     "hp": 1200,
@@ -2323,16 +2580,23 @@
     "power": 100,
     "effects": [
      {
+      "op": "extra",
+      "type": "phys",
+      "power": 40,
+      "stat": "spd"
+     },
+     {
       "op": "nextFirst"
      }
     ],
-    "text": "次のターン自分が先制できる"
+    "text": "攻撃後、素早さを攻撃力変換し、威力40の追加物理攻撃\n次のターン自分が先攻になる"
    },
+   "desc": "背中に大きな鳥の翼を持ち、天空を自由に駆けることができる伝説の白馬\n速すぎて競走馬界をクビになった",
    "image": "images/monsters/monster_78.png"
   },
   {
    "id": 79,
-   "name": "ケルビム",
+   "name": "ユニコーン",
    "el": "light",
    "init": {
     "hp": 1200,
@@ -2357,8 +2621,9 @@
       "cond": "last"
      }
     ],
-    "text": "後攻攻撃なら威力100の追加魔法攻撃"
+    "text": "後攻なら威力100の追加魔法攻撃"
    },
+   "desc": "額に一本の鋭い角を持ち、純潔を好むとされる神聖な一角獣\nまだ子供で魔法が苦手",
    "image": "images/monsters/monster_79.png"
   },
   {
@@ -2385,19 +2650,20 @@
       "op": "forceLast"
      },
      {
-      "op": "heal",
-      "n": 1500,
-      "cond": "foeHpHigher"
-     },
-     {
       "op": "extra",
       "type": "phys",
       "power": 60,
       "cond": "foeHpHigher"
+     },
+     {
+      "op": "heal",
+      "n": 1000,
+      "cond": "foeHpHigher"
      }
     ],
-    "text": "このターン必ず後攻になる相手のHPが自分より多ければHP1500回復し威力60の追加物理攻撃"
+    "text": "このターン必ず後攻になる\n相手のHPが自分より多ければ自分のHPを1000回復し威力60の追加物理攻撃"
    },
+   "desc": "3つの頭と蛇の尾を持ち、冥界の入り口を監視する地獄の番犬\n真ん中の首の大好物はイチゴ大福",
    "image": "images/monsters/monster_80.png"
   },
   {
@@ -2427,6 +2693,7 @@
     ],
     "text": "HP500のダメージを受ける"
    },
+   "desc": "火属性のドラゴン\nドラゴンたちが総じて名前を変えるため、仕方なくファイアドラゴンから改名した",
    "image": "images/monsters/monster_81.png"
   },
   {
@@ -2456,6 +2723,7 @@
     ],
     "text": "HP500のダメージを受ける"
    },
+   "desc": "水属性のドラゴン\nアクアドラゴンだと弱そうだと思い名前を変えた　実は氷系の技はあまり得意ではない",
    "image": "images/monsters/monster_82.png"
   },
   {
@@ -2485,6 +2753,7 @@
     ],
     "text": "HP500のダメージを受ける"
    },
+   "desc": "土属性のドラゴン\nサンドドラゴンと呼ばれていたがモグラみたいだと思ってゴールドドラゴンと名乗るようになった",
    "image": "images/monsters/monster_83.png"
   },
   {
@@ -2514,6 +2783,7 @@
     ],
     "text": "HP500のダメージを受ける"
    },
+   "desc": "風属性のドラゴン\nゴールドドラゴンに誘われてグリーンドラゴンから名前を変えたが、名前負けしていると思っている",
    "image": "images/monsters/monster_84.png"
   },
   {
@@ -2543,6 +2813,7 @@
     ],
     "text": "次のターン自分の攻撃の威力を＋60"
    },
+   "desc": "光属性のドラゴン\nとある人間の命令で宝石を使い目の色が青く見えるようにしているらしい",
    "image": "images/monsters/monster_85.png"
   },
   {
@@ -2572,11 +2843,12 @@
      },
      {
       "op": "selfDamage",
-      "n": 2000
+      "n": 1000
      }
     ],
-    "text": "威力120の追加物理攻撃HP2000のダメージを受ける"
+    "text": "威力120の追加物理攻撃\n自分に1000のダメージ"
    },
+   "desc": "闇属性のドラゴン　自分ではシャドウドラゴンと名乗っているが、かなりの目立ちたがり屋\n人里で目撃されるドラゴンは大体こいつ",
    "image": "images/monsters/monster_86.png"
   },
   {
@@ -2611,8 +2883,9 @@
       "cond": "foeEl:earth"
      }
     ],
-    "text": "威力40の追加物理攻撃相手が土属性ならさらに威力50の追加魔法攻撃"
+    "text": "威力40の追加物理攻撃\n相手が土属性なら、さらに威力50の追加魔法攻撃"
    },
+   "desc": "南方を守護する、美しい五色絢爛な鳥の神獣\n超が付くほどの寒がりで冬場はこたつから出ない",
    "image": "images/monsters/monster_87.png"
   },
   {
@@ -2647,8 +2920,9 @@
       "cond": "foeEl:wind"
      }
     ],
-    "text": "威力40の追加魔法攻撃相手が風属性ならさらに威力50の追加物理攻撃"
+    "text": "威力40の追加魔法攻撃\n相手が風属性なら、さらに威力50の追加物理攻撃"
    },
+   "desc": "北方を守護する、亀に蛇が巻き付いた姿をした神獣\n歩くのが遅く、待ち合わせに前日から出発している",
    "image": "images/monsters/monster_88.png"
   },
   {
@@ -2683,8 +2957,9 @@
       "cond": "foeEl:fire"
      }
     ],
-    "text": "威力40の追加魔法攻撃相手が火属性ならさらに威力50の追加物理攻撃"
+    "text": "威力40の追加魔法攻撃\n相手が火属性なら、さらに威力50の追加物理攻撃"
    },
+   "desc": "西方を守護する、白い虎の姿をした神獣\n威厳を保ちたいのに、猫じゃらしを見ると体が勝手に動いてしまう",
    "image": "images/monsters/monster_89.png"
   },
   {
@@ -2719,8 +2994,9 @@
       "cond": "foeEl:water"
      }
     ],
-    "text": "威力40の追加物理攻撃相手が水属性ならさらに威力50の追加魔法攻撃"
+    "text": "威力40の追加物理攻撃\n相手が水属性なら、さらに威力50の追加魔法攻撃"
    },
+   "desc": "東方を守護する、高貴な青い龍の神獣\n雨を降らせるときは、洗濯物が乾いているかを確認してからにしている",
    "image": "images/monsters/monster_90.png"
   },
   {
@@ -2761,8 +3037,9 @@
       "cond": "clash"
      }
     ],
-    "text": "相手の攻撃が光属性なら与えたダメージ分HPを回復する打消しが発生した場合威力100の物理攻撃と威力100の魔法攻撃を与える"
+    "text": "相手の攻撃が光属性なら、相手に与えたダメージ分、自分のHPを回復する\n打消しが発生した場合、威力100の追加物理攻撃と威力100の追加魔法攻撃を与える"
    },
+   "desc": "四神の中心に君臨する非常に格式高い黄金の龍\nまだ子供だが、成長したら他の龍とキャラがかぶるのではないかと気にしている",
    "image": "images/monsters/monster_91.png"
   },
   {
@@ -2803,8 +3080,9 @@
       "cond": "clash"
      }
     ],
-    "text": "相手の攻撃が闇属性なら与えたダメージの4分の3分HPを回復する打消しが発生した場合威力130の物理攻撃と威力130の魔法攻撃を与える"
+    "text": "相手の攻撃が闇属性なら、与えたダメージの4分の3分HPを回復する\n打消しが発生した場合、威力130の追加物理攻撃と威力130の追加魔法攻撃を与える"
    },
+   "desc": "闇を払う力を持つ慈悲深い幻の聖獣\n慈悲深すぎるため部屋に出た小さな虫も傷つけず外へ逃がす",
    "image": "images/monsters/monster_92.png"
   },
   {
@@ -2828,15 +3106,16 @@
     "power": 130,
     "effects": [
      {
-      "op": "heal",
-      "n": 1000
+      "op": "nextHalf"
      },
      {
-      "op": "nextHalf"
+      "op": "heal",
+      "n": 1000
      }
     ],
-    "text": "HP1000回復する次のターン受けるダメージを半減する"
+    "text": "HP1000回復する\n次のターン受けるダメージを半減する"
    },
+   "desc": "炎に包まれて自ら燃え上がり、灰から蘇る不死鳥\n長く生き過ぎて逆に退屈になりつつある",
    "image": "images/monsters/monster_93.png"
   },
   {
@@ -2867,6 +3146,7 @@
     ],
     "text": "威力40の追加物理攻撃"
    },
+   "desc": "海を支配する、最強の硬い鱗を持った巨大な蛇\n脱皮した直後は鱗も柔らかいので狙うならそのタイミング",
    "image": "images/monsters/monster_94.png"
   },
   {
@@ -2897,8 +3177,9 @@
       "op": "nextHalf"
      }
     ],
-    "text": "次のターン受けるダメージを半減する次のターン自分の攻撃の威力を＋60"
+    "text": "次のターン受けるダメージを半減する\n次のターン自分の攻撃の威力を＋60"
    },
+   "desc": "陸を支配する、山をも動かす怪力を持った巨大な獣\n召喚すると食費がえらいことになる",
    "image": "images/monsters/monster_95.png"
   },
   {
@@ -2922,15 +3203,16 @@
     "power": 130,
     "effects": [
      {
-      "op": "heal",
-      "n": 1500
+      "op": "nextDouble"
      },
      {
-      "op": "nextDouble"
+      "op": "heal",
+      "n": 1500
      }
     ],
-    "text": "HPを1500回復次のターン受けるダメージを倍にする"
+    "text": "自分のHPを1500回復\n次のターン受けるダメージを倍にする"
    },
+   "desc": "空を支配する、広げた翼で太陽を隠すほど巨大な怪鳥\n最近は日傘にライバル心を抱いている",
    "image": "images/monsters/monster_96.png"
   },
   {
@@ -2959,8 +3241,9 @@
       "cond": "last"
      }
     ],
-    "text": "後攻攻撃なら威力100追加"
+    "text": "後攻なら威力100追加"
    },
+   "desc": "圧倒的な力を持つ竜\n最近、黄龍やホワイトドラゴンになんとなく避けられているような気がする…",
    "image": "images/monsters/monster_97.png"
   },
   {
@@ -2988,8 +3271,9 @@
       "cond": "first"
      }
     ],
-    "text": "先制攻撃なら相手の攻撃を無効化する"
+    "text": "先攻ならこのターンの相手の攻撃を無効化する"
    },
+   "desc": "人々を誘惑して奈落へと突き落とす、大いなる悪魔\nインターネットの登場により、最近誘惑のされる人間が減っている気がしている",
    "image": "images/monsters/monster_98.png"
   },
   {
@@ -3015,10 +3299,17 @@
      {
       "op": "recoil",
       "ratio": 0.5
+     },
+     {
+      "op": "counterOnSelfKO",
+      "type": "mag",
+      "power": 130,
+      "healOnKill": 10
      }
     ],
-    "text": "与えたダメージの2分の1HPにダメージを受ける"
+    "text": "相手に与えたダメージの1/2を自分も受ける\nこの効果で受けたダメージで自分のHPが0になった場合、威力130の追加魔法攻撃\n追加魔法攻撃で相手を倒した場合、体力を10回復する"
    },
+   "desc": "魔界を統べる王様　昔は強かったが\n最近魔物たちが強くなりすぎていて直接戦ったら勝てるかわからない",
    "image": "images/monsters/monster_99.png"
   }
  ]
