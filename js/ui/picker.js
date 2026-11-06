@@ -11,14 +11,16 @@ export function pickMonster(ctx, { exclude = [], tabs = ['stock', 'number'], tit
     const box = h('div', 'dlg panel pick');
     const close = v => { back.remove(); resolve(v); };
     box.append(h('h2', 'dlg-title', title));
-    const names = { stock: 'ストック', number: '番号を入れる', random: 'ランダム' };
+    const names = { stock: 'ストック', roster: 'タワーの仲間', number: '番号を入れる', random: 'ランダム' };
     const seg = h('div', 'seg'); const body = h('div', 'pick-body');
     const show = t => {
       seg.querySelectorAll('.seg-b').forEach(b => b.classList.toggle('on', b.dataset.t === t));
       body.replaceChildren();
-      if (t === 'stock') {
-        const items = ctx.store.get().stock.filter(it => !exclude.includes(it.jan));
-        if (!items.length) body.append(h('p', 'sub', '選べる仲間がいません。「番号を入れる」から召喚できます。'));
+      if (t === 'stock' || t === 'roster') {
+        const st = ctx.store.get();
+        const all = t === 'roster' ? st.tower.roster.map(j => ({ jan: j, nick: (st.stock.find(x => x.jan === j) || {}).nick || '' })) : st.stock;
+        const items = all.filter(it => !exclude.includes(it.jan));
+        if (!items.length) body.append(h('p', 'sub', tabs.includes('number') ? '選べる仲間がいません。「番号を入れる」から召喚できます。' : '選べる仲間がいません。'));
         for (const it of items) {
           let p; try { p = analyze(it.jan, ctx.data); } catch (e) { continue; }
           const row = h('button', 'pick-row');

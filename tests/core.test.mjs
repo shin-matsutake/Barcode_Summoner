@@ -229,7 +229,7 @@ t('勝ち抜き：勝者のHPは持ち越し、負けた側は次の個体が全
   assert.equal(s.battleNo, 2); assert.equal(s.battle.turn, 1);
   assert(s.fighters.a.hp < 5000 && s.fighters.a.hp > 0);           // 受けたダメージはそのまま
   assert.equal(s.fighters.b.hp, s.fighters.b.maxHp);               // 新しい個体は全回復
-  assert.equal(s.fighters.a.prevSlot, null);                        // 前ターンの使用枠制限はリセット
+  assert.equal(s.fighters.a.prevSlot, 0);                           // フィニッシュに使った枠(0)は、次の戦闘の1ターン目も使えない
   const hpBefore = s.fighters.a.hp; runTurn(s, 1, 1, r);
   assert(s.over && s.result === 'a'); assert(s.fighters.a.hp <= hpBefore);
 });
@@ -273,6 +273,14 @@ t('勝ち抜き：判定勝ち（反動で同時に倒れた）も両者退場�
   assert.equal(s.fighters.b.hp, s.fighters.b.maxHp);                // 次の個体は全回復で登場
   const e = startSeries([A()], [B()]); runTurn(e, 0, 0, new Rng(1));
   assert(e.over); assert.equal(e.result, 'b');                      // 最後の1体：自分の効果で倒れた側の負け
+});
+t('勝ち抜き：フィニッシュに使った技は、次の戦闘の1ターン目も使えない（登場した相手は制限なし）', () => {
+  const A = () => prof('fire', 500, 500, 500, 5000, [plain, plain, plain]), B = () => prof('wind', 1, 1, 1, 50, [plain, plain, plain]);
+  const s = startSeries([A()], [B(), B()]);
+  runTurn(s, 1, 0, new Rng(1));                                       // Aが技B(枠1)で1体目を倒す
+  assert.equal(s.idx.b, 1); assert.equal(s.fighters.a.prevSlot, 1);
+  assert.deepEqual(allowedSlots(s.fighters.a, s.battle.turn), [0, 2]); // 枠1は使えない
+  assert.deepEqual(allowedSlots(s.fighters.b, s.battle.turn), [0, 1, 2]);
 });
 t('勝ち抜き：CPU同士で最後まで進む（3v3を2000試合）', () => {
   const r = new Rng(9); const rj = () => Array.from({ length: 13 }, () => r.int(10)).join('');

@@ -15,3 +15,6 @@ export async function loadData() {
   if (!monsters || !skills) throw new Error('データの形式が想定と違います');
   return { version, monsters, skills, tower: { stages: (t && t.stages) || [] } };
 }
+// ステージ番号から探す（ステージの数は決め打ちしない）
+export const stageOf = (data, n) => data.tower.stages.find(x => x.stage === n) || null;
+export const randomTeamIdx = stg => Math.floor(Math.random() * stg.teams.length);

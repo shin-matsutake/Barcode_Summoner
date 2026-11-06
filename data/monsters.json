@@ -2173,17 +2173,17 @@
     "mag": 0.1
    },
    "unique": {
-    "name": "ネクロ・ブロッサ",
+    "name": "ガイア・クラッシャー",
     "el": "earth",
-    "type": "mag",
-    "power": 100,
+    "type": "phys",
+    "power": 120,
     "effects": [
      {
-      "op": "drain",
-      "ratio": 0.5
+      "op": "recoil",
+      "ratio": 0.25
      }
     ],
-    "text": "相手に与えたダメージの半分、自分のHPを回復する"
+    "text": "相手に与えたダメージの1/4を自分も受ける"
    },
    "desc": "地を司る、小人の姿をした土の精霊\n庭いじりに没頭するあまり、置物のように動かなくなる。",
    "image": "images/monsters/monster_65.png"
@@ -2352,17 +2352,17 @@
     "mag": 0
    },
    "unique": {
-    "name": "ガイア・クラッシャー",
+    "name": "ネクロ・ブロッサ",
     "el": "earth",
-    "type": "phys",
-    "power": 120,
+    "type": "mag",
+    "power": 100,
     "effects": [
      {
-      "op": "recoil",
-      "ratio": 0.25
+      "op": "drain",
+      "ratio": 0.5
      }
     ],
-    "text": "相手に与えたダメージの1/4を自分も受ける"
+    "text": "相手に与えたダメージの半分、自分のHPを回復する"
    },
    "desc": "根が人間の姿をしている植物の魔物\n森でかくれんぼをすると強すぎて、誰も見つけることができない",
    "image": "images/monsters/monster_71.png"

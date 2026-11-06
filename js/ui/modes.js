@@ -5,28 +5,59 @@ import { analyze } from '../core/jan.js';
 import { createFighter } from '../core/battle.js';
 import { pickMonster } from './picker.js';
 import { AI_LABELS } from './ai.js';
+import { story } from './dialog.js';
+import { resetButton } from './roster.js';
+import { ROSTER_MAX } from '../storage.js';
+import { stageOf, randomTeamIdx } from '../data.js';
 
 function backBar(ctx, title) {
   const bar = h('header', 'bar'), b = h('button', 'btn small', '戻る');
   b.onclick = () => ctx.go('top'); bar.append(b, h('h1', '', title)); return bar;
 }
 
+// ステージに入る：ステージの前の文（intro。あれば）→ 仲間が足りなければ仲間を加える画面 → 選出
+export async function enterStage(ctx, n) {
+  const stg = stageOf(ctx.data, n);
+  if (!stg) return ctx.go('tower');
+  if (stg.intro && n > ctx.store.get().tower.cleared) await story(stg.intro, `ステージ${n}`);
+  const teamIdx = randomTeamIdx(stg);
+  if (ctx.store.get().tower.roster.length < stg.rule.bring) return ctx.go('towerAdd', { stage: n, teamIdx, from: 'tower' });
+  ctx.go('select', { stage: n, teamIdx });
+}
+
 export function tower(root, ctx) {
   const wrap = h('div', 'page');
   wrap.append(backBar(ctx, 'CPUタワー'));
-  const list = h('div', 'list'), cleared = ctx.store.get().tower.cleared;
+  const list = h('div', 'list'), t = ctx.store.get().tower, cleared = t.cleared;
   const stages = ctx.data.tower.stages;
+
+  // 仲間の欄（押すと一覧）
+  const rp = h('button', 'panel roster-panel');
+  const rh = h('div', 'rp-head');
+  rh.append(h('b', '', 'タワーの仲間'), h('span', 'rp-n', `${t.roster.length}/${ROSTER_MAX}`));
+  const faces = h('div', 'rp-faces');
+  for (let i = 0; i < ROSTER_MAX; i++) {
+    const j = t.roster[i];
+    if (j) faces.append(portrait(analyze(j, ctx.data).monster, { view: 'icon', cls: 'xs' }));
+    else faces.append(h('div', 'rp-empty', '＋'));
+  }
+  rp.append(rh, faces, h('p', 'sub', t.roster.length ? 'タップで一覧を見る・仲間を加える' : 'まず、仲間を加えましょう（挑戦が終わるまで外せません）'));
+  rp.onclick = () => ctx.go('towerRoster');
+  list.append(rp);
+
   if (!stages.length) list.append(h('div', 'panel empty', 'タワーのデータがありません'));
   for (const stg of stages) {
     const open = stg.stage <= cleared + 1, done = stg.stage <= cleared;
     const b = h('button', 'panel stage' + (open ? '' : ' locked') + (done ? ' done' : ''));
-    const t = h('div', 'info');
-    t.append(h('div', 'name', `ステージ${stg.stage}`), h('div', 'sub', `${stg.rule.bring}体持ち込み・${stg.rule.fight}体で戦う`));
-    b.append(t, h('span', 'st-tag', done ? 'クリア済み' : open ? '挑戦できる' : 'ロック中'));
+    const info = h('div', 'info');
+    info.append(h('div', 'name', `ステージ${stg.stage}`), h('div', 'sub', `${stg.rule.bring}体持ち込み・${stg.rule.fight}体で戦う`));
+    b.append(info, h('span', 'st-tag', done ? 'クリア済み' : open ? '挑戦できる' : 'ロック中'));
     b.disabled = !open;
-    b.onclick = () => ctx.go('select', { stage: stg.stage, teamIdx: Math.floor(Math.random() * stg.teams.length) });
+    b.onclick = () => enterStage(ctx, stg.stage);
     list.append(b);
   }
+  const rb = resetButton(ctx, () => ctx.go('tower'));
+  if (rb) list.append(rb);
   wrap.append(list); root.append(wrap);
 }
 

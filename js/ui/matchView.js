@@ -1,6 +1,8 @@
 // バトル画面。勝ち抜き戦（1〜3体）に対応。自分が操作するモードと、CPU同士を観戦するモードがある。
 import { h, sleep } from './dom.js';
-import { dialog, confirmDialog } from './dialog.js';
+import { dialog, confirmDialog, story } from './dialog.js';
+import { enterStage } from './modes.js';
+import { stageOf } from '../data.js';
 import { portrait, elemIcon, EL } from './portrait.js';
 import { analyze } from '../core/jan.js';
 import { Rng } from '../core/rng.js';
@@ -76,7 +78,8 @@ export function match(root, ctx, params) {
   const mid = h('div', 'mid');
   const turnBox = h('div', 'turn'), turnNum = h('b'), rage = h('span', 'rage');
   turnBox.append(h('span', '', 'TURN'), turnNum, rage);
-  const warn = h('div', 'warn'), msg = h('div', 'msg panel');
+  const warn = h('div', 'warn'), msg = h('div', 'msg panel'), m1 = h('div', 'm1'), m2 = h('div', 'm2');
+  msg.append(m1, m2);
   mid.append(turnBox, msg, warn);
   arena.append(sides.b, mid, sides.a);
 
@@ -92,7 +95,9 @@ export function match(root, ctx, params) {
   } else bt.append(top, huds.b.el, arena, huds.a.el, timer, skills);
   root.append(bt);
 
-  const say = t => { msg.textContent = t; };
+  // メッセージは2行固定。引数は、文字列、または [{t:文字, c:色}] の配列（技名を属性の色にするため）
+  const fillLine = (el, parts) => { el.replaceChildren(); for (const p of (Array.isArray(parts) ? parts : [{ t: String(parts) }])) { const sp = h('span', '', p.t); if (p.c) sp.style.color = p.c; el.append(sp); } };
+  const say = (l1, l2 = '') => { fillLine(m1, l1); fillLine(m2, l2); };
   const fa = () => s.fighters.a;
   const gate = async () => { while (paused && alive) await new Promise(r => waiters.push(r)); };
   const wait = async ms => { await sleep(ms / speed); await gate(); };
@@ -118,10 +123,26 @@ export function match(root, ctx, params) {
   }
   function hitFx(w, dmg, type, color) {
     const el = sides[w];
-    el.style.setProperty('--fx', color);
-    if (opts.fx) { el.classList.remove('shake', 'mag'); void el.offsetWidth; el.classList.add(type === 'mag' ? 'mag' : 'shake'); }
+    el.style.setProperty('--fx', color);   // ダメージの数字と、エフェクトは、技の属性の色
+    if (opts.fx) {
+      el.classList.remove('shake', 'mag'); void el.offsetWidth; el.classList.add(type === 'mag' ? 'mag' : 'shake');
+      const fx = h('div', type === 'mag' ? 'fxm' : 'fxs');   // 物理＝斬撃の線、魔法＝光の輪
+      fx.innerHTML = type === 'mag' ? '<i></i><i></i>' : '<svg viewBox="0 0 100 100"><path pathLength="1" d="M12 18L88 82"/><path pathLength="1" d="M34 8L92 60"/><path pathLength="1" d="M8 44L58 94"/></svg>';
+      el.append(fx); setTimeout(() => fx.remove(), 800);
+    }
     const n = h('div', 'dmg', String(dmg)); el.append(n); setTimeout(() => n.remove(), 900);
   }
+  const advance = async w => {   // 攻撃側が前に出る（自分は上へ、相手は下へ）
+    if (!opts.fx) return;
+    const el = sides[w]; el.classList.remove('adv'); void el.offsetWidth; el.classList.add('adv');
+    await wait(260);
+  };
+  // 鎖と南京錠（線画）。連続して使えない技にかぶせる
+  const LOCK_SVG = (() => {
+    let links = '';
+    for (let k = 0; k < 11; k++) { const x = 14 + k * 27; links += k % 2 ? `<ellipse cx="${x}" cy="30" rx="5" ry="10"/>` : `<ellipse cx="${x}" cy="30" rx="13" ry="8"/>`; }
+    return `<svg viewBox="0 0 300 60" preserveAspectRatio="xMidYMid meet"><g fill="none" stroke="#aebdcb" stroke-width="3.5" transform="rotate(-6 150 30)">${links}</g><g transform="translate(150 33)"><path d="M-9 -2V-10a9 9 0 0 1 18 0V-2" fill="none" stroke="#e0b93a" stroke-width="5"/><rect x="-15" y="-3" width="30" height="24" rx="4" fill="#e0b93a" stroke="#6b5413" stroke-width="2"/><circle cx="0" cy="8" r="3" fill="#6b5413"/><rect x="-1.5" y="9" width="3" height="7" fill="#6b5413"/></g></svg>`;
+  })();
 
   function renderSkills() {
     skills.replaceChildren();
@@ -134,13 +155,17 @@ export function match(root, ctx, params) {
       head.append(h('span', 'sk-kind', KIND[i]), h('b', 'sk-name', sk.name), elemIcon(sk.el, 'sm'),
         h('span', `tbadge tb-${sk.type}`, TYPE[sk.type]), h('span', 'sk-pow', `威力 ${sk.power}`));
       b.append(head);
-      if (!ok.includes(i)) b.append(h('div', 'sk-meta', '連続して使えません'));
       b.append(h('div', 'sk-text', sk.text));
+      if (!ok.includes(i)) { const lk = h('div', 'chain'); lk.innerHTML = LOCK_SVG; b.append(lk); }
       let pressed = false, pt = 0;
       b.onpointerdown = () => { pressed = false; pt = setTimeout(() => { pressed = true; dialog({ title: sk.name, text: `${EL[sk.el].ja}属性・${TYPE[sk.type]}攻撃・威力 ${sk.power}\n${sk.text}` }); }, 500); };
       b.onpointerup = b.onpointerleave = b.onpointercancel = () => clearTimeout(pt);
       b.oncontextmenu = e => e.preventDefault();
-      b.onclick = () => { if (pressed) { pressed = false; return; } if (!locked && ok.includes(i)) commit(i); };
+      b.onclick = () => {
+        if (pressed) { pressed = false; return; }
+        if (!ok.includes(i)) { b.classList.remove('nope'); void b.offsetWidth; b.classList.add('nope'); return; }   // ロック中は、小さく震える
+        if (!locked) commit(i);
+      };
       skills.append(b);
     });
   }
@@ -188,25 +213,41 @@ export function match(root, ctx, params) {
       const list = nul[e.who] ? extras : [{ type: sk.type, el: sk.el }, ...extras, ...(ef.some(o => o.op === 'copyFoe') && foeSk ? [{ type: foeSk.type, el: foeSk.el }] : [])];
       return list[n] || dflt;
     };
+    const col = sk => EL[sk ? sk.el : 'dark'].c;
+    const skOf = w => { const i = w === 'a' ? slotA : slotB; return i != null ? view[w].profile.slots[i] : null; };
+    let mutualShown = false;
     for (const e of ev) {
       if (!alive) return;
       let w = d;
       switch (e.t) {
         case 'turn': setTurn(e.turn); say(`ターン${e.turn}`); w = d * 0.6; break;
-        case 'clash': say('属性がぶつかり合った！'); break;
-        case 'nullified': nul[e.who] = true; say(`${nm(e.who)}の${e.skill}は打ち消された！`); break;
+        case 'clash': {
+          if (e.a && e.b) {   // 相殺
+            mutualShown = true; const sa = skOf('a'), sb = skOf('b');
+            say([{ t: `${nm('a')}の` }, { t: sa ? sa.name : '', c: col(sa) }, { t: `と${nm('b')}の` }, { t: sb ? sb.name : '', c: col(sb) }, { t: 'が' }], '打ち消し合った！');
+          } else w = 0;       // 片方だけの打消しは、'nullified' で表示する
+          break;
+        }
+        case 'nullified': {
+          if (mutualShown) { nul[e.who] = true; w = 0; break; }
+          nul[e.who] = true; const win = e.who === 'a' ? 'b' : 'a', sw = skOf(win), sl = skOf(e.who);
+          say([{ t: `${nm(win)}の` }, { t: sw ? sw.name : '', c: col(sw) }, { t: 'が' }], [{ t: `${nm(e.who)}の` }, { t: e.skill, c: col(sl) }, { t: 'を打ち消した！' }]);
+          break;
+        }
         case 'stunned': say(`${nm(e.who)}は動けない！`); break;
         case 'hit': {
-          const tgt = e.who === 'a' ? 'b' : 'a', hi = hitInfo(e);
-          say(e.counter ? `${nm(e.who)}の反撃！（${TYPE[hi.type]}攻撃）　${e.dmg}ダメージ` : `${nm(e.who)}の${e.skill}！（${TYPE[hi.type]}攻撃）　${e.dmg}ダメージ`);
-          hitFx(tgt, e.dmg, hi.type, EL[hi.el].c); setHp(tgt, e.foeHp, view[tgt]); break;
+          const tgt = e.who === 'a' ? 'b' : 'a', hi = hitInfo(e), c = EL[hi.el].c;
+          if (e.counter) say(`${nm(e.who)}の反撃！`, `${TYPE[hi.type]}攻撃　${e.dmg}ダメージ`);
+          else say([{ t: `${nm(e.who)}の` }, { t: e.skill, c }, { t: '！' }], `${TYPE[hi.type]}攻撃　${e.dmg}ダメージ`);
+          await advance(e.who);
+          hitFx(tgt, e.dmg, hi.type, c); setHp(tgt, e.foeHp, view[tgt]); break;
         }
-        case 'heal': say(`${nm(e.who)}はHPを${e.n}回復した`); setHp(e.who, e.hp, view[e.who]); break;
-        case 'selfDamage': say(`${nm(e.who)}は${e.n}のダメージを受けた`); setHp(e.who, e.hp, view[e.who]); break;
-        case 'hpSet': say(`${nm(e.target)}のHPが0になった`); setHp(e.target, e.hp, view[e.target]); break;
+        case 'heal': say(`${nm(e.who)}は回復した！`, `HPが${e.n}回復`); setHp(e.who, e.hp, view[e.who]); break;
+        case 'selfDamage': say(`${nm(e.who)}は${e.cause === 'recoil' ? '反動を受けた' : '自分にダメージを受けた'}！`, `${e.n}ダメージ`); setHp(e.who, e.hp, view[e.who]); break;
+        case 'hpSet': say(`${nm(e.target)}のHPが0になった！`); setHp(e.target, e.hp, view[e.target]); break;
         case 'judgeWin': say(`${nm(e.who === 'a' ? 'b' : 'a')}は自分の効果で倒れた！`); break;
         case 'faint': say(`${nm(e.who)}は倒れた！`); break;
-        case 'mutualKO': say(`${CONFIG.MAX_TURNS}ターンが終わり、相打ちになった`); break;
+        case 'mutualKO': say(`${CONFIG.MAX_TURNS}ターンが終わった`, '相打ちになった'); break;
         case 'enter': view[e.who] = s.fighters[e.who]; showFighter(e.who, view[e.who]); say(`${e.name}が登場！`); break;
         default: w = 0;
       }
@@ -227,14 +268,15 @@ export function match(root, ctx, params) {
       if (!alive) return;
       return c === 'again' ? retry() : c === 'new' ? ctx.go('quick') : ctx.go('top');
     }
-    const stage = params.stage, last = ctx.data.tower.stages.length;
+    const stage = params.stage, stg = stageOf(ctx.data, stage), hasNext = !!stageOf(ctx.data, stage + 1);
     if (r === 'a') {
       ctx.store.update(st => { st.tower.cleared = Math.max(st.tower.cleared, stage); });
+      if (stg && stg.outro) { await story(stg.outro, `ステージ${stage}`); if (!alive) return; }
       const btns = [{ label: 'タワーへ', value: 'tower' }];
-      if (stage < last) btns.push({ label: '次のステージへ', value: 'next', primary: true });
-      const c = await dialog({ title: `ステージ${stage} クリア！`, text, buttons: btns });
+      if (hasNext) btns.push({ label: '次のステージへ', value: 'next', primary: true });
+      const c = await dialog({ title: `ステージ${stage} クリア！`, text: hasNext ? text : `${text}\n\nすべてのステージをクリアしました！\nタワーの画面の「もう一度挑戦」から、最初に戻れます。`, buttons: btns });
       if (!alive) return;
-      return c === 'next' ? ctx.go('select', { stage: stage + 1, teamIdx: Math.floor(Math.random() * ctx.data.tower.stages[stage].teams.length) }) : ctx.go('tower');
+      return c === 'next' ? enterStage(ctx, stage + 1) : ctx.go('tower');
     }
     const c = await dialog({ title: '決着', text, buttons: [{ label: 'タワーへ', value: 'tower' }, { label: '選出からやり直す', value: 'again', primary: true }] });
     if (!alive) return;

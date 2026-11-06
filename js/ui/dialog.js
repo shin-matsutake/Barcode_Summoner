@@ -37,3 +37,11 @@ export function toast(msg) {
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
 }
+
+// ストーリーの文を1ページずつ出す（pages は文字列または文字列の配列）。タップ（ボタン）で次へ
+export async function story(pages, title = '') {
+  const list = (Array.isArray(pages) ? pages : [pages]).map(String).filter(t => t.trim());
+  for (let i = 0; i < list.length; i++) {
+    await dialog({ title, text: list[i], buttons: [{ label: i < list.length - 1 ? '次へ' : 'OK', value: true }] });
+  }
+}

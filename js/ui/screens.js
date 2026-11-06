@@ -5,7 +5,9 @@ import { analyze } from '../core/jan.js';
 import { match } from './matchView.js';
 import { select } from './select.js';
 import { tower, quick } from './modes.js';
-import { summon, summonFx, detail } from './summon.js';
+import { summon, detail } from './summon.js';
+import { summonFx } from './summonFx.js';
+import { towerRoster, towerAdd, inRoster } from './roster.js';
 
 const TITLE = 'バーコード・サモナー';
 
@@ -40,7 +42,7 @@ function top(root, ctx) {
   const items = [
     ['召喚する', 'summon', '番号を入れて仲間を呼ぶ'],
     ['対戦する', null, '友達と合言葉で対戦'],
-    ['CPUタワー', 'tower', '5つのステージに挑戦'],
+    ['CPUタワー', 'tower', `${ctx.data.tower.stages.length}つのステージに挑戦`],
     ['クイックバトル', 'quick', 'CPUどうしの対戦を観戦'],
     ['ストック', 'stock', '召喚した仲間を見る'],
     ['オプション', 'options', '音量・演出・データ'],
@@ -73,6 +75,7 @@ function stock(root, ctx) {
     row.append(portrait(p.monster, { view: 'icon', cls: 'sm' }));
     const info = h('div', 'info');
     info.append(h('div', 'name', it.nick ? `${it.nick}（${p.monster.name}）` : p.monster.name), h('div', 'sub', `HP ${p.stats.hp}　召喚日 ${it.date || '-'}`));
+    if (inRoster(ctx, it.jan)) info.append(h('span', 'tower-tag', 'タワーの仲間'));
     row.append(info);
     list.append(row);
   }
@@ -150,4 +153,4 @@ function options(root, ctx) {
   root.append(wrap);
 }
 
-export const screens = { top, stock, options, summon, summonFx, detail, tower, quick, select, match };
+export const screens = { top, stock, options, summon, summonFx, detail, tower, towerRoster, towerAdd, quick, select, match };

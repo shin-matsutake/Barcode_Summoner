@@ -2,7 +2,7 @@
 // ルール：
 //  - 勝った個体は残り、HPは持ち越す（回復なし）。負けた側は次の個体が全回復で登場する
 //  - 相打ち（同時に倒れる／10ターンで決着なし）は両者退場。反動などで同時に倒れて判定勝ちになった場合も両者退場（勝者はHP1で残るが交代する）
-//  - 戦闘ごとにターン数・レイジ・「前のターンに使った枠」はリセットする
+//  - 戦闘ごとにターン数・レイジはリセットする。「前のターンに使った枠」は持ち越す（フィニッシュに使った技は、次の戦闘の1ターン目も使えない）
 //  - 威力アップなどの効果はリセットしない：倒れるまで続く能力変化と、最後のターンに付いた「次のターン効果」は
 //    次の戦闘の1ターン目に持ち越す。行動不能（反動の拘束など）は持ち越さない
 import { createFighter, newBattle, resolveTurn, aiChoose } from './battle.js';
@@ -13,7 +13,7 @@ export function carryOver(f, lastTurn) {
     .filter(m => m.until === Infinity || (m.from === lastTurn + 1 && m.until === lastTurn + 1))
     .map(m => (m.until === Infinity ? { ...m, from: 1 } : { ...m, from: 1, until: 1 }));
   f.cur = {};           // pending（次のターン効果）は、そのまま次の戦闘の1ターン目に効く
-  f.prevSlot = null;    // 前のターンの使用枠の制限はリセット
+  // f.prevSlot はそのまま持ち越す：フィニッシュに使った技は、次の戦闘の1ターン目も使えない
   f.stunTurn = -1;      // 行動不能は持ち越さない
   f.takenThis = 0; f.takenLast = 0;
 }

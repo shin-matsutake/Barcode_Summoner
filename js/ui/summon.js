@@ -4,6 +4,8 @@ import { dialog, confirmDialog, toast } from './dialog.js';
 import { portrait, elemIcon, EL } from './portrait.js';
 import { analyze, isValidCheckDigit } from '../core/jan.js';
 import { createFighter } from '../core/battle.js';
+import { inRoster } from './roster.js';
+import { findJan } from './summonFx.js';
 
 const KIND = ['技A', '技B', '固有'];
 const TYPE = { phys: '物理', mag: '魔法' };
@@ -47,27 +49,29 @@ export function summon(root, ctx) {
   const test = h('button', 'btn small', 'テスト用：ランダムな番号を入れる');
   test.onclick = () => { input.value = randomJan(); input.oninput(); };
   box.append(input, count, go, cam, test);
+
+  // テスト用：演出を段階ごとに試す（保存しない）
+  const demo = h('div', 'panel opt demo-box');
+  demo.append(h('p', 'sub', 'テスト用：召喚の演出を試す（保存されません）'));
+  let rank = 'normal', tier = 1;
+  const seg = (label, items, get, set) => {
+    const row = h('div', 'seg'); row.append(h('span', 'seg-l', label));
+    items.forEach(([v, l]) => { const b = h('button', 'seg-b' + (get() === v ? ' on' : ''), l); b.onclick = () => { set(v); row.querySelectorAll('.seg-b').forEach(x => x.classList.toggle('on', x === b)); }; row.append(b); });
+    return row;
+  };
+  const play = h('button', 'btn small', 'この演出を見る');
+  play.onclick = () => {
+    const jan = findJan(ctx.data, { rank, tier });
+    if (jan) ctx.go('summonFx', { jan, demo: true }); else toast('見つかりませんでした。もう一度押してください');
+  };
+  demo.append(
+    seg('格', [['normal', '1重'], ['2', '2重'], ['3', '3重'], ['shatter', '砕ける']], () => rank, v => { rank = v; }),
+    seg('運', [[0, '低'], [1, 'ふつう'], [2, '高'], [3, '最高']], () => tier, v => { tier = v; }),
+    play);
+  box.append(demo);
   wrap.append(bar, box);
   root.append(wrap);
   setTimeout(() => input.focus(), 50);
-}
-
-// ---- 召喚の演出（光の輪が広がり、シルエットから絵が現れる） ----
-export function summonFx(root, ctx, { jan }) {
-  const p = analyze(jan, ctx.data);
-  const fx = h('div', 'sfx');
-  fx.style.setProperty('--el', EL[p.monster.el].c);
-  fx.append(h('u', 'ring r1'), h('u', 'ring r2'), h('u', 'flash'));
-  const pic = h('div', 'sfx-pic'); pic.append(portrait(p.monster, { view: 'front' }));
-  const name = h('div', 'sfx-name'); name.append(h('span', '', '召喚成功'), h('b', '', p.monster.name));
-  const skip = h('button', 'sfx-skip', 'タップで進む');
-  fx.append(pic, name, skip);
-  root.append(fx);
-  let done = false;
-  const next = () => { if (done) return; done = true; ctx.go('detail', { jan, isNew: true }); };
-  fx.onclick = next;
-  const t = setTimeout(next, 3600);
-  return () => { done = true; clearTimeout(t); };
 }
 
 // ---- モンスターの詳細（召喚直後の確認と、ストックからの表示を兼ねる） ----
@@ -89,6 +93,7 @@ export function detail(root, ctx, { jan, isNew = false }) {
   const nm = h('div', 'd-name'); nm.append(elemIcon(p.monster.el), h('b', '', p.monster.name));
   head.append(nm);
   if (p.monster.desc) head.append(h('p', 'sub desc', p.monster.desc));
+  if (!isNew && inRoster(ctx, jan)) head.append(h('p', 'sub tower-tag', 'タワーの仲間（挑戦が終わるまで外せません）'));
   const nickRow = h('label', 'nick');
   nickRow.append(h('span', '', 'ニックネーム'));
   const nick = h('input'); nick.type = 'text'; nick.maxLength = 10; nick.placeholder = '10文字まで（なくてもOK）';
@@ -126,6 +131,7 @@ export function detail(root, ctx, { jan, isNew = false }) {
   const del = h('button', 'btn small danger', '魔界に戻す');
   del.onclick = async () => {
     const msg = isNew ? '魔界に戻します。この仲間は保存されません。\n同じ番号で、また召喚できます。' : 'この仲間を魔界に戻します。ストックから消えます。\n同じ番号で、また召喚できます。';
+    if (!isNew && inRoster(ctx, jan)) { await dialog({ title: '戻せません', text: 'この仲間は、タワー挑戦中の仲間です。\nタワーの「最初からやり直す」のあとで、魔界に戻せます。' }); return; }
     if (!(await confirmDialog(msg, '魔界に戻す', 'やめる'))) return;
     if (!isNew) ctx.store.update(s => { s.stock = s.stock.filter(x => x.jan !== jan); s.fav = s.fav.filter(x => x !== jan); });
     toast('魔界に戻しました'); ctx.go(isNew ? 'summon' : 'stock');

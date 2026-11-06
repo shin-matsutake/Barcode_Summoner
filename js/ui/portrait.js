@@ -4,8 +4,8 @@
 import { h } from './dom.js';
 
 export const EL = {
-  water: { ja: '水', c: '#3b8bff' }, fire: { ja: '火', c: '#ff6a3d' }, earth: { ja: '土', c: '#c0903f' },
-  wind: { ja: '風', c: '#3fbf7f' }, light: { ja: '光', c: '#f2c53d' }, dark: { ja: '闇', c: '#8366e0' },
+  water: { ja: '水', c: '#3b8bff', g: '#fff' }, fire: { ja: '火', c: '#ff6a3d', g: '#fff' }, earth: { ja: '土', c: '#b07a35', g: '#fff' },
+  wind: { ja: '風', c: '#3fbf7f', g: '#fff' }, light: { ja: '光', c: '#f4f1e0', g: '#2b2a20' }, dark: { ja: '闇', c: '#8366e0', g: '#fff' },   // c＝色、g＝丸の中の文字の色
 };
 const missing = new Set();
 const pad = n => String(n).padStart(2, '0');
@@ -24,7 +24,7 @@ function loadImage(list, onOk) {
 
 export function portrait(monster, { view = 'front', cls = '' } = {}) {
   const box = h('div', `pt pt-${view} ${cls}`.trim());
-  box.style.setProperty('--el', EL[monster.el].c);
+  box.style.setProperty('--el', EL[monster.el].c); box.style.setProperty('--g', EL[monster.el].g);
   const ph = h('div', 'pt-ph');
   ph.append(h('b', '', EL[monster.el].ja));
   box.append(ph);
@@ -36,7 +36,7 @@ export function portrait(monster, { view = 'front', cls = '' } = {}) {
 
 export function elemIcon(el, cls = '') {
   const s = h('span', `eic ${cls}`.trim());
-  s.style.setProperty('--el', EL[el].c);
+  s.style.setProperty('--el', EL[el].c); s.style.setProperty('--g', EL[el].g);
   s.append(h('i', '', EL[el].ja));
   loadImage([`images/elements/${el}.png`], img => { img.alt = EL[el].ja; s.classList.add('has-img'); s.append(img); });
   return s;
