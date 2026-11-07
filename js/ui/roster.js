@@ -6,6 +6,7 @@ import { portrait, elemIcon, EL } from './portrait.js';
 import { analyze, isValidCheckDigit } from '../core/jan.js';
 import { createFighter } from '../core/battle.js';
 import { pickMonster } from './picker.js';
+import { cameraPanel } from './scanner.js';
 import { statsGrid, skillList } from './monsterInfo.js';
 import { ROSTER_MAX } from '../storage.js';
 import { stageOf } from '../data.js';
@@ -44,9 +45,13 @@ export function resetButton(ctx, after) {
 }
 
 // 1体を仲間に加える（確認つき）。加えたら true
+const addBlock = (ctx, jan) => inRoster(ctx, jan) ? { text: 'この子は、すでに仲間です' }
+  : rosterOf(ctx).length >= ROSTER_MAX ? { title: '仲間はいっぱいです', text: `タワーの仲間は${ROSTER_MAX}体までです。\n挑戦が終わるまで、外すことはできません。` } : null;
+async function showBlock(b) { if (b.title) await dialog(b); else toast(b.text); }
+
 export async function addCompanion(ctx, jan) {
-  if (inRoster(ctx, jan)) { toast('この子は、すでに仲間です'); return false; }
-  if (rosterOf(ctx).length >= ROSTER_MAX) { await dialog({ title: '仲間はいっぱいです', text: `タワーの仲間は${ROSTER_MAX}体までです。\n挑戦が終わるまで、外すことはできません。` }); return false; }
+  const blk = addBlock(ctx, jan);
+  if (blk) { await showBlock(blk); return false; }
   const p = analyze(jan, ctx.data), f = createFighter(p), st = stockOf(ctx, jan);
   const info = `${nameOf(ctx, p)}（${EL[p.monster.el].ja}属性）\nHP ${f.maxHp}／攻撃 ${f.base.atk}／魔法攻撃 ${f.base.mat}／SPD ${f.base.spd}`;
   const warn = '仲間に加えると、タワーの挑戦が終わるまで外せません。';
@@ -114,35 +119,43 @@ export function towerRoster(root, ctx) {
 export function towerAdd(root, ctx, params = {}) {
   const { stage, teamIdx, from } = params;
   const stg = stage ? stageOf(ctx.data, stage) : null;
-  let mode = 'camera';   // camera（準備中）→ number（番号入力）
+  let mode = params.pendingJan ? 'number' : 'camera';   // camera（準備中）→ number（番号入力）
   const wrap = h('div', 'page');
   root.append(wrap);
 
   const back = () => from === 'select' ? ctx.go('select', { stage, teamIdx, restore: true }) : from === 'roster' ? ctx.go('towerRoster') : ctx.go('tower');
   // 加えたあと：ステージに必要な数がそろったら選出へ。足りなければ続けて加える
   const afterAdd = () => {
-    const n = rosterOf(ctx).length;
-    if (stg && n >= stg.rule.bring) return ctx.go('select', { stage, teamIdx, restore: from === 'select' });
-    if (n >= ROSTER_MAX) return back();
+    const roster = rosterOf(ctx);
+    if (from === 'select') return ctx.go('select', { stage, teamIdx, restore: true, addJan: roster[roster.length - 1], slot: params.slot });
+    if (roster.length >= ROSTER_MAX) return back();
     draw();
   };
 
+  // 13桁が決まったあと：召喚の演出 → 戻ってきたら、仲間に加えるかの確認
+  let cam = null;
+  const stopCam = () => { if (cam) { cam.stop(); cam = null; } };
+  const useJan = async jan => {
+    const blk = addBlock(ctx, jan);
+    if (blk) { await showBlock(blk); if (mode === 'camera') draw(); return; }
+    ctx.go('summonFx', { jan, after: { screen: 'towerAdd', params: { ...params, pendingJan: jan } } });
+  };
+
   const draw = () => {
+    stopCam();
     const roster = rosterOf(ctx), full = roster.length >= ROSTER_MAX;
     wrap.replaceChildren(backBar('仲間を加える', back, `タワーの仲間 ${roster.length}/${ROSTER_MAX}`));
     const body = h('div', 'list');
     if (stg) {
-      const need = Math.max(0, stg.rule.bring - roster.length);
-      if (need) body.append(h('div', 'panel need', `ステージ${stage}は${stg.rule.bring}体を持ち込みます。あと${need}体、仲間が必要です。`));
+      if (roster.length < stg.rule.bring) body.append(h('div', 'panel need', `ステージ${stage}は${stg.rule.bring}体まで持ち込めます（いま仲間は${roster.length}体）。少ない人数でも挑戦できますが、不利になります。`));
     }
     if (full) { body.append(h('div', 'panel need', '仲間はいっぱいです。')); wrap.append(body); return; }
 
     if (mode === 'camera') {
-      const cam = h('div', 'panel cam-box');
-      cam.innerHTML = '<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M8 20h12l4-6h16l4 6h12v32H8z"/><circle cx="32" cy="35" r="10"/><circle cx="32" cy="35" r="4"/></svg>';
-      cam.append(h('p', 'big', 'カメラで読み取る'), h('p', 'sub warn', '準備中です'));
-      const num = h('button', 'btn primary big-btn', '番号を入力する'); num.onclick = () => { mode = 'number'; draw(); };
-      body.append(cam, num);
+      const box = h('div', 'panel summon-box');
+      box.append(h('p', 'big', 'バーコードを読み取る'));
+      cam = cameraPanel({ onJan: useJan, onManual: () => { mode = 'number'; draw(); } });
+      box.append(cam.el); body.append(box);
     } else {
       const box = h('div', 'panel summon-box');
       box.append(h('p', 'big', 'バーコードの13桁の数字を入力'));
@@ -157,7 +170,7 @@ export function towerAdd(root, ctx, params = {}) {
         const jan = input.value;
         if (jan.length !== 13) return;
         if (!isValidCheckDigit(jan)) { await dialog({ title: '番号を確認してください', text: '13桁目の確認用の数字が合いません。打ち間違いがないか、もう一度見直してください。' }); return; }
-        if (await addCompanion(ctx, jan)) afterAdd();
+        useJan(jan);
       };
       ok.onclick = submit; input.onkeydown = e => { if (e.key === 'Enter') submit(); };
       const cam = h('button', 'btn small', 'カメラに戻る'); cam.onclick = () => { mode = 'camera'; draw(); };
@@ -172,6 +185,9 @@ export function towerAdd(root, ctx, params = {}) {
     };
     body.append(stk);
     wrap.append(body);
+    if (cam) cam.start();
   };
   draw();
+  if (params.pendingJan) addCompanion(ctx, params.pendingJan).then(ok => { if (ok) afterAdd(); });
+  return stopCam;
 }

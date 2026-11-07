@@ -1,6 +1,6 @@
-// 属性ルール：水→火→土→風→水（左が右に有利）／光⇔闇は相互に有利
+// 属性ルール：火→風→土→水→火（左が右に有利。火は風に、風は土に、土は水に、水は火に強い）／光⇔闇は相互に有利
 export const ELEMENTS = ['water', 'fire', 'earth', 'wind', 'light', 'dark'];
-const CYCLE = ['water', 'fire', 'earth', 'wind'];
+const CYCLE = ['fire', 'wind', 'earth', 'water'];
 export function beats(a, b) {
   const i = CYCLE.indexOf(a), j = CYCLE.indexOf(b);
   if (i >= 0 && j >= 0) return CYCLE[(i + 1) % 4] === b;

@@ -82,7 +82,7 @@ function perform(me, foe, sk, isFirst, turn, ev, who, orderOff, x = {}) {
     if (o.cond && o.cond.startsWith('after')) hits.push({ type: o.type, power: o.power, stat: o.stat, lazy: o.cond }); // 攻撃後に判定
     else if (condOk(o.cond, c)) hits.push({ type: o.type, power: o.power, stat: o.stat });
   }
-  if (x.foeSk) for (const o of ops(sk)) if (o.op === 'copyFoe' && condOk(o.cond, c)) hits.push({ type: x.foeSk.type, power: x.foeSk.power, el: x.foeSk.el }); // 相手の攻撃をコピー
+  if (x.foeSk) for (const o of ops(sk)) if (o.op === 'copyFoe' && condOk(o.cond, c)) hits.push({ type: x.foeSk.type, power: x.foeSk.power, el: x.foeSk.el, copy: true }); // 相手の攻撃をコピー
   if (x.nulled) { // 打ち消された技：「打消しが発生した場合」の追加攻撃だけが通る
     hits.length = 0;
     for (const o of ops(sk)) if (o.op === 'extra' && o.cond === 'clash') hits.push({ type: o.type, power: o.power, stat: o.stat });
@@ -98,7 +98,7 @@ function perform(me, foe, sk, isFirst, turn, ev, who, orderOff, x = {}) {
     const wasFull = foe.hp === foe.maxHp;
     foe.hp = Math.max(0, foe.hp - d); total += d; if (h.main) mainTotal += d; foe.takenThis += d;
     if (foe.hp <= 0 && C.ENDURE_FULL_HP && wasFull && !foe.endured) { foe.hp = 1; foe.endured = true; }
-    ev.push({ t: 'hit', who, skill: sk.name, dmg: d, foeHp: foe.hp });
+    ev.push({ t: 'hit', who, skill: sk.name, dmg: d, foeHp: foe.hp, extra: !h.main && !h.copy });
   };
   for (const h of hits) {
     if (foe.hp <= 0) break;
@@ -168,7 +168,8 @@ export function resolveTurn(st, slotA, slotB, rng) {
   let nullA = actA && actB && beats(sb.el, sa.el), nullB = actA && actB && beats(sa.el, sb.el);
   const orderOff = C.CLASH_CANCELS_ORDER_EFFECTS && (nullA || nullB); // 属性の打ち消し発生ターン
   const nf = (sk, isFirst, foeSk) => { const o = hasOp(sk, 'nullifyFoe'); return !!o && condOk(o.cond, { isFirst, orderOff }) && (!o.foeType || o.foeType === foeSk.type); };
-  if (actA && actB) { if (nf(sa, aFirst, sb)) nullB = true; if (nf(sb, !aFirst, sa)) nullA = true; }
+  // 属性による打ち消しが最優先。属性で勝敗が決まるターンは、技の効果による無効化（先制なら相手の攻撃を無効、など）は働かない
+  if (actA && actB && !nullA && !nullB) { if (nf(sa, aFirst, sb)) nullB = true; if (nf(sb, !aFirst, sa)) nullA = true; }
   const anyClash = nullA || nullB;
   if (anyClash) ev.push({ t: 'clash', a: nullA, b: nullB });
   const order = aFirst ? ['a', 'b'] : ['b', 'a'];

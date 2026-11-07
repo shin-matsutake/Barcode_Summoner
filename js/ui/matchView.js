@@ -70,7 +70,7 @@ export function match(root, ctx, params) {
     u.meta.replaceChildren(elemIcon(f.el, 'sm'), h('span', '', `物理耐性 ${pct(f.profile.res.phys)}　魔法耐性 ${pct(f.profile.res.mag)}`));
     const total = s.teams[w].length, remain = total - s.idx[w];
     u.dots.textContent = total > 1 ? '●'.repeat(remain) + '○'.repeat(total - remain) : '';
-    sides[w].replaceChildren(portrait(f.profile.monster, { view: w === 'a' ? 'back' : 'front' }));
+    sides[w].replaceChildren(portrait(f.profile.monster, { view: w === 'a' ? 'back' : 'front', fit: { scale: w === 'a' ? 1 : 0.9 } }));   // 相手は、少し小さく（遠近感）
     setHp(w, f.hp, f);
   }
 
@@ -80,8 +80,8 @@ export function match(root, ctx, params) {
   turnBox.append(h('span', '', 'TURN'), turnNum, rage);
   const warn = h('div', 'warn'), msg = h('div', 'msg panel'), m1 = h('div', 'm1'), m2 = h('div', 'm2');
   msg.append(m1, m2);
-  mid.append(turnBox, msg, warn);
-  arena.append(sides.b, mid, sides.a);
+  mid.append(msg, warn);
+  arena.append(sides.b, mid, sides.a, turnBox);   // ターンは、左上に重ねる（場所を節約）
 
   const timer = h('div', 'timer'), tfill = h('i'), tnum = h('b'); timer.append(tfill, tnum);
   const skills = h('div', 'skills');
@@ -238,7 +238,7 @@ export function match(root, ctx, params) {
         case 'hit': {
           const tgt = e.who === 'a' ? 'b' : 'a', hi = hitInfo(e), c = EL[hi.el].c;
           if (e.counter) say(`${nm(e.who)}の反撃！`, `${TYPE[hi.type]}攻撃　${e.dmg}ダメージ`);
-          else say([{ t: `${nm(e.who)}の` }, { t: e.skill, c }, { t: '！' }], `${TYPE[hi.type]}攻撃　${e.dmg}ダメージ`);
+          else say([{ t: `${nm(e.who)}の` }, { t: e.skill, c }, { t: e.extra ? 'の追加攻撃！' : '！' }], `${TYPE[hi.type]}攻撃　${e.dmg}ダメージ`);
           await advance(e.who);
           hitFx(tgt, e.dmg, hi.type, c); setHp(tgt, e.foeHp, view[tgt]); break;
         }

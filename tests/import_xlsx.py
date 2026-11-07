@@ -29,7 +29,7 @@ def build_monsters(path):
           'res':{'phys':r[7],'mag':r[8]},
           'unique':{'name':r[9],'el':EL[r[10]],'type':TY[r[11]],'power':r[12],'effects':ops,'text':txt},
           'desc':text_of(r[14]) if len(r)>14 else '',
-          'image':f'images/monsters/monster_{i:02d}.png'}
+          'image':f'images/monsters/M{i:03d}_F.png'}
     assert sorted(mons)==list(range(100)),'モンスターIDが0〜99そろっていません（足りない番号：%s）'%sorted(set(range(100))-set(mons))
     return [mons[i] for i in range(100)],bad
 def build_skills(path):

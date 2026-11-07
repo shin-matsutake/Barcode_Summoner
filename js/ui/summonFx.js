@@ -126,7 +126,8 @@ function buildShards(jan) {
 }
 
 // params: { jan, demo }（demo＝テスト用。保存せず、終わったら召喚の画面に戻る）
-export function summonFx(root, ctx, { jan, demo = false }) {
+// after＝{ screen, params }：演出のあとに行く画面（なければ、ふつうの召喚の詳細へ）
+export function summonFx(root, ctx, { jan, demo = false, after = null }) {
   const p = analyze(jan, ctx.data), lv = fxLevel(jan, ctx.data);
   const fx = h('div', `sfx lk${lv.tier} rk${lv.rings}${lv.shatter ? ' shat' : ''}`);
   fx.style.setProperty('--el', EL[p.monster.el].c);
@@ -140,7 +141,7 @@ export function summonFx(root, ctx, { jan, demo = false }) {
   fx.append(mc, name, h('u', 'flash'), skip);
   root.append(fx);
   let done = false;
-  const next = () => { if (done) return; done = true; demo ? ctx.go('summon') : ctx.go('detail', { jan, isNew: true }); };
+  const next = () => { if (done) return; done = true; after ? ctx.go(after.screen, after.params) : demo ? ctx.go('summon') : ctx.go('detail', { jan, isNew: true }); };
   fx.onclick = next;
   const t = setTimeout(next, lv.shatter ? 7600 : 6200);
   return () => { done = true; clearTimeout(t); };

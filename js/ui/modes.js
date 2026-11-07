@@ -15,13 +15,12 @@ function backBar(ctx, title) {
   b.onclick = () => ctx.go('top'); bar.append(b, h('h1', '', title)); return bar;
 }
 
-// ステージに入る：ステージの前の文（intro。あれば）→ 仲間が足りなければ仲間を加える画面 → 選出
+// ステージに入る：ステージの前の文（intro。あれば）→ 選出（仲間が足りなくても入れる。空き枠から召喚できる）
 export async function enterStage(ctx, n) {
   const stg = stageOf(ctx.data, n);
   if (!stg) return ctx.go('tower');
   if (stg.intro && n > ctx.store.get().tower.cleared) await story(stg.intro, `ステージ${n}`);
   const teamIdx = randomTeamIdx(stg);
-  if (ctx.store.get().tower.roster.length < stg.rule.bring) return ctx.go('towerAdd', { stage: n, teamIdx, from: 'tower' });
   ctx.go('select', { stage: n, teamIdx });
 }
 

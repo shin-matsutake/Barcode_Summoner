@@ -6,6 +6,7 @@ import { analyze, isValidCheckDigit } from '../core/jan.js';
 import { createFighter } from '../core/battle.js';
 import { inRoster } from './roster.js';
 import { findJan } from './summonFx.js';
+import { cameraPanel } from './scanner.js';
 
 const KIND = ['技A', '技B', '固有'];
 const TYPE = { phys: '物理', mag: '魔法' };
@@ -19,59 +20,90 @@ export function randomJan() { // テスト用：チェックデジットが正�
   return s + ((10 - (sum % 10)) % 10);
 }
 
-// ---- 召喚する（13桁の入力） ----
+// ---- 召喚する（最初はカメラ。「番号を入力する」で手入力） ----
 export function summon(root, ctx) {
+  let mode = 'camera', cam = null;
   const wrap = h('div', 'page');
-  const bar = h('header', 'bar');
-  const back = h('button', 'btn small', '戻る'); back.onclick = () => ctx.go('top');
-  bar.append(back, h('h1', '', '召喚する'));
-  const box = h('div', 'panel summon-box');
-  box.append(h('p', 'big', 'バーコードの13桁の数字を入力'), h('p', 'sub', '商品のバーコードの下に印刷されている数字です。'));
-  const input = h('input', 'jan-input');
-  input.type = 'text'; input.inputMode = 'numeric'; input.maxLength = 13; input.placeholder = '4901234567894';
-  input.autocomplete = 'off'; input.setAttribute('aria-label', 'バーコードの13桁');
-  const count = h('div', 'jan-count', '0/13');
-  const go = h('button', 'btn primary big-btn', '召喚する'); go.disabled = true;
-  input.oninput = () => {
-    input.value = input.value.replace(/[０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0)).replace(/\D/g, '').slice(0, 13);
-    count.textContent = `${input.value.length}/13`; go.disabled = input.value.length !== 13;
-  };
-  const submit = async () => {
-    const jan = input.value;
-    if (jan.length !== 13) return;
-    if (!isValidCheckDigit(jan)) { await dialog({ title: '番号を確認してください', text: '13桁目の確認用の数字が合いません。打ち間違いがないか、もう一度見直してください。' }); return; }
+  root.append(wrap);
+  const stopCam = () => { if (cam) { cam.stop(); cam = null; } };
+
+  // 13桁が決まったあと：召喚済みなら詳細へ、はじめてなら演出へ
+  const open = jan => {
     if (inStock(ctx, jan)) { toast('この番号はすでに召喚済みです'); ctx.go('detail', { jan }); return; }
     ctx.go('summonFx', { jan });
   };
-  go.onclick = submit;
-  input.onkeydown = e => { if (e.key === 'Enter') submit(); };
-  const cam = h('button', 'btn', 'カメラで読み取る（準備中）'); cam.disabled = true;
-  const test = h('button', 'btn small', 'テスト用：ランダムな番号を入れる');
-  test.onclick = () => { input.value = randomJan(); input.oninput(); };
-  box.append(input, count, go, cam, test);
+
+  function numberBox() {
+    const box = h('div', 'panel summon-box');
+    box.append(h('p', 'big', 'バーコードの13桁の数字を入力'), h('p', 'sub', '商品のバーコードの下に印刷されている数字です。'));
+    const input = h('input', 'jan-input');
+    input.type = 'text'; input.inputMode = 'numeric'; input.maxLength = 13; input.placeholder = '4901234567894';
+    input.autocomplete = 'off'; input.setAttribute('aria-label', 'バーコードの13桁');
+    const count = h('div', 'jan-count', '0/13');
+    const go = h('button', 'btn primary big-btn', '召喚する'); go.disabled = true;
+    input.oninput = () => {
+      input.value = input.value.replace(/[０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0)).replace(/\D/g, '').slice(0, 13);
+      count.textContent = `${input.value.length}/13`; go.disabled = input.value.length !== 13;
+    };
+    const submit = async () => {
+      const jan = input.value;
+      if (jan.length !== 13) return;
+      if (!isValidCheckDigit(jan)) { await dialog({ title: '番号を確認してください', text: '13桁目の確認用の数字が合いません。打ち間違いがないか、もう一度見直してください。' }); return; }
+      open(jan);
+    };
+    go.onclick = submit;
+    input.onkeydown = e => { if (e.key === 'Enter') submit(); };
+    const camBtn = h('button', 'btn', 'カメラで読み取る'); camBtn.onclick = () => { mode = 'camera'; draw(); };
+    const test = h('button', 'btn small', 'テスト用：ランダムな番号を入れる');
+    test.onclick = () => { input.value = randomJan(); input.oninput(); };
+    box.append(input, count, go, camBtn, test);
+    setTimeout(() => input.focus(), 50);
+    return box;
+  }
 
   // テスト用：演出を段階ごとに試す（保存しない）
-  const demo = h('div', 'panel opt demo-box');
-  demo.append(h('p', 'sub', 'テスト用：召喚の演出を試す（保存されません）'));
-  let rank = 'normal', tier = 1;
-  const seg = (label, items, get, set) => {
-    const row = h('div', 'seg'); row.append(h('span', 'seg-l', label));
-    items.forEach(([v, l]) => { const b = h('button', 'seg-b' + (get() === v ? ' on' : ''), l); b.onclick = () => { set(v); row.querySelectorAll('.seg-b').forEach(x => x.classList.toggle('on', x === b)); }; row.append(b); });
-    return row;
-  };
-  const play = h('button', 'btn small', 'この演出を見る');
-  play.onclick = () => {
-    const jan = findJan(ctx.data, { rank, tier });
-    if (jan) ctx.go('summonFx', { jan, demo: true }); else toast('見つかりませんでした。もう一度押してください');
-  };
-  demo.append(
-    seg('格', [['normal', '1重'], ['2', '2重'], ['3', '3重'], ['shatter', '砕ける']], () => rank, v => { rank = v; }),
-    seg('運', [[0, '低'], [1, 'ふつう'], [2, '高'], [3, '最高']], () => tier, v => { tier = v; }),
-    play);
-  box.append(demo);
-  wrap.append(bar, box);
-  root.append(wrap);
-  setTimeout(() => input.focus(), 50);
+  function demoBox() {
+    const demo = h('div', 'panel opt demo-box');
+    demo.append(h('p', 'sub', 'テスト用：召喚の演出を試す（保存されません）'));
+    let rank = 'normal', tier = 1;
+    const seg = (label, items, get, set) => {
+      const row = h('div', 'seg'); row.append(h('span', 'seg-l', label));
+      items.forEach(([v, l]) => { const b = h('button', 'seg-b' + (get() === v ? ' on' : ''), l); b.onclick = () => { set(v); row.querySelectorAll('.seg-b').forEach(x => x.classList.toggle('on', x === b)); }; row.append(b); });
+      return row;
+    };
+    const play = h('button', 'btn small', 'この演出を見る');
+    play.onclick = () => {
+      const jan = findJan(ctx.data, { rank, tier });
+      if (jan) ctx.go('summonFx', { jan, demo: true }); else toast('見つかりませんでした。もう一度押してください');
+    };
+    demo.append(
+      seg('格', [['normal', '1重'], ['2', '2重'], ['3', '3重'], ['shatter', '砕ける']], () => rank, v => { rank = v; }),
+      seg('運', [[0, '低'], [1, 'ふつう'], [2, '高'], [3, '最高']], () => tier, v => { tier = v; }),
+      play);
+    return demo;
+  }
+
+  function draw() {
+    stopCam();
+    const bar = h('header', 'bar');
+    const back = h('button', 'btn small', '戻る'); back.onclick = () => ctx.go('top');
+    bar.append(back, h('h1', '', '召喚する'));
+    wrap.replaceChildren(bar);
+    const body = h('div', 'list detail-body');
+    if (mode === 'camera') {
+      const box = h('div', 'panel summon-box');
+      box.append(h('p', 'big', 'バーコードを読み取る'), h('p', 'sub', '商品のバーコード（13桁）を、カメラに映してください。'));
+      cam = cameraPanel({ onJan: open, onManual: () => { mode = 'number'; draw(); } });
+      box.append(cam.el);
+      body.append(box);
+    } else {
+      body.append(numberBox(), demoBox());
+    }
+    wrap.append(body);
+    if (cam) cam.start();
+  }
+  draw();
+  return stopCam;
 }
 
 // ---- モンスターの詳細（召喚直後の確認と、ストックからの表示を兼ねる） ----

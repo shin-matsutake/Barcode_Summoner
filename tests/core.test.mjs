@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import { analyze, isValidCheckDigit, baseValue, ID_DIGITS, STAT_RULES } from '../js/core/jan.js';
 import { beats, weakAgainst } from '../js/core/rules.js';
 import { Rng } from '../js/core/rng.js';
+import { normalizeScanned } from '../js/ui/scanner.js';
 import { CONFIG } from '../js/core/rules.js';
 const DEFAULT_K = CONFIG.DAMAGE_K, DEFAULT_LS = CONFIG.LASTSTAND_THR; CONFIG.DAMAGE_K = 2; CONFIG.LASTSTAND_THR = 0; // 手計算しやすいよう、ダメージ検証だけK=2・背水なしで行う
 import { startSeries, resolveSeriesTurn, simulateSeries } from '../js/core/series.js';
@@ -14,7 +15,8 @@ let n = 0; const t = (name, fn) => { fn(); n++; console.log('ok  ' + name); };
 const rjan = r => Array.from({ length: 13 }, () => r.int(10)).join('');
 
 t('属性相性', () => {
-  assert(beats('water', 'fire') && beats('fire', 'earth') && beats('earth', 'wind') && beats('wind', 'water'));
+  assert(beats('fire', 'wind') && beats('wind', 'earth') && beats('earth', 'water') && beats('water', 'fire'));
+  assert(!beats('wind', 'fire') && !beats('earth', 'wind') && !beats('water', 'earth') && !beats('fire', 'water'));
   assert(!beats('fire', 'water') && beats('light', 'dark') && beats('dark', 'light'));
   assert(!beats('light', 'fire') && !beats('fire', 'dark'));
   assert.deepEqual(weakAgainst('light'), ['dark']);
@@ -42,24 +44,24 @@ const mk = (el, atk = 200, mat = 200, spd = 100, hp = 3000, pr = 0, mr = 0, slot
   monster: { name: 'm', el }, stats: { hp, atk, mat, spd }, res: { phys: pr, mag: mr }, slots });
 const sk = (el, type, power, effects = []) => ({ name: el + type, el, type, power, effects });
 t('ダメージ式（等倍・一致・特効・コンボ・逆補正・耐性）', () => {
-  const dummy = mk('wind');
+  const dummy = mk('earth');
   assert.equal(calcDamage(mk('fire'), sk('light', 'phys', 100), dummy, 1), (200 + 100) * 2);        // 等倍
   assert.equal(calcDamage(mk('fire'), sk('fire', 'phys', 100), dummy, 1), 600 * 1.5);                 // 一致
-  assert.equal(calcDamage(mk('fire'), sk('fire', 'phys', 100), mk('earth'), 1), 600 * 2.5);           // コンボ
+  assert.equal(calcDamage(mk('fire'), sk('fire', 'phys', 100), mk('wind'), 1), 600 * 2.5);           // コンボ
   assert.equal(calcDamage(mk('fire'), sk('water', 'phys', 100), dummy, 1), (200 + 50) * 2);           // 逆補正
-  assert.equal(calcDamage(mk('fire'), sk('light', 'phys', 100), mk('wind', 0, 0, 0, 3000, 0.3), 1), Math.round(600 * 0.7));
-  assert.equal(calcDamage(mk('fire', 1, 1), sk('light', 'phys', 0), mk('wind', 0, 0, 0, 3000, 0.9), 1), 10); // 最低保証
+  assert.equal(calcDamage(mk('fire'), sk('light', 'phys', 100), mk('earth', 0, 0, 0, 3000, 0.3), 1), Math.round(600 * 0.7));
+  assert.equal(calcDamage(mk('fire', 1, 1), sk('light', 'phys', 0), mk('earth', 0, 0, 0, 3000, 0.9), 1), 10); // 最低保証
   assert.equal(calcDamage(mk('light'), sk('dark', 'mag', 100), mk('light'), 1), (200 + 50) * 2 * 1.5);  // 光が闇技→逆補正＋特効
 });
 const slots3 = (a, b, c) => [{ slot: 0, ...a }, { slot: 1, ...b }, { slot: 2, ...c }];
 t('下剋上で無効化（技の追加効果も不発）／最低保証は無効化時に適用されない', () => {
   const stun = sk('water', 'phys', 100, [{ op: 'stun' }]);
   const A = mk('fire', 200, 200, 200, 3000, 0, 0, slots3(stun, stun, stun));
-  const B = mk('earth', 200, 200, 100, 3000, 0, 0, slots3(sk('fire', 'phys', 100), sk('fire', 'phys', 100), sk('fire', 'phys', 100)));
+  const B = mk('wind', 200, 200, 100, 3000, 0, 0, slots3(sk('fire', 'phys', 100), sk('fire', 'phys', 100), sk('fire', 'phys', 100)));
   const st = newBattle(A, B); resolveTurn(st, 0, 0, new Rng(1)); // 水技 vs 火技 → 水が勝つ
   assert.equal(A.hp, 3000); assert(B.hp < 3000); assert.equal(B.stunTurn, 2);
   const A2 = mk('fire', 200, 200, 200, 3000, 0, 0, slots3(sk('fire', 'phys', 100), sk('fire', 'phys', 100), sk('fire', 'phys', 100)));
-  const B2 = mk('earth', 200, 200, 100, 3000, 0, 0, slots3(stun, stun, stun));
+  const B2 = mk('wind', 200, 200, 100, 3000, 0, 0, slots3(stun, stun, stun));
   const st2 = newBattle(A2, B2); resolveTurn(st2, 0, 0, new Rng(1)); // 火技が水技に無効化される
   assert.equal(A2.hp, 3000 - calcDamage(B2, stun, A2, 1)); assert.equal(B2.hp, 3000);
 });
@@ -162,7 +164,7 @@ t('共通技の効果：自分の行動不能／このターン半減／次タ�
 
 t('設定：打ち消し発生ターンは先攻/後攻の効果も不発（既定はOFF）', () => {
   const mkA = () => mk('fire', 200, 200, 200, 3000, 0, 0, slots3(sk('water', 'phys', 100, [{ op: 'bonus', power: 40, cond: 'first' }]), plain, plain));
-  const mkB = () => mk('earth', 200, 200, 100, 3000, 0, 0, slots3(sk('fire', 'phys', 100), plain, plain)); // 水技が火技に勝つ
+  const mkB = () => mk('wind', 200, 200, 100, 3000, 0, 0, slots3(sk('fire', 'phys', 100), plain, plain)); // 水技が火技に勝つ
   const dmgOf = () => { const st = newBattle(mkA(), mkB()); resolveTurn(st, 0, 0, new Rng(1)); return st.log.find(e => e.t === 'hit' && e.who === 'a').dmg; };
   const off = dmgOf(); CONFIG.CLASH_CANCELS_ORDER_EFFECTS = true; const on = dmgOf(); CONFIG.CLASH_CANCELS_ORDER_EFFECTS = false;
   assert(off > on); // OFF：勝った側の先攻+40が発動／ON：発動しない
@@ -171,7 +173,7 @@ t('設定：打ち消し発生ターンは先攻/後攻の効果も不発（既�
 t('自傷（魔法）／相手の攻撃を打ち消した場合の追加攻撃／打消しが発生した場合の反撃／相手技の属性で吸収', () => {
   // 自傷：魔法ステータスで計算される
   const self = sk('fire', 'phys', 100, [{ op: 'selfAttack', power: 20, type: 'mag' }]);
-  const A1 = mk('fire', 1, 500, 200, 9999, 0, 0, slots3(self, plain, plain)), B1 = mk('wind', 1, 1, 100, 9999, 0, 0, slots3(plain, plain, plain));
+  const A1 = mk('fire', 1, 500, 200, 9999, 0, 0, slots3(self, plain, plain)), B1 = mk('earth', 1, 1, 100, 9999, 0, 0, slots3(plain, plain, plain));
   const st1 = newBattle(A1, B1); resolveTurn(st1, 0, 0, new Rng(1));
   const selfDmg = calcDamage(A1, { el: 'fire', type: 'mag', power: 20 }, A1, 1);
   const bHit = st1.log.find(e => e.t === 'hit' && e.who === 'b').dmg;
@@ -179,33 +181,33 @@ t('自傷（魔法）／相手の攻撃を打ち消した場合の追加攻撃�
   // 打ち消した場合だけ追加攻撃
   const nf = sk('water', 'phys', 60, [{ op: 'extra', type: 'phys', power: 80, cond: 'nullifiedFoe' }]);
   const hitsOf = (foeSk) => {
-    const A = mk('wind', 200, 200, 200, 99999, 0, 0, slots3(nf, nf, nf)), B = mk('wind', 200, 200, 100, 99999, 0, 0, slots3(foeSk, foeSk, foeSk));
+    const A = mk('earth', 200, 200, 200, 99999, 0, 0, slots3(nf, nf, nf)), B = mk('earth', 200, 200, 100, 99999, 0, 0, slots3(foeSk, foeSk, foeSk));
     const st = newBattle(A, B); resolveTurn(st, 0, 0, new Rng(1)); return st.log.filter(e => e.t === 'hit' && e.who === 'a').length;
   };
   assert.equal(hitsOf(sk('fire', 'phys', 60)), 2);   // 水技が火技を打ち消した → 追加攻撃あり
   assert.equal(hitsOf(sk('light', 'phys', 60)), 1);  // 打ち消していない → 本体のみ
   // 光⇔闇の相殺でも「打消しが発生した場合」の追加攻撃は通る（本体は不発）
   const ctr = sk('light', 'phys', 100, [{ op: 'extra', type: 'phys', power: 100, cond: 'clash' }, { op: 'extra', type: 'mag', power: 100, cond: 'clash' }]);
-  const A3 = mk('wind', 200, 200, 200, 3000, 0, 0, slots3(ctr, ctr, ctr)), B3 = mk('wind', 200, 200, 100, 3000, 0, 0, slots3(sk('dark', 'phys', 100), sk('dark', 'phys', 100), sk('dark', 'phys', 100)));
+  const A3 = mk('earth', 200, 200, 200, 3000, 0, 0, slots3(ctr, ctr, ctr)), B3 = mk('earth', 200, 200, 100, 3000, 0, 0, slots3(sk('dark', 'phys', 100), sk('dark', 'phys', 100), sk('dark', 'phys', 100)));
   const st3 = newBattle(A3, B3); resolveTurn(st3, 0, 0, new Rng(1));
   assert.equal(st3.log.filter(e => e.t === 'hit' && e.who === 'a').length, 2); // 追加攻撃2発
   assert(st3.log.some(e => e.t === 'nullified' && e.who === 'a')); // 本体は打ち消された
   assert.equal(A3.hp, 3000); assert(B3.hp < 3000); // Bの攻撃も相殺
   // 相手の技の属性が光なら、与えたダメージ分を回復
   const dr = sk('light', 'phys', 100, [{ op: 'drain', ratio: 1, cond: 'foeSkillEl:light' }]);
-  const A4 = mk('wind', 200, 200, 200, 3000, 0, 0, slots3(dr, dr, dr)); A4.hp = 1000;
-  const B4 = mk('wind', 200, 200, 100, 3000, 0, 0, slots3(sk('light', 'phys', 100), plain, plain));
+  const A4 = mk('earth', 200, 200, 200, 3000, 0, 0, slots3(dr, dr, dr)); A4.hp = 1000;
+  const B4 = mk('earth', 200, 200, 100, 3000, 0, 0, slots3(sk('light', 'phys', 100), plain, plain));
   const st4 = newBattle(A4, B4); resolveTurn(st4, 0, 0, new Rng(1));
   const dealt = st4.log.find(e => e.t === 'hit' && e.who === 'a').dmg, taken = st4.log.find(e => e.t === 'hit' && e.who === 'b').dmg;
   assert.equal(A4.hp, 1000 + dealt - taken);
-  const B5 = mk('wind', 200, 200, 100, 3000, 0, 0, slots3(sk('fire', 'phys', 100), plain, plain)), A5 = mk('wind', 200, 200, 200, 3000, 0, 0, slots3(dr, dr, dr)); A5.hp = 1000;
+  const B5 = mk('earth', 200, 200, 100, 3000, 0, 0, slots3(sk('fire', 'phys', 100), plain, plain)), A5 = mk('earth', 200, 200, 200, 3000, 0, 0, slots3(dr, dr, dr)); A5.hp = 1000;
   const st5 = newBattle(A5, B5); resolveTurn(st5, 0, 0, new Rng(1)); // 相手が火技なら回復しない
   assert.equal(A5.hp, 1000 - st5.log.find(e => e.t === 'hit' && e.who === 'b').dmg);
 });
 
 t('背水（検証用の設定。標準はオフ）：HPが50%以下の側の与ダメージが1.5倍', () => {
   CONFIG.LASTSTAND_THR = 0.5;
-  const a = mk('fire', 200, 200, 200, 3000, 0, 0, []), d = mk('wind', 200, 200, 200, 3000, 0, 0, []);
+  const a = mk('fire', 200, 200, 200, 3000, 0, 0, []), d = mk('earth', 200, 200, 200, 3000, 0, 0, []);
   const full = calcDamage(a, sk('light', 'phys', 100), d, 1); a.hp = 1500;
   const half = calcDamage(a, sk('light', 'phys', 100), d, 1); a.hp = 1501;
   const above = calcDamage(a, sk('light', 'phys', 100), d, 1);
@@ -222,7 +224,7 @@ const prof = (el, atk, mat, spd, hp, slots, pr = 0, mr = 0) => ({ monster: { nam
 const runTurn = (s, a, b, r) => resolveSeriesTurn(s, a, b, r);
 t('勝ち抜き：勝者のHPは持ち越し、負けた側は次の個体が全回復で登場', () => {
   const strong = prof('fire', 400, 400, 300, 5000, [plain, plain, plain]);
-  const weak = () => prof('wind', 50, 50, 500, 400, [sk('light', 'phys', 100), plain, plain]);
+  const weak = () => prof('earth', 50, 50, 500, 400, [sk('light', 'phys', 100), plain, plain]);
   const s = startSeries([strong], [weak(), weak()]); const r = new Rng(1);
   const ev = runTurn(s, 0, 0, r);
   assert(ev.some(e => e.t === 'battleEnd' && e.result === 'a'));
@@ -236,7 +238,7 @@ t('勝ち抜き：勝者のHPは持ち越し、負けた側は次の個体が全
 t('勝ち抜き：威力アップ等は持ち越し／行動不能は持ち越さない', () => {
   const buff = sk('light', 'phys', 200, [{ op: 'stat', target: 'self', stat: 'atk', mult: 1.2, duration: 'perm' }, { op: 'nextPower', n: 100 }, { op: 'selfStun' }]);
   const hero = prof('fire', 300, 300, 300, 9000, [buff, plain, plain]);
-  const mk1 = () => prof('wind', 1, 1, 1, 50, [plain, plain, plain]);
+  const mk1 = () => prof('earth', 1, 1, 1, 50, [plain, plain, plain]);
   const s = startSeries([hero], [mk1(), mk1()]); const r = new Rng(1);
   runTurn(s, 0, 0, r);                                              // 1体目を倒す（相手を倒したので行動不能にならない）
   assert.equal(s.fighters.a.stunTurn, -1);
@@ -249,7 +251,7 @@ t('勝ち抜き：威力アップ等は持ち越し／行動不能は持ち越�
 });
 t('勝ち抜き：行動不能が残っていても、次の戦闘には持ち越さない', () => {
   const hero = prof('fire', 500, 500, 500, 9000, [plain, plain, plain]);
-  const s = startSeries([hero], [prof('wind', 1, 1, 1, 50, [plain, plain, plain]), prof('wind', 1, 1, 1, 50, [plain, plain, plain])]);
+  const s = startSeries([hero], [prof('earth', 1, 1, 1, 50, [plain, plain, plain]), prof('earth', 1, 1, 1, 50, [plain, plain, plain])]);
   s.fighters.a.stunTurn = 2; // 拘束が付いた状態で倒したと仮定
   runTurn(s, 0, 0, new Rng(1));
   assert.equal(s.fighters.a.stunTurn, -1);
@@ -264,7 +266,7 @@ t('勝ち抜き：相打ちは両者退場、最後の1体どうしの相打ち�
 });
 t('勝ち抜き：判定勝ち（反動で同時に倒れた）も両者退場。最後の1体どうしは判定勝ちの側が試合の勝ち', () => {
   const rc = sk('light', 'phys', 100, [{ op: 'recoil', ratio: 0.5 }]);
-  const A = () => prof('fire', 200, 200, 500, 100, [rc, rc, rc]), B = () => prof('wind', 1, 1, 1, 600, [plain, plain, plain]);
+  const A = () => prof('fire', 200, 200, 500, 100, [rc, rc, rc]), B = () => prof('earth', 1, 1, 1, 600, [plain, plain, plain]);
   const s = startSeries([A(), A()], [B(), B()]);
   runTurn(s, 0, 0, new Rng(1));
   assert(s.log.some(e => e.t === 'judgeWin' && e.who === 'b'));
@@ -275,7 +277,7 @@ t('勝ち抜き：判定勝ち（反動で同時に倒れた）も両者退場�
   assert(e.over); assert.equal(e.result, 'b');                      // 最後の1体：自分の効果で倒れた側の負け
 });
 t('勝ち抜き：フィニッシュに使った技は、次の戦闘の1ターン目も使えない（登場した相手は制限なし）', () => {
-  const A = () => prof('fire', 500, 500, 500, 5000, [plain, plain, plain]), B = () => prof('wind', 1, 1, 1, 50, [plain, plain, plain]);
+  const A = () => prof('fire', 500, 500, 500, 5000, [plain, plain, plain]), B = () => prof('earth', 1, 1, 1, 50, [plain, plain, plain]);
   const s = startSeries([A()], [B(), B()]);
   runTurn(s, 1, 0, new Rng(1));                                       // Aが技B(枠1)で1体目を倒す
   assert.equal(s.idx.b, 1); assert.equal(s.fighters.a.prevSlot, 1);
@@ -290,9 +292,42 @@ t('勝ち抜き：CPU同士で最後まで進む（3v3を2000試合）', () => {
   assert(cnt.a > 700 && cnt.b > 700);
 });
 
+t('打ち消し：属性による打ち消しが最優先（技の効果の無効化は、属性で決まるターンには働かない）', () => {
+  const mk = (el, slots) => ({ monster: { el, name: el }, stats: { hp: 3000, atk: 100, mat: 100, spd: 50 }, res: { phys: 0, mag: 0 }, slots });
+  const sk = (el, effects) => ({ name: el + 'の技', el, type: 'phys', power: 50, kind: 'A', effects, text: '' });
+  // 風は土に有利（風の技が土の技を打ち消す）。土の技が「相手の攻撃を無効」を持っていても、風の技は通り、土は打ち消される
+  const wind = createFighter(mk('wind', [sk('wind', []), sk('wind', []), sk('wind', [])]));
+  const earth = createFighter(mk('earth', [sk('earth', [{ op: 'nullifyFoe' }, { op: 'forceFirst' }]), sk('earth', []), sk('earth', [])]));
+  const st = newBattle(wind, earth);
+  const ev = resolveTurn(st, 0, 0, new Rng(1));
+  assert(ev.some(e => e.t === 'clash' && e.b && !e.a), '土だけが打ち消される');
+  assert(wind.hp === wind.maxHp, '風は無傷');
+  assert(earth.hp < earth.maxHp, '風の攻撃は土に通る');
+});
+
+t('ヒットのイベント：追加攻撃には extra の印がつく（本体・反撃・コピーにはつかない）', () => {
+  const mk = (el, slots) => ({ monster: { el, name: el }, stats: { hp: 3000, atk: 100, mat: 100, spd: 50 }, res: { phys: 0, mag: 0 }, slots });
+  const sk = (el, effects) => ({ name: el + 'の技', el, type: 'phys', power: 50, kind: 'A', effects, text: '' });
+  const a = createFighter(mk('fire', [sk('fire', [{ op: 'extra', type: 'mag', power: 30 }]), sk('fire', []), sk('fire', [])]));
+  const b = createFighter(mk('light', [sk('light', []), sk('light', []), sk('light', [])]));
+  const hits = resolveTurn(newBattle(a, b), 0, 0, new Rng(3)).filter(e => e.t === 'hit' && e.who === 'a');
+  assert.deepEqual(hits.map(e => e.extra), [false, true]);
+});
+
+t('カメラ：読み取った文字を13桁にそろえる（UPC-Aは先頭に0を足す。検算が合わないものは使わない）', () => {
+  assert.equal(normalizeScanned('4901234567894'), '4901234567894');
+  assert.equal(normalizeScanned(' 4901234567894\n'), '4901234567894');
+  assert.equal(normalizeScanned('4901234567895'), null);          // 検算が合わない
+  assert.equal(normalizeScanned('012345678905'), '0012345678905'); // UPC-A（12桁）
+  assert.equal(normalizeScanned('012345678906'), null);
+  assert.equal(normalizeScanned('49012347'), null);                // EAN-8
+  assert.equal(normalizeScanned('abc'), null);
+  assert.equal(normalizeScanned(null), null);
+});
+
 t('タワー：data/tower.json の形式（5ステージ×3チーム、持ち込み体数、JANの妥当性）', () => {
   const tw = JSON.parse(fs.readFileSync('data/tower.json')).stages;
-  const rules = [[1, 1], [3, 1], [3, 2], [3, 3], [5, 3]];
+  const rules = [[1, 1], [2, 2], [3, 2], [3, 3], [5, 3]];
   assert.equal(tw.length, 5);
   tw.forEach((s, i) => {
     assert.equal(s.stage, i + 1); assert.deepEqual([s.rule.bring, s.rule.fight], rules[i]); assert.equal(s.teams.length, 3);
@@ -305,12 +340,12 @@ t('タワー：data/tower.json の形式（5ステージ×3チーム、持ち込
 
 t('ログ用イベント：回復・反動・自傷・即死に「量」つきのイベントが出る', () => {
   const rc = sk('light', 'phys', 100, [{ op: 'recoil', ratio: 0.25 }, { op: 'selfDamage', n: 50 }]);
-  const A = mk('fire', 200, 200, 200, 3000, 0, 0, slots3(rc, plain, plain)), B = mk('wind', 1, 1, 100, 3000, 0, 0, slots3(plain, plain, plain));
+  const A = mk('fire', 200, 200, 200, 3000, 0, 0, slots3(rc, plain, plain)), B = mk('earth', 1, 1, 100, 3000, 0, 0, slots3(plain, plain, plain));
   const st = newBattle(A, B); resolveTurn(st, 0, 0, new Rng(1));
   const hit = st.log.find(e => e.t === 'hit' && e.who === 'a'), rcv = st.log.find(e => e.t === 'selfDamage' && e.cause === 'recoil'), sd = st.log.find(e => e.t === 'selfDamage' && e.cause === 'selfDamage');
   assert.equal(rcv.n, Math.round(hit.dmg * 0.25)); assert.equal(rcv.hp, 3000 - rcv.n); assert.equal(sd.n, 50); assert.equal(sd.hp, 3000 - rcv.n - 50);
   const dr = sk('light', 'phys', 100, [{ op: 'drain', ratio: 0.5 }]);
-  const A2 = mk('fire', 200, 200, 200, 3000, 0, 0, slots3(dr, plain, plain)), B2 = mk('wind', 1, 1, 1, 3000, 0, 0, slots3(plain, plain, plain)); A2.hp = 1000;
+  const A2 = mk('fire', 200, 200, 200, 3000, 0, 0, slots3(dr, plain, plain)), B2 = mk('earth', 1, 1, 1, 3000, 0, 0, slots3(plain, plain, plain)); A2.hp = 1000;
   const st2 = newBattle(A2, B2); resolveTurn(st2, 0, 0, new Rng(1));
   const h2 = st2.log.find(e => e.t === 'heal'); assert.equal(h2.who, 'a'); assert.equal(h2.n, Math.round(st2.log.find(e => e.t === 'hit' && e.who === 'a').dmg * 0.5)); assert.equal(h2.hp, 1000 + h2.n);
   const ko = sk('light', 'phys', 100, [{ op: 'ohko', cond: 'foeEl:light' }]);
@@ -323,13 +358,13 @@ const turn1 = (A, B, sa = 0, sb = 0) => { const st = newBattle(A, B); resolveTur
 const hitsOf2 = (st, who) => st.log.filter(e => e.t === 'hit' && e.who === who);
 t('次のターンの威力加算は、技本体だけ（追加攻撃には乗らない）', () => {
   const skx = sk('light', 'phys', 100, [{ op: 'extra', type: 'mag', power: 50 }]);
-  const mkA = () => mk('fire', 200, 200, 500, 99999, 0, 0, slots3(skx, skx, skx)), B = () => mk('wind', 1, 1, 1, 99999, 0, 0, slots3(plain, plain, plain));
+  const mkA = () => mk('fire', 200, 200, 500, 99999, 0, 0, slots3(skx, skx, skx)), B = () => mk('earth', 1, 1, 1, 99999, 0, 0, slots3(plain, plain, plain));
   const base = hitsOf2(turn1(mkA(), B()), 'a'); const A2 = mkA(); A2.pending.powBonus = 100; const buf = hitsOf2(turn1(A2, B()), 'a');
   assert.equal(buf[0].dmg, (200 + 100 + 100) * 2); assert.equal(buf[1].dmg, base[1].dmg); // 追加攻撃は変わらない
 });
 t('半減の重ねがけ：次のターン効果とこのターン効果で4分の1', () => {
   const hn = sk('light', 'phys', 100, [{ op: 'halfNow', cond: 'first' }]);
-  const mkB = () => mk('wind', 200, 200, 100, 99999, 0, 0, slots3(plain, plain, plain));
+  const mkB = () => mk('earth', 200, 200, 100, 99999, 0, 0, slots3(plain, plain, plain));
   const one = hitsOf2(turn1(mk('fire', 200, 200, 500, 99999, 0, 0, slots3(hn, hn, hn)), mkB()), 'b')[0].dmg;
   const A2 = mk('fire', 200, 200, 500, 99999, 0, 0, slots3(hn, hn, hn)); A2.pending.halfN = 1; // 前のターンの「次のターン半減」
   const two = hitsOf2(turn1(A2, mkB()), 'b')[0].dmg;
@@ -337,41 +372,41 @@ t('半減の重ねがけ：次のターン効果とこのターン効果で4分�
 });
 t('攻撃後のHP条件：本体の攻撃でHPが減ったあとの値で比べる', () => {
   const mkS = op => sk('light', 'phys', 100, [{ op: 'extra', type: 'mag', power: 50, cond: op }]);
-  const run = (op, bHp) => { const A = mk('fire', 200, 200, 500, 3000, 0, 0, slots3(mkS(op), mkS(op), mkS(op))); A.hp = 500; return hitsOf2(turn1(A, mk('wind', 1, 1, 1, bHp, 0, 0, slots3(plain, plain, plain))), 'a').length; };
+  const run = (op, bHp) => { const A = mk('fire', 200, 200, 500, 3000, 0, 0, slots3(mkS(op), mkS(op), mkS(op))); A.hp = 500; return hitsOf2(turn1(A, mk('earth', 1, 1, 1, bHp, 0, 0, slots3(plain, plain, plain))), 'a').length; };
   assert.equal(run('afterFoeHpLower', 1000), 2);  // 本体で1000→400。自分500より少ない → 追加攻撃
   assert.equal(run('afterFoeHpHigher', 1000), 1);
   assert.equal(run('afterFoeHpHigher', 3000), 2);  // 3000→2400。自分500より多い
 });
 t('吸収・反動：excludeExtras で追加攻撃のダメージを含めない', () => {
   const mkSk = ex => sk('light', 'phys', 100, [{ op: 'extra', type: 'mag', power: 50 }, { op: 'drain', ratio: 0.5, excludeExtras: ex }]);
-  const heal = ex => { const A = mk('fire', 200, 200, 500, 3000, 0, 0, slots3(mkSk(ex), mkSk(ex), mkSk(ex))); A.hp = 100; const st = turn1(A, mk('wind', 1, 1, 1, 99999, 0, 0, slots3(plain, plain, plain))); return st.log.find(e => e.t === 'heal').n; };
+  const heal = ex => { const A = mk('fire', 200, 200, 500, 3000, 0, 0, slots3(mkSk(ex), mkSk(ex), mkSk(ex))); A.hp = 100; const st = turn1(A, mk('earth', 1, 1, 1, 99999, 0, 0, slots3(plain, plain, plain))); return st.log.find(e => e.t === 'heal').n; };
   assert.equal(heal(true), Math.round(600 * 0.5)); assert.equal(heal(false), Math.round((600 + 500) * 0.5));
 });
 t('次の攻撃が指定属性なら威力加算（技の属性で判定）', () => {
-  const run = el => { const A = mk('fire', 200, 200, 500, 99999, 0, 0, slots3(sk(el, 'phys', 100), plain, plain)); A.pending.powBonusEl = [{ el: 'fire', n: 100 }]; return hitsOf2(turn1(A, mk('wind', 1, 1, 1, 99999, 0, 0, slots3(plain, plain, plain))), 'a')[0].dmg; };
+  const run = el => { const A = mk('fire', 200, 200, 500, 99999, 0, 0, slots3(sk(el, 'phys', 100), plain, plain)); A.pending.powBonusEl = [{ el: 'fire', n: 100 }]; return hitsOf2(turn1(A, mk('earth', 1, 1, 1, 99999, 0, 0, slots3(plain, plain, plain))), 'a')[0].dmg; };
   assert.equal(run('fire') > run('water'), true); assert.equal(run('fire'), Math.round((200 + 200) * 2 * 1.5 * (1))); // 火の技は+100、タイプ一致1.5倍
 });
 t('素早さを攻撃力にする追加攻撃（その攻撃に限る）', () => {
   const sp = sk('light', 'phys', 100, [{ op: 'extra', type: 'phys', power: 100, stat: 'spd' }]);
-  const st = turn1(mk('fire', 1, 1, 500, 99999, 0, 0, slots3(sp, sp, sp)), mk('wind', 1, 1, 1, 99999, 0, 0, slots3(plain, plain, plain)));
+  const st = turn1(mk('fire', 1, 1, 500, 99999, 0, 0, slots3(sp, sp, sp)), mk('earth', 1, 1, 1, 99999, 0, 0, slots3(plain, plain, plain)));
   const h = hitsOf2(st, 'a'); assert.equal(h[1].dmg, (500 + 100) * 2); assert.equal(h[0].dmg, (1 + 100) * 2);
 });
 t('相手の攻撃をコピーして追加攻撃（M000型）', () => {
   const cp = sk('light', 'phys', 10, [{ op: 'forceFirst' }, { op: 'nullifyFoe' }, { op: 'copyFoe' }]);
   const foe = sk('fire', 'mag', 120);
-  const A = mk('wind', 1, 300, 1, 99999, 0, 0, slots3(cp, cp, cp)), B = mk('earth', 999, 999, 999, 99999, 0, 0, slots3(foe, foe, foe));
+  const A = mk('earth', 1, 300, 1, 99999, 0, 0, slots3(cp, cp, cp)), B = mk('wind', 999, 999, 999, 99999, 0, 0, slots3(foe, foe, foe));
   const st = turn1(A, B); assert.equal(hitsOf2(st, 'b').length, 0);                 // 相手の攻撃は打ち消される
   const h = hitsOf2(st, 'a'); assert.equal(h.length, 2); assert.equal(h[1].dmg, calcDamage(A, { el: 'fire', type: 'mag', power: 120 }, B, 1)); // 自分の能力で、相手の技の属性・種別・威力
 });
 t('反動で倒れたとき反撃し、相手を倒せばHP10で生き残る／倒せなければ負け', () => {
   const ct = sk('light', 'phys', 100, [{ op: 'recoil', ratio: 0.5 }, { op: 'counterOnSelfKO', type: 'mag', power: 130, healOnKill: 10 }]);
-  const run = bHp => { const A = mk('fire', 200, 200, 500, 100, 0, 0, slots3(ct, ct, ct)); const st = turn1(A, mk('wind', 1, 1, 1, bHp, 0, 0, slots3(plain, plain, plain))); return { st, A }; };
+  const run = bHp => { const A = mk('fire', 200, 200, 500, 100, 0, 0, slots3(ct, ct, ct)); const st = turn1(A, mk('earth', 1, 1, 1, bHp, 0, 0, slots3(plain, plain, plain))); return { st, A }; };
   const win = run(700); assert.equal(win.st.result, 'a'); assert.equal(win.A.hp, 10);   // 本体600→残り100→反撃で倒す→HP10
   const lose = run(3000); assert.equal(lose.st.result, 'b'); assert.equal(lose.A.hp, 0); // 反撃しても倒せず、反動で倒れた側の負け
 });
 t('同時に倒れたとき、反動で倒れた側が負け（勝者はHP1で残る）', () => {
   const rc = sk('light', 'phys', 100, [{ op: 'recoil', ratio: 0.5 }]);
-  const A = mk('fire', 200, 200, 500, 100, 0, 0, slots3(rc, rc, rc)), B = mk('wind', 1, 1, 1, 600, 0, 0, slots3(plain, plain, plain));
+  const A = mk('fire', 200, 200, 500, 100, 0, 0, slots3(rc, rc, rc)), B = mk('earth', 1, 1, 1, 600, 0, 0, slots3(plain, plain, plain));
   const st = turn1(A, B); assert.equal(st.result, 'b'); assert.equal(B.hp, 1); assert(st.log.some(e => e.t === 'judgeWin' && e.who === 'b')); assert(st.log.some(e => e.t === 'faint' && e.who === 'a'));
   assert(!st.log.some(e => e.t === 'faint' && e.who === 'b'));
 });

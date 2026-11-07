@@ -36,7 +36,11 @@ function backBar(ctx, title) {
 function top(root, ctx) {
   const wrap = h('div', 'top');
   const logo = h('div', 'logo');
-  logo.append(h('h1', '', TITLE), barcodeStrip(), h('p', 'sub', 'バーコードから仲間を呼び出して戦う'));
+  // ロゴ画像（images/LOGO.png）。ファイルがなければ、文字のタイトルとバーコードの帯を出す
+  const img = h('img', 'logo-img');
+  img.alt = TITLE; img.width = 793; img.height = 253; img.src = 'images/LOGO.png';
+  img.onerror = () => img.replaceWith(h('h1', '', TITLE), barcodeStrip());
+  logo.append(img, h('p', 'sub', 'バーコードから仲間を呼び出して戦う'));
   wrap.append(logo);
   const menu = h('nav', 'menu');
   const items = [
