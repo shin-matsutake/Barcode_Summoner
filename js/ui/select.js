@@ -1,6 +1,8 @@
-// 選出画面：相手の持ち込み（公開情報だけ）／自分の持ち込み（タワーの仲間から）／詳細／出撃メンバー（順番）
-import { h } from './dom.js';
-import { dialog, toast } from './dialog.js';
+// 選出画面：相手の持ち込み（公開情報だけ）／自分の持ち込み／詳細／出撃メンバー（順番）
+//   params.mode が 'code'（チームコード挑戦）… 自分の持ち込みは、ストック・番号から。仲間にいない子は「この試合だけ」も選べる
+//   それ以外（CPUタワー） … 自分の持ち込みは、タワーの仲間から
+import { h, today } from './dom.js';
+import { dialog } from './dialog.js';
 import { portrait, elemIcon, EL } from './portrait.js';
 import { analyze } from '../core/jan.js';
 import { createFighter } from '../core/battle.js';
@@ -10,16 +12,32 @@ import { stageOf } from '../data.js';
 import { ROSTER_MAX } from '../storage.js';
 
 export function select(root, ctx, params) {
+  const isCode = params.mode === 'code';
   const { stage, teamIdx, restore } = params;
-  const stg = stageOf(ctx.data, stage);
-  const { bring, fight } = stg.rule;
-  const foeTeam = stg.teams[teamIdx];
-  const foeShown = foeTeam.slice(0, bring);   // 相手の持ち込み（データのチームが多くても、持ち込み数まで）
-  const foeProf = foeShown.map(j => analyze(j, ctx.data));
-  const key = 'tower' + stage, old = restore && ctx.session[key];
+  let bring, fight, foeTeam, title, subTitle, key, goBack, matchParams;
+  if (isCode) {
+    foeTeam = params.jans; bring = foeTeam.length; fight = params.fight;
+    title = 'チームコード 選出'; key = 'code';
+    goBack = () => ctx.go('teamCode');
+    matchParams = pt => ({ kind: 'code', mineJans: pt, foeJans: foeTeam.slice(0, fight), ai: params.ai || 1, codeParams: { jans: foeTeam, fight, ai: params.ai || 1 } });
+  } else {
+    const stg = stageOf(ctx.data, stage);
+    ({ bring, fight } = stg.rule);
+    foeTeam = stg.teams[teamIdx].slice(0, bring);   // 相手の持ち込み（データのチームが多くても、持ち込み数まで）
+    title = `ステージ${stage} 選出`; key = 'tower' + stage;
+    goBack = () => ctx.go('tower');
+    matchParams = pt => ({ kind: 'tower', stage, teamIdx, mineJans: pt, foeJans: foeTeam.slice(0, fight), ai: stg.ai || 1 });
+  }
+  subTitle = `${bring}体持ち込み・${fight}体で戦う`;
+  const foeProf = foeTeam.map(j => analyze(j, ctx.data));
+  const old = restore && ctx.session[key];
   const roster = () => ctx.store.get().tower.roster;
   let pool, party, sel = -1;
-  if (old) { // やり直し：前の選び方を戻す（仲間にいない子は外す）
+  if (isCode) {
+    pool = old ? old.pool : Array(bring).fill(null);
+    party = old ? old.party.filter(i => pool[i]) : [];
+    if (!old && bring === 1 && fight === 1) party = [];
+  } else if (old) { // やり直し：前の選び方を戻す（仲間にいない子は外す）
     pool = old.pool.map(it => it && roster().includes(it.jan) ? it : null);
     party = old.party.filter(i => pool[i]);
   } else {
@@ -29,7 +47,7 @@ export function select(root, ctx, params) {
       if (pool.filter(Boolean).length <= fight) party = pool.map((x, i) => x ? i : -1).filter(i => i >= 0);
     }
   }
-  if (params.addJan && roster().includes(params.addJan) && !pool.some(x => x && x.jan === params.addJan)) {   // 仲間を加えて戻ってきたとき、タップした枠に入れる
+  if (!isCode && params.addJan && roster().includes(params.addJan) && !pool.some(x => x && x.jan === params.addJan)) {   // 仲間を加えて戻ってきたとき、タップした枠に入れる
     const i = params.slot != null && !pool[params.slot] ? params.slot : pool.findIndex(x => !x);
     if (i >= 0) { pool[i] = { jan: params.addJan }; if (party.length < fight) party.push(i); }
   }
@@ -42,6 +60,23 @@ export function select(root, ctx, params) {
 
   async function choose(i) {
     const exclude = pool.filter((x, k) => x && k !== i).map(x => x.jan);
+    if (isCode) {   // ストック・番号から選ぶ。ストックにいない子は、この試合だけか、仲間に加えるかを選ぶ
+      const r = await pickMonster(ctx, { exclude, tabs: ['stock', 'number'], title: '持ち込む仲間を選ぶ' });
+      if (!r) return;
+      const item = { jan: r.jan };
+      if (!stockOf(r.jan)) {
+        const p = analyze(r.jan, ctx.data), f = createFighter(p);
+        const c = await dialog({ title: '召喚！', text: `${p.monster.name}（${EL[p.monster.el].ja}属性）\nHP ${f.maxHp}／攻撃 ${f.base.atk}／魔法攻撃 ${f.base.mat}／SPD ${f.base.spd}`,
+          buttons: [{ label: 'やめる', value: 'x' }, { label: 'この子で戦う', value: 'once' }, { label: '仲間に加えて戦う', value: 'save', primary: true }] });
+        if (c !== 'once' && c !== 'save') return;
+        item.saveOnStart = c === 'save';
+      }
+      pool[i] = item;
+      party = party.filter(k => k !== i);
+      if (party.length < fight && bring <= fight) party.push(i);
+      sel = i; keep(); draw();
+      return;
+    }
     const avail = roster().some(j => !exclude.includes(j)), canAdd = roster().length < ROSTER_MAX;
     let how = avail ? 'pick' : 'add';
     if (avail && canAdd) {   // 仲間から選ぶか、新しく召喚するか
@@ -68,7 +103,7 @@ export function select(root, ctx, params) {
     head.append(portrait(p.monster, { view: 'icon', cls: 'sm' }));
     const t = h('div', 'info');
     t.append(h('div', 'name', st && st.nick ? `${st.nick}（${p.monster.name}）` : p.monster.name),
-      h('div', 'sub', `${EL[p.monster.el].ja}属性`));
+      h('div', 'sub', `${EL[p.monster.el].ja}属性${isCode && !st ? (it.saveOnStart ? '・仲間に加わる' : '・この試合だけ') : ''}`));
     head.append(t, elemIcon(p.monster.el));
     const grid = statsGrid(p, f), sk = skillList(p);
     const row = h('div', 'btn-row');
@@ -86,8 +121,8 @@ export function select(root, ctx, params) {
 
   function draw() {
     wrap.replaceChildren();
-    const bar = h('header', 'bar'), back = h('button', 'btn small', '戻る'); back.onclick = () => ctx.go('tower');
-    const tt = h('div'); tt.append(h('h1', '', `ステージ${stage} 選出`), h('div', 'sub', `${bring}体持ち込み・${fight}体で戦う`));
+    const bar = h('header', 'bar'), back = h('button', 'btn small', '戻る'); back.onclick = goBack;
+    const tt = h('div'); tt.append(h('h1', '', title), h('div', 'sub', subTitle));
     bar.append(back, tt); wrap.append(bar);
     const body = h('div', 'list sel-body');
 
@@ -98,7 +133,7 @@ export function select(root, ctx, params) {
     foe.append(fr);
 
     const filled = pool.filter(Boolean).length, mine = h('div', 'panel sel-sec');
-    mine.append(h('div', 'sec-l', `あなたの持ち込み（タワーの仲間から） ${filled}/${bring}`));
+    mine.append(h('div', 'sec-l', `あなたの持ち込み（${isCode ? 'ストック・番号から' : 'タワーの仲間から'}） ${filled}/${bring}`));
     const mr = h('div', 'pool'); mr.style.setProperty('--n', bring);
     pool.forEach((it, i) => {
       const c = h('button', 'pcard' + (i === sel ? ' on' : '') + (party.includes(i) ? ' in' : ''));
@@ -111,7 +146,7 @@ export function select(root, ctx, params) {
       mr.append(c);
     });
     mine.append(mr);
-    if (filled < bring) mine.append(h('p', 'sub warn', '空いている枠をタップすると、仲間を選ぶ・召喚できます（少ない人数でも挑戦できますが、不利になります）。'));
+    if (filled < bring) mine.append(h('p', 'sub warn', isCode ? '空いている枠をタップして選びます（少ない人数でも挑戦できますが、不利になります）。' : '空いている枠をタップすると、仲間を選ぶ・召喚できます（少ない人数でも挑戦できますが、不利になります）。'));
     body.append(foe, mine);
     if (sel >= 0 && pool[sel]) body.append(detailPanel());
 
@@ -136,7 +171,13 @@ export function select(root, ctx, params) {
     go.disabled = !ready;
     go.onclick = () => {
       keep();
-      ctx.go('match', { kind: 'tower', stage, teamIdx, mineJans: party.map(i => pool[i].jan), foeJans: foeTeam.slice(0, fight), ai: stg.ai || 1 });
+      if (isCode) {   // 「仲間に加えて戦う」を選んだ子を、ストックに保存する
+        ctx.store.update(s => {
+          for (const it of pool) if (it && it.saveOnStart && !s.stock.some(x => x.jan === it.jan)) s.stock.push({ jan: it.jan, nick: '', date: today() });
+        });
+        for (const it of pool) if (it) delete it.saveOnStart;   // 保存したので、やり直しのときに重ねて保存しない
+      }
+      ctx.go('match', matchParams(party.map(i => pool[i].jan)));
     };
     foot.append(go); wrap.append(foot);
   }

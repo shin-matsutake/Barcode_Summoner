@@ -238,6 +238,9 @@ input:checked+.sw::after{transform:translateX(20px);background:#06263d}
 .cam-view.ok .cam-guide{border-color:var(--green)}.cam-view.ok .cam-guide i{animation:none;background:var(--green);box-shadow:0 0 8px var(--green);top:50%}
 .cam-msg{position:absolute;inset:0;display:none;align-items:center;justify-content:center;padding:16px;text-align:center;font-size:13px;line-height:1.6;color:var(--amber);background:rgba(2,7,13,.82)}
 .cam-view.err .cam-msg{display:flex}.cam-view.err .cam-guide{display:none}
+.cam-start{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:16px;border:0;background:rgba(2,7,13,.9);color:var(--text);cursor:pointer;text-align:center}
+.cam-start b{font-size:16px;color:var(--cyan)}.cam-start span{font-size:12px;color:var(--sub);line-height:1.5}
+.cam-view.idle .cam-start{display:flex}.cam-view.idle .cam-guide{display:none}
 .cam-status{margin:0;min-height:2.6em;font-size:13px;line-height:1.5;color:var(--sub);text-align:center}
 .cam-btns{display:flex;gap:8px;flex-wrap:wrap}.cam-btns .btn{flex:1;min-width:0;padding:0 8px}.cam-btns .retry{flex-basis:100%}
 @media (prefers-reduced-motion:reduce){.cam-guide i{animation:none;top:50%}}
@@ -357,3 +360,17 @@ input:checked+.sw::after{transform:translateX(20px);background:#06263d}
 @media (max-height:720px){.skill{height:57px}.skill .sk-text{-webkit-line-clamp:2;min-height:0}.msg{min-height:42px}.hud .pt.sm{width:46px;height:46px}.skills{gap:3px}}
 /* 長い名前は途中で折り返さない（「能力値」の案内などが入りきらないときは、次の行へ） */
 .hud-name{flex-wrap:wrap;row-gap:0}.hud-name b{white-space:nowrap}
+
+/* ---- チームコード ---- */
+.code-box{width:100%;box-sizing:border-box;padding:10px;border:1px solid var(--line);border-radius:6px;background:#04101c;color:var(--text);font:14px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;word-break:break-all;resize:none}
+.code-box:focus{outline:1px solid var(--cyan)}
+.code-preview{display:flex;flex-direction:column;gap:10px}
+.row-btn.picked{border-color:var(--cyan);box-shadow:0 0 0 1px var(--cyan) inset}
+.row-btn .ord{position:static;margin-left:6px;flex:none}
+
+/* ---- 対人戦 ---- */
+.rule-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0}
+.rule-grid .seg-b{padding:10px 4px;font-size:13px}
+.pvp-wait{display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center}
+.pvp-code{font:700 44px/1.1 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.18em;color:var(--cyan);padding-left:.18em}
+.pvp-opp{margin:6px 0 0;min-height:1.4em}

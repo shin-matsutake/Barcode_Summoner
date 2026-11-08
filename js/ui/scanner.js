@@ -98,7 +98,10 @@ async function toBitmap(file) {
 const firstJan = texts => texts.map(normalizeScanned).find(Boolean) || null;
 
 // ---- 画面の部品 ----
-// onJan(jan)：読み取れた13桁。onManual()：「番号を入力する」。start() で起動、stop() で止める
+// プライバシーのため、カメラは「タップしたとき」だけ起動する。次のときは、自動で止まって、またタップが必要になる：
+//   読み取れたとき／30秒たったとき／アプリを裏に回したとき／画面を離れたとき
+// onJan(jan)：読み取れた13桁。onManual()：「番号を入力する」。stop() で止める（画面を離れるとき）
+export const AUTO_STOP_MS = 30000;
 export function cameraPanel({ onJan, onManual }) {
   const el = h('div', 'cam-panel');
   const view = h('div', 'cam-view');
@@ -107,8 +110,11 @@ export function cameraPanel({ onJan, onManual }) {
   video.setAttribute('playsinline', ''); video.setAttribute('muted', '');
   const guide = h('div', 'cam-guide'); guide.append(h('i'));
   const msg = h('div', 'cam-msg');
-  view.append(video, guide, msg);
-  const status = h('p', 'cam-status', 'カメラを起動しています…');
+  const startBtn = h('button', 'cam-start');
+  startBtn.append(h('b', '', 'タップして、カメラを起動'), h('span', '', '読み取れたとき・30秒たったときは、自動で止まります'));
+  view.append(video, guide, msg, startBtn);
+  view.classList.add('idle');
+  const status = h('p', 'cam-status', 'カメラは、タップしたときだけ起動します');
   status.setAttribute('role', 'status');
 
   const row = h('div', 'cam-btns');
@@ -119,14 +125,20 @@ export function cameraPanel({ onJan, onManual }) {
   row.append(retry, photo, manual);
   el.append(view, status, row, file);
 
-  let stream = null, timer = null, stopped = true, busy = false, last = null, count = 0;
+  let stream = null, timer = null, autoTimer = null, stopped = true, busy = false, last = null, count = 0;
   const say = t => { status.textContent = t; };
+  const onHide = () => { if (document.hidden) toIdle('アプリが裏に回ったので、カメラを止めました。'); };
   const release = () => {
-    clearInterval(timer); timer = null;
+    clearInterval(timer); timer = null; clearTimeout(autoTimer); autoTimer = null;
+    document.removeEventListener('visibilitychange', onHide); window.removeEventListener('pagehide', onHide);
     if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
     video.srcObject = null;
   };
   const stop = () => { stopped = true; release(); };
+  // カメラを止めて、「タップして起動」の状態に戻す
+  function toIdle(text) {
+    stop(); view.classList.remove('err', 'ok'); view.classList.add('idle'); msg.textContent = ''; retry.hidden = true; say(text);
+  }
   const fail = text => { release(); view.classList.add('err'); msg.textContent = text; say(''); retry.hidden = false; };
   const done = jan => {
     stop();
@@ -137,7 +149,7 @@ export function cameraPanel({ onJan, onManual }) {
 
   async function start() {
     stopped = false; last = null; count = 0; retry.hidden = true;
-    view.classList.remove('err', 'ok'); msg.textContent = ''; say('カメラを起動しています…');
+    view.classList.remove('err', 'ok', 'idle'); msg.textContent = ''; say('カメラを起動しています…');
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       return fail('この環境ではカメラが使えません。「写真で読み取る」か、番号を入力してください。');
     }
@@ -161,6 +173,8 @@ export function cameraPanel({ onJan, onManual }) {
     if (stopped) return;
     if (decoder instanceof Error) return fail('読み取りの部品を読み込めませんでした。通信を確認するか、「写真で読み取る」・番号の入力を使ってください。');
     say('13桁のバーコードを、わくの中に入れてください');
+    document.addEventListener('visibilitychange', onHide); window.addEventListener('pagehide', onHide);
+    autoTimer = setTimeout(() => toIdle('30秒たったので、カメラを止めました。もう一度、タップして起動してください。'), AUTO_STOP_MS);
     timer = setInterval(async () => {
       if (busy || stopped || video.readyState < 2) return;
       busy = true;
@@ -176,7 +190,7 @@ export function cameraPanel({ onJan, onManual }) {
     }, 140);
   }
 
-  retry.onclick = start;
+  retry.onclick = start; startBtn.onclick = start;
   manual.onclick = () => { stop(); onManual(); };
   photo.onclick = () => file.click();
   file.onchange = async () => {

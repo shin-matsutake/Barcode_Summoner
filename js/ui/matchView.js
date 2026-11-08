@@ -5,6 +5,7 @@ import { enterStage } from './modes.js';
 import { stageOf } from '../data.js';
 import { portrait, elemIcon, EL } from './portrait.js';
 import { analyze } from '../core/jan.js';
+import { beats } from '../core/rules.js';
 import { Rng } from '../core/rng.js';
 import { allowedSlots, rageMult, effStat, CONFIG } from '../core/battle.js';
 import { startSeries, resolveSeriesTurn } from '../core/series.js';
@@ -16,10 +17,16 @@ const KIND = ['技A', '技B', '固有'];
 const TYPE = { phys: '物理', mag: '魔法' };
 const pct = v => Math.round(v * 100) + '%';
 
-// params: { kind:'tower'|'quick', stage, mineJans, foeJans, ai, aiA, watch, teamIdx }
+// params: { kind:'tower'|'quick'|'code'|'pvp', stage, mineJans, foeJans, ai, aiA, watch, teamIdx, codeParams, pvp }
+// 対人戦（kind:'pvp'）：mineJans＝部屋を作った側（a）の出撃順、foeJans＝参加した側（b）の出撃順。pvp＝{ session, side:'a'|'b', seed }
+//   計算は、両方の端で、同じ向き（a＝部屋を作った側）で行う。画面だけ、自分が常に下になるよう、左右を入れ替える。
 export function match(root, ctx, params) {
   const opts = ctx.store.get().options;
-  const rng = new Rng(Date.now());
+  const pvp = params.kind === 'pvp' ? params.pvp : null;
+  const M = pvp ? pvp.side : 'a';                                 // 自分の側（計算上の）
+  const U = w => (M === 'a' ? w : (w === 'a' ? 'b' : 'a'));        // 計算上の側 → 画面の側（自分は下＝'a'）
+  const rng = new Rng(pvp ? pvp.seed : Date.now());
+  let step = 0, waitingOpp = false, connTimer = 0;
   const watch = !!params.watch, aiB = params.ai || 1, aiA = params.aiA || 1;
   const teamA = params.mineJans.map(j => analyze(j, ctx.data)), teamB = params.foeJans.map(j => analyze(j, ctx.data));
   const s = startSeries(teamA, teamB);
@@ -30,7 +37,7 @@ export function match(root, ctx, params) {
   const bt = h('div', 'bt');
   const top = h('header', 'bt-top');
   const menuBtn = h('button', 'btn small', watch ? 'やめる' : 'メニュー');
-  top.append(menuBtn, h('span', 'bt-title', params.kind === 'tower' ? `CPUタワー ステージ${params.stage}` : 'クイックバトル'));
+  top.append(menuBtn, h('span', 'bt-title', params.kind === 'tower' ? `CPUタワー ステージ${params.stage}` : params.kind === 'code' ? 'チームコード挑戦' : params.kind === 'pvp' ? '対人戦' : 'クイックバトル'));
 
   // ---- HUD（名前・HP・属性・耐性。自分側はタップで能力値） ----
   function buildHud(w) {
@@ -58,19 +65,19 @@ export function match(root, ctx, params) {
   const sides = { a: h('div', 'side me-side'), b: h('div', 'side foe-side') };
 
   function setHp(w, hp, f) {
-    const u = huds[w], r = Math.max(0, hp) / f.maxHp;
+    const u = huds[U(w)], r = Math.max(0, hp) / f.maxHp;
     u.fill.style.width = (r * 100) + '%';
     u.fill.className = r > 0.5 ? 'g' : r > 0.25 ? 'y' : 'r';
     u.num.textContent = `${Math.max(0, hp)}/${f.maxHp}`;
   }
   function showFighter(w, f) { // 登場時に、パネルと絵を入れ替える
-    const u = huds[w];
+    const u = huds[U(w)];
     u.iconSlot.replaceChildren(portrait(f.profile.monster, { view: 'icon', cls: 'sm' }));
     u.nameB.textContent = f.name;
     u.meta.replaceChildren(elemIcon(f.el, 'sm'), h('span', '', `物理耐性 ${pct(f.profile.res.phys)}　魔法耐性 ${pct(f.profile.res.mag)}`));
     const total = s.teams[w].length, remain = total - s.idx[w];
     u.dots.textContent = total > 1 ? '●'.repeat(remain) + '○'.repeat(total - remain) : '';
-    sides[w].replaceChildren(portrait(f.profile.monster, { view: w === 'a' ? 'back' : 'front', fit: { scale: w === 'a' ? 1 : 0.9 } }));   // 相手は、少し小さく（遠近感）
+    sides[U(w)].replaceChildren(portrait(f.profile.monster, { view: U(w) === 'a' ? 'back' : 'front', fit: { scale: U(w) === 'a' ? 1 : 0.9 } }));   // 相手は、少し小さく（遠近感）
     setHp(w, f.hp, f);
   }
 
@@ -98,7 +105,7 @@ export function match(root, ctx, params) {
   // メッセージは2行固定。引数は、文字列、または [{t:文字, c:色}] の配列（技名を属性の色にするため）
   const fillLine = (el, parts) => { el.replaceChildren(); for (const p of (Array.isArray(parts) ? parts : [{ t: String(parts) }])) { const sp = h('span', '', p.t); if (p.c) sp.style.color = p.c; el.append(sp); } };
   const say = (l1, l2 = '') => { fillLine(m1, l1); fillLine(m2, l2); };
-  const fa = () => s.fighters.a;
+  const fa = () => s.fighters[M];
   const gate = async () => { while (paused && alive) await new Promise(r => waiters.push(r)); };
   const wait = async ms => { await sleep(ms / speed); await gate(); };
 
@@ -122,7 +129,7 @@ export function match(root, ctx, params) {
     warn.textContent = t >= CONFIG.WARN_TURN ? `あと${CONFIG.MAX_TURNS - t + 1}ターンで相打ち` : '';
   }
   function hitFx(w, dmg, type, color) {
-    const el = sides[w];
+    const el = sides[U(w)];
     el.style.setProperty('--fx', color);   // ダメージの数字と、エフェクトは、技の属性の色
     if (opts.fx) {
       el.classList.remove('shake', 'mag'); void el.offsetWidth; el.classList.add(type === 'mag' ? 'mag' : 'shake');
@@ -134,7 +141,7 @@ export function match(root, ctx, params) {
   }
   const advance = async w => {   // 攻撃側が前に出る（自分は上へ、相手は下へ）
     if (!opts.fx) return;
-    const el = sides[w]; el.classList.remove('adv'); void el.offsetWidth; el.classList.add('adv');
+    const el = sides[U(w)]; el.classList.remove('adv'); void el.offsetWidth; el.classList.add('adv');
     await wait(260);
   };
   // 鎖と南京錠（線画）。連続して使えない技にかぶせる
@@ -190,12 +197,37 @@ export function match(root, ctx, params) {
     locked = false; say('技を選んでください'); startTimer(ok);
   }
 
-  async function commit(slotA) {
+  // 対人戦で、通信が失敗したとき（相手がやめた・切れた・返事がない・不正）
+  async function pvpFail(e) {
+    if (!alive) return;
+    alive = false; stopTimer(); clearInterval(connTimer); waiters.splice(0).forEach(r => r());
+    const code = e && e.code;
+    const text = code === 'bye' ? (e.detail === 'forfeit' ? '相手がギブアップしました。\nあなたの勝ちです！' : '相手が、対戦をやめました。')
+      : code === 'lost' ? '相手との接続が切れたまま、戻りませんでした。'
+      : code === 'timeout' ? '相手の返事が、ありませんでした。'
+      : code === 'cheat' ? '通信に、おかしなところがありました。対戦を終わります。'
+      : code === 'restart' ? '相手がアプリを開き直したので、対戦を終わります。'
+      : '通信でエラーが起きました。対戦を終わります。';
+    await dialog({ title: '対戦が終わりました', text });
+    pvp.session.close(); ctx.pvp = null; ctx.go('top');
+  }
+  async function commit(slotArg) {
     if (!alive) return;
     locked = true; stopTimer(); skills.classList.add('lock');
     const t = s.battle.turn, view = { a: s.fighters.a, b: s.fighters.b };
-    if (watch) slotA = chooseSlot(view.a, view.b, t, rng, aiA);
-    const slotB = chooseSlot(view.b, view.a, t, rng, aiB);
+    let slotA = slotArg, slotB;
+    if (pvp) {   // 自分の選択と、相手の選択を、同時に確定する。どちらも、通信で受け取った値を使う
+      waitingOpp = true; tnum.textContent = '--'; say('相手の選択を待っています…');
+      let opp;
+      try { opp = await pvp.session.turn(step++, slotArg); } catch (e) { waitingOpp = false; return pvpFail(e); }
+      waitingOpp = false; if (!alive) return;
+      const oppSide = M === 'a' ? 'b' : 'a', okOpp = allowedSlots(s.fighters[oppSide], t);
+      if (opp === null ? okOpp.length > 0 : !okOpp.includes(opp)) return pvpFail({ code: 'cheat' });   // 選べない技・動けるのに動かない、は不正
+      slotA = M === 'a' ? slotArg : opp; slotB = M === 'a' ? opp : slotArg;
+    } else {
+      if (watch) slotA = chooseSlot(view.a, view.b, t, rng, aiA);
+      slotB = chooseSlot(view.b, view.a, t, rng, aiB);
+    }
     const ev = resolveSeriesTurn(s, slotA, slotB, rng);
     const d = DELAY[opts.tempo] || 1000;
     const nm = w => view[w].name;
@@ -238,7 +270,7 @@ export function match(root, ctx, params) {
         case 'hit': {
           const tgt = e.who === 'a' ? 'b' : 'a', hi = hitInfo(e), c = EL[hi.el].c;
           if (e.counter) say(`${nm(e.who)}の反撃！`, `${TYPE[hi.type]}攻撃　${e.dmg}ダメージ`);
-          else say([{ t: `${nm(e.who)}の` }, { t: e.skill, c }, { t: e.extra ? 'の追加攻撃！' : '！' }], `${TYPE[hi.type]}攻撃　${e.dmg}ダメージ`);
+          else say([{ t: `${nm(e.who)}の` }, { t: e.skill, c }, { t: e.extra ? 'の追加攻撃！' : '！' }], `${TYPE[hi.type]}攻撃　${e.dmg}ダメージ${beats(view[tgt].el, hi.el) && !beats(hi.el, view[tgt].el) ? '　効果はいまひとつ' : ''}`);
           await advance(e.who);
           hitFx(tgt, e.dmg, hi.type, c); setHp(tgt, e.foeHp, view[tgt]); break;
         }
@@ -263,10 +295,29 @@ export function match(root, ctx, params) {
     const r = s.result;
     const text = watch ? (r === 'a' ? 'Aの勝ち！' : r === 'b' ? 'Bの勝ち！' : '引き分け') : (r === 'a' ? 'あなたの勝ち！' : r === 'b' ? 'あなたの負け…' : '引き分け');
     const retry = () => ctx.go('match', { ...params });
+    if (pvp) {   // 対人戦：再戦は、両方が押したときだけ（相手の返事を待つ）
+      const win = r === M, draw = r !== 'a' && r !== 'b';
+      const c = await dialog({ title: '決着', text: draw ? '引き分け' : win ? 'あなたの勝ち！' : 'あなたの負け…', buttons: [{ label: 'ロビーへ', value: 'lobby' }, { label: 'もう一度（再戦）', value: 'again', primary: true }] });
+      if (!alive) return;
+      if (c !== 'again') { await pvp.session.bye('leave'); ctx.pvp = null; return ctx.go('pvpLobby'); }
+      const wait = dialog({ text: '相手の返事を待っています…', buttons: [{ label: 'やめる', value: 'x' }] });
+      const done = pvp.session.rematch().then(() => 'ok', e => e);
+      const res = await Promise.race([done, wait]);
+      if (!alive) return;
+      if (res === 'ok') { wait.close(); return ctx.go('pvpSelect', {}); }
+      wait.close();
+      if (res === 'x') { await pvp.session.bye('leave'); ctx.pvp = null; return ctx.go('pvpLobby'); }
+      return pvpFail(res);
+    }
     if (params.kind === 'quick') {
       const c = await dialog({ title: '決着', text, buttons: [{ label: 'トップへ', value: 'top' }, { label: '別の2体で', value: 'new' }, { label: 'もう一度', value: 'again', primary: true }] });
       if (!alive) return;
       return c === 'again' ? retry() : c === 'new' ? ctx.go('quick') : ctx.go('top');
+    }
+    if (params.kind === 'code') {
+      const c = await dialog({ title: '決着', text, buttons: [{ label: 'チームコードへ', value: 'code' }, { label: '選出からやり直す', value: 'again', primary: true }] });
+      if (!alive) return;
+      return c === 'again' ? ctx.go('select', { mode: 'code', ...params.codeParams, restore: true }) : ctx.go('teamCode');
     }
     const stage = params.stage, stg = stageOf(ctx.data, stage), hasNext = !!stageOf(ctx.data, stage + 1);
     if (r === 'a') {
@@ -286,14 +337,23 @@ export function match(root, ctx, params) {
   menuBtn.onclick = async () => {
     stopTimer(); const remain = tLeft, wasLocked = locked; locked = true; const wasPaused = paused; paused = true;
     const quit = await confirmDialog(watch ? '観戦をやめて、戻りますか？' : 'バトルをやめて、戻りますか？', watch ? 'やめる' : 'ギブアップ', '続ける');
-    if (quit) { alive = false; waiters.splice(0).forEach(r => r()); return ctx.go(params.kind === 'quick' ? 'quick' : 'tower'); }
+    if (quit && pvp) { alive = false; stopTimer(); clearInterval(connTimer); waiters.splice(0).forEach(r => r()); await pvp.session.bye('forfeit'); ctx.pvp = null; return ctx.go('top'); }
+    if (quit) { alive = false; waiters.splice(0).forEach(r => r()); return ctx.go(params.kind === 'quick' ? 'quick' : params.kind === 'code' ? 'teamCode' : 'tower'); }
     paused = wasPaused; if (!paused) waiters.splice(0).forEach(r => r());
     locked = wasLocked; if (!watch && !wasLocked && alive) startTimer(allowedSlots(fa(), s.battle.turn), remain);
   };
 
   showFighter('a', s.fighters.a); showFighter('b', s.fighters.b);
   setTurn(1); say('');
+  if (pvp) connTimer = setInterval(() => {   // 相手がやめたら、すぐ知らせる。待っているとき、接続が切れていたら、知らせる
+    const by = pvp.session.oppBye();
+    if (by !== undefined && alive) return pvpFail({ code: 'bye', detail: by });
+    if (!waitingOpp || !alive) return;
+    const st = pvp.session.state();
+    if (!st.present) say('相手との接続が切れました', `つながるのを待っています（あと${Math.max(0, 30 - Math.floor(st.lostFor / 1000))}秒）`);
+    else say('相手の選択を待っています…');
+  }, 500);
   if (!watch) renderSkills();
   dialog({ text: params.kind === 'tower' ? `ステージ${params.stage}\nバトル開始！` : 'バトル開始！', buttons: [], auto: 1300 }).then(() => alive && beginTurn());
-  return () => { alive = false; stopTimer(); waiters.splice(0).forEach(r => r()); };
+  return () => { alive = false; stopTimer(); clearInterval(connTimer); waiters.splice(0).forEach(r => r()); };
 }

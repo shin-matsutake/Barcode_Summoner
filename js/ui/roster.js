@@ -185,7 +185,6 @@ export function towerAdd(root, ctx, params = {}) {
     };
     body.append(stk);
     wrap.append(body);
-    if (cam) cam.start();
   };
   draw();
   if (params.pendingJan) addCompanion(ctx, params.pendingJan).then(ok => { if (ok) afterAdd(); });

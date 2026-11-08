@@ -31,7 +31,9 @@ export function calcDamage(att, skill, def, turn, opts = {}) {
   let power = skill.power;
   if (weakAgainst(att.el).includes(skill.el)) power *= C.MISMATCH; // 不一致逆補正
   const match = skill.el === att.el, adv = beats(skill.el, def.el);
-  const mult = match && adv ? C.COMBO : (match || adv ? 1.5 : 1);
+  const dis = !adv && beats(def.el, skill.el);   // 不利：相手の属性が、この技の属性に強い
+  let mult = match && adv ? C.COMBO : match ? C.MATCH : adv ? C.ADV : 1;
+  if (dis) mult *= C.DISADV;
   const phys = skill.type === 'phys';
   const stat = effStat(att, opts.stat || (phys ? 'atk' : 'mat'), turn); // opts.stat='spd' なら、素早さを攻撃力として使う
   const res = opts.ignoreRes ? 0 : effStat(def, phys ? 'pres' : 'mres', turn);

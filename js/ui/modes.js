@@ -55,6 +55,13 @@ export function tower(root, ctx) {
     b.onclick = () => enterStage(ctx, stg.stage);
     list.append(b);
   }
+  // チームコード（友だちが作ったチームに挑戦する）
+  const tc = h('button', 'panel stage');
+  const tci = h('div', 'info');
+  tci.append(h('div', 'name', 'チームコードで挑戦'), h('div', 'sub', '友だちが作ったチームと、CPUとして戦う'));
+  tc.append(tci, h('span', 'st-tag', 'いつでも'));
+  tc.onclick = () => ctx.go('teamCode');
+  list.append(tc);
   const rb = resetButton(ctx, () => ctx.go('tower'));
   if (rb) list.append(rb);
   wrap.append(list); root.append(wrap);

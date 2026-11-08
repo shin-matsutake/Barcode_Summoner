@@ -8,6 +8,8 @@ import { tower, quick } from './modes.js';
 import { summon, detail } from './summon.js';
 import { summonFx } from './summonFx.js';
 import { towerRoster, towerAdd, inRoster } from './roster.js';
+import { teamCode, teamCodeMake } from './teamcodeView.js';
+import { pvpLobby, pvpSelect } from './pvpView.js';
 
 const TITLE = 'バーコード・サモナー';
 
@@ -45,7 +47,7 @@ function top(root, ctx) {
   const menu = h('nav', 'menu');
   const items = [
     ['召喚する', 'summon', '番号を入れて仲間を呼ぶ'],
-    ['対戦する', null, '友達と合言葉で対戦'],
+    ['対戦する', 'pvpLobby', '友だちと、合言葉で対戦'],
     ['CPUタワー', 'tower', `${ctx.data.tower.stages.length}つのステージに挑戦`],
     ['クイックバトル', 'quick', 'CPUどうしの対戦を観戦'],
     ['ストック', 'stock', '召喚した仲間を見る'],
@@ -67,6 +69,10 @@ function stock(root, ctx) {
   wrap.append(backBar(ctx, 'ストック'));
   const list = h('div', 'list');
   const items = ctx.store.get().stock;
+  if (items.length) {
+    const mk = h('button', 'btn small', 'チームコードを作る');
+    mk.onclick = () => ctx.go('teamCodeMake'); list.append(mk);
+  }
   if (!items.length) {
     const e = h('div', 'panel empty');
     e.append(h('p', 'big', 'まだ誰も召喚していません'), h('p', 'sub', 'トップの「召喚する」から番号を入れると、ここに仲間が並びます。'));
@@ -157,4 +163,4 @@ function options(root, ctx) {
   root.append(wrap);
 }
 
-export const screens = { top, stock, options, summon, summonFx, detail, tower, towerRoster, towerAdd, quick, select, match };
+export const screens = { top, stock, options, summon, summonFx, detail, tower, towerRoster, towerAdd, teamCode, teamCodeMake, pvpLobby, pvpSelect, quick, select, match };

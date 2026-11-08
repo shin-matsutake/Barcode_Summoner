@@ -4,8 +4,11 @@ import { analyze, isValidCheckDigit, baseValue, ID_DIGITS, STAT_RULES } from '..
 import { beats, weakAgainst } from '../js/core/rules.js';
 import { Rng } from '../js/core/rng.js';
 import { normalizeScanned } from '../js/ui/scanner.js';
+import { encodeTeam, parseTeam } from '../js/core/teamcode.js';
 import { CONFIG } from '../js/core/rules.js';
 const DEFAULT_K = CONFIG.DAMAGE_K, DEFAULT_LS = CONFIG.LASTSTAND_THR; CONFIG.DAMAGE_K = 2; CONFIG.LASTSTAND_THR = 0; // 手計算しやすいよう、ダメージ検証だけK=2・背水なしで行う
+const DEFAULT_MULT = { MATCH: CONFIG.MATCH, ADV: CONFIG.ADV, COMBO: CONFIG.COMBO, DISADV: CONFIG.DISADV };
+Object.assign(CONFIG, { MATCH: 1.5, ADV: 1.5, COMBO: 2.5, DISADV: 1 }); // 既存の手計算のテストは、旧い倍率（一致1.5・両方2.5・不利なし）で行う
 import { startSeries, resolveSeriesTurn, simulateSeries } from '../js/core/series.js';
 import { rageMult, calcDamage, createFighter, newBattle, resolveTurn, simulate, allowedSlots } from '../js/core/battle.js';
 const data = {
@@ -314,6 +317,22 @@ t('ヒットのイベント：追加攻撃には extra の印がつく（本体�
   assert.deepEqual(hits.map(e => e.extra), [false, true]);
 });
 
+t('属性の倍率：一致1.2・有利1.5・両方2.0・不利0.8（光↔闇は不利なし）・逆補正0.5', () => {
+  const sv = { ...CONFIG }; Object.assign(CONFIG, DEFAULT_MULT);
+  try {
+    assert.deepEqual({ M: CONFIG.MATCH, A: CONFIG.ADV, C: CONFIG.COMBO, D: CONFIG.DISADV }, { M: 1.2, A: 1.5, C: 2.0, D: 0.8 });
+    const base = calcDamage(mk('fire'), sk('earth', 'phys', 100), mk('earth'), 1);   // 一致でも有利でも不利でもない＝等倍
+    const near = (x, r) => assert(Math.abs(x - base * r) <= 1, `${x} ≠ ${base} × ${r}`);
+    near(calcDamage(mk('fire'), sk('fire', 'phys', 100), mk('earth'), 1), 1.2);       // 一致
+    near(calcDamage(mk('fire'), sk('wind', 'phys', 100), mk('earth'), 1), 1.5);       // 有利（風は土に強い）
+    near(calcDamage(mk('fire'), sk('fire', 'phys', 100), mk('wind'), 1), 2.0);        // 両方（火は風に強い）
+    near(calcDamage(mk('fire'), sk('earth', 'phys', 100), mk('wind'), 1), 0.8);       // 不利（風は土に強い＝土の技は風に通りにくい）
+    near(calcDamage(mk('fire'), sk('fire', 'phys', 100), mk('water'), 1), 0.96);      // 一致×不利（水は火に強い）
+    near(calcDamage(mk('light'), sk('light', 'phys', 100), mk('dark'), 1), 2.0);      // 光↔闇は互いに有利。不利は重ならない
+    assert.equal(calcDamage(mk('light'), sk('dark', 'phys', 100), mk('light'), 1), (200 + 50) * 2 * 1.5);   // 光が闇の技：逆補正（威力半分）×有利（闇は光に強い）
+  } finally { Object.assign(CONFIG, sv); }
+});
+
 t('カメラ：読み取った文字を13桁にそろえる（UPC-Aは先頭に0を足す。検算が合わないものは使わない）', () => {
   assert.equal(normalizeScanned('4901234567894'), '4901234567894');
   assert.equal(normalizeScanned(' 4901234567894\n'), '4901234567894');
@@ -323,6 +342,25 @@ t('カメラ：読み取った文字を13桁にそろえる（UPC-Aは先頭に0
   assert.equal(normalizeScanned('49012347'), null);                // EAN-8
   assert.equal(normalizeScanned('abc'), null);
   assert.equal(normalizeScanned(null), null);
+});
+
+t('チームコード：作る・読む（長さ・重複・全角・区切りの文字。検算はしない）', () => {
+  const A = '4901234567894', B = '4500000000018', C = '2701013043692';
+  assert.equal(encodeTeam([A]), '1' + A);
+  assert.equal(encodeTeam([A, B, C]), '3' + A + B + C);
+  assert.deepEqual(parseTeam(encodeTeam([A, B])), { ok: true, jans: [A, B] });
+  assert.deepEqual(parseTeam(' 2 ' + A + '\n' + B + ' ').jans, [A, B]);                 // 空白・改行は無視
+  assert.deepEqual(parseTeam('２' + A + B).jans, [A, B]);                                // 全角の数字
+  assert.equal(parseTeam('').ok, false);
+  assert.equal(parseTeam('abc').ok, false);
+  assert.equal(parseTeam('0' + A).ok, false);                                            // 体数が0
+  assert.equal(parseTeam('6' + A).ok, false);                                            // 体数が6
+  assert.match(parseTeam('2' + A).error, /長さが合いません/);                              // 欠けている
+  assert.equal(parseTeam('1' + '4901234567895').ok, true);                               // 13桁目の検算は、コードでは見ない（仕様書どおり）
+  assert.match(parseTeam('2' + A + A).error, /重なって/);                                // 重複
+  assert.equal(encodeTeam([A, B, C, '9339835287081', '6354601642041']).length, 66);       // 最大66桁
+  assert.throws(() => encodeTeam([]));
+  assert.throws(() => encodeTeam([A, B, C, A, B, C]));
 });
 
 t('タワー：data/tower.json の形式（5ステージ×3チーム、持ち込み体数、JANの妥当性）', () => {
@@ -416,7 +454,7 @@ t('同じシードなら同じ結果（対人戦の一致）', () => {
   assert.equal(run(), run());
 });
 t('大量対戦：平均ターン・相打ち率・先攻勝率', () => {
-  CONFIG.DAMAGE_K = DEFAULT_K; CONFIG.LASTSTAND_THR = DEFAULT_LS;
+  CONFIG.DAMAGE_K = DEFAULT_K; CONFIG.LASTSTAND_THR = DEFAULT_LS; Object.assign(CONFIG, DEFAULT_MULT);
   const r = new Rng(42); const N = 20000; let turns = 0, draws = 0, ge10 = 0, fastWin = 0, fastN = 0;
   for (let i = 0; i < N; i++) {
     const A = analyze(rjan(r), data), B = analyze(rjan(r), data);

@@ -3,6 +3,7 @@ import * as store from './storage.js';
 import { screens } from './ui/screens.js';
 import { closeAllDialogs } from './ui/dialog.js';
 import { h } from './ui/dom.js';
+import { initBackNav } from './ui/backnav.js';
 
 const root = document.getElementById('screen');
 const ctx = { data: null, store, go, session: {} };
@@ -23,6 +24,7 @@ async function boot() {
   try {
     ctx.data = await loadData();
     go('top');
+    initBackNav(root, ctx);
   } catch (e) {
     console.error(e);
     const box = h('div', 'panel boot-error');

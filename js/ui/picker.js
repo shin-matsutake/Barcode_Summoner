@@ -52,7 +52,7 @@ export function pickMonster(ctx, { exclude = [], tabs = ['stock', 'number'], tit
       }
     };
     for (const t of tabs) { const b = h('button', 'seg-b', names[t]); b.dataset.t = t; b.onclick = () => show(t); seg.append(b); }
-    const cancel = h('button', 'btn small', 'やめる'); cancel.onclick = () => close(null);
+    const cancel = h('button', 'btn small', 'やめる'); cancel.onclick = () => close(null); cancel.dataset.back = '1';
     box.append(seg, body, cancel);
     back.append(box);
     document.getElementById('dialog').append(back);

@@ -100,7 +100,6 @@ export function summon(root, ctx) {
       body.append(numberBox(), demoBox());
     }
     wrap.append(body);
-    if (cam) cam.start();
   }
   draw();
   return stopCam;

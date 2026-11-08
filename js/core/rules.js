@@ -9,9 +9,10 @@ export function beats(a, b) {
 // その属性に対して有利な属性の一覧（＝弱点属性）
 export function weakAgainst(el) { return ELEMENTS.filter(x => beats(x, el)); }
 export const CONFIG = {
-  DAMAGE_K: 1.4,      // 基本ダメージ係数（2→1.4に変更。テンポ調整用）
+  DAMAGE_K: 1.2,      // 基本ダメージ係数（2→1.4→1.2。テンポ調整用）
   MIN_DMG: 10,        // 最低保証ダメージ（無効化されなかった技のみ）
-  MATCH: 1.5, ADV: 1.5, COMBO: 2.5, MISMATCH: 0.5,
+  // 属性の倍率：一致（技の属性＝自分の属性）／有利（技の属性が、相手の属性に強い）／両方／不利（相手の属性が、技の属性に強い。光↔闇は互いに有利なので対象外）／逆補正（自分の属性に強い属性の技は、威力が半分）
+  MATCH: 1.2, ADV: 1.5, COMBO: 2.0, DISADV: 0.8, MISMATCH: 0.5,
   RAGE_START: 4, RAGE_STEP: 0.5,   // 4ターン目1.5倍、以降+0.5ずつ
   MAX_TURNS: 10, WARN_TURN: 8,     // 10ターン終了時に決着なし→相打ち
   STAT_MIN: 0.5, STAT_MAX: 2.0,    // 能力変化の倍率範囲（仮）
