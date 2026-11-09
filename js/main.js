@@ -14,6 +14,8 @@ export function go(name, params = {}) {
   closeAllDialogs();
   root.replaceChildren();
   root.dataset.screen = name;
+  const app = document.getElementById('app');   // 切り替えのスキャン線
+  if (app) { app.classList.remove('scan'); void app.offsetWidth; app.classList.add('scan'); }
   const fn = screens[name];
   if (!fn) { console.error('画面がありません:', name); return; }
   cleanup = fn(root, ctx, params) || null;

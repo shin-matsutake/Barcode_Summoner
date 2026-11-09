@@ -293,7 +293,7 @@ input:checked+.sw::after{transform:translateX(20px);background:#06263d}
 .watch-ctl{display:flex;gap:8px}.watch-ctl .btn{flex:1}
 /* ピッカー（モンスターを選ぶ） */
 .pick{max-height:86dvh;overflow:auto;display:flex;flex-direction:column;gap:10px}
-.pick-body{display:flex;flex-direction:column;gap:8px;max-height:46dvh;overflow:auto}
+.pick-body{display:flex;flex-direction:column;gap:8px;max-height:56dvh;overflow:auto}
 .pick-row{display:flex;align-items:center;gap:10px;padding:6px 8px;border:1px solid var(--line);background:var(--panel2);border-radius:4px;text-align:left;cursor:pointer;color:var(--text)}
 .pick-row .name{font-weight:600;font-size:14px}
 .pt.xs{flex:none;width:44px;height:44px;border:1px solid var(--line);border-radius:6px;background:#081a2c;overflow:hidden}
@@ -374,3 +374,61 @@ input:checked+.sw::after{transform:translateX(20px);background:#06263d}
 .pvp-wait{display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center}
 .pvp-code{font:700 44px/1.1 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.18em;color:var(--cyan);padding-left:.18em}
 .pvp-opp{margin:6px 0 0;min-height:1.4em}
+.cam-note{margin:2px 0 0;font-size:11px;line-height:1.5;color:var(--sub);text-align:center}
+.dlg.pick .cam-view{max-height:24dvh}
+
+/* 画像の表示：ふわっと出す。仮の丸は、読み込みが遅いときだけ出す */
+.pt img{animation:imgin .25s ease backwards}
+.pt-ph{animation:phin .2s ease .35s backwards}.pt.ph-now .pt-ph{animation:none}
+@keyframes imgin{from{opacity:0}}@keyframes phin{from{opacity:0}}
+@media (prefers-reduced-motion:reduce){.pt img,.pt-ph{animation:none}}
+
+/* =====================================================================
+   デジタルな枠：面取りの角＋バーコードの飾り＋ロゴのオレンジ（主ボタンだけ）
+   画像は使わない（CSSと、とても小さなSVGだけ）。枠の形は --cut（角を切る大きさ）で変えられる
+   ===================================================================== */
+:root{--orange:#f08a2c;--orange-hi:#ffa24d;--orange-ink:#2a1604;--cut:10px;--barcode:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='6' fill='%2362e6ff'%3E%3Crect x='0' width='2' height='6'/%3E%3Crect x='4' width='1' height='6'/%3E%3Crect x='7' width='3' height='6'/%3E%3Crect x='12' width='1' height='6'/%3E%3Crect x='15' width='2' height='6'/%3E%3Crect x='19' width='1' height='6'/%3E%3Crect x='22' width='3' height='6'/%3E%3Crect x='27' width='1' height='6'/%3E%3Crect x='30' width='2' height='6'/%3E%3Crect x='34' width='1' height='6'/%3E%3Crect x='37' width='3' height='6'/%3E%3Crect x='42' width='1' height='6'/%3E%3Crect x='45' width='2' height='6'/%3E%3Crect x='49' width='1' height='6'/%3E%3Crect x='52' width='3' height='6'/%3E%3Crect x='57' width='2' height='6'/%3E%3Crect x='61' width='1' height='6'/%3E%3C/svg%3E")}
+.panel,.btn,.seg-b{position:relative;isolation:isolate;border:0;border-radius:0;
+  clip-path:polygon(var(--cut) 0,100% 0,100% calc(100% - var(--cut)),calc(100% - var(--cut)) 100%,0 100%,0 var(--cut))}
+.panel::before,.btn::before,.seg-b::before{content:"";position:absolute;inset:1px;z-index:-1;pointer-events:none;border:0;width:auto;height:auto;
+  clip-path:polygon(calc(var(--cut) - .6px) 0,100% 0,100% calc(100% - var(--cut) + .6px),calc(100% - var(--cut) + .6px) 100%,0 100%,0 calc(var(--cut) - .6px))}
+/* パネル */
+.panel{background:var(--line)}
+.panel::before{background:rgba(13,42,69,.93)}
+.panel::after{content:"";position:absolute;top:4px;right:calc(var(--cut) + 6px);left:auto;bottom:auto;width:30px;height:6px;border:0;background:var(--barcode) no-repeat;opacity:.45;pointer-events:none}
+/* ボタン：ふつう＝シアンの縁／主ボタン＝オレンジ */
+.btn{--cut:8px;background:var(--line);color:var(--text)}
+.btn::before{background:var(--panel)}
+.btn:active::before{background:var(--panel2)}
+.btn.small{--cut:6px}
+.btn.primary{background:var(--orange);color:var(--orange-ink)}
+.btn.primary::before{background:var(--orange)}
+.btn.primary:active::before{background:var(--orange-hi)}
+.btn.danger{background:#7a2f2b;color:var(--red)}
+.btn:focus-visible{outline:none}.btn:focus-visible::before{background:#17496e}.btn.primary:focus-visible::before{background:var(--orange-hi)}
+.btn:disabled{opacity:.42}
+/* 切り替えのボタン */
+.seg-b{--cut:6px;background:var(--line);color:var(--text)}
+.seg-b::before{background:rgba(13,42,69,.75)}
+.seg-b.on{background:var(--cyan);color:#06263d}.seg-b.on::before{background:var(--cyan)}
+/* 小さな札・枠 */
+.pcard,.slot,.pick-row{clip-path:polygon(6px 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%,0 6px)}
+/* 見出しの下に、バーコードの飾り */
+.bar h1::after{content:"";display:block;width:44px;height:6px;margin-top:4px;background:var(--barcode) no-repeat;opacity:.8}
+.sec-l::after{content:"";display:inline-block;width:26px;height:5px;margin-left:8px;vertical-align:middle;background:var(--barcode) no-repeat;opacity:.55}
+/* HPバー：バーコードのような、細かい区切り */
+.hp-bar{position:relative;border-radius:0}.hp-bar i{border-radius:0}
+.hp-bar::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(90deg,transparent 0 5px,rgba(6,16,28,.85) 5px 6px)}
+.timer{border-radius:2px}
+/* 数字は、そろった幅で */
+.hp-num,.jan-count,.pvp-code,.code-box,.stat b,.hud-stats b,.ver,.st-tag,.rp-n{font-variant-numeric:tabular-nums}
+.hp-num,.pvp-code,.jan-count,.ver{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+/* ロゴの光（シアンの発光）は、控えめに */
+.logo-img{filter:drop-shadow(0 0 8px rgba(98,230,255,.16))}
+/* 画面の切り替え：スキャン線が走る */
+#app.scan::after{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:var(--orange);box-shadow:0 0 10px var(--orange);z-index:60;pointer-events:none;animation:sweep .42s ease-out both}
+#app.scan #screen{animation:screenin .22s ease-out}
+@keyframes sweep{from{top:0;opacity:1}to{top:100%;opacity:0}}
+@keyframes screenin{from{opacity:0;transform:translateY(4px)}}
+@media (prefers-reduced-motion:reduce){#app.scan::after,#app.scan #screen{animation:none}}
+.menu-btn.primary .ms{color:#5a3612}

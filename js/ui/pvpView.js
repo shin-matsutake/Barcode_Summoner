@@ -7,7 +7,8 @@ import { createFighter } from '../core/battle.js';
 import { pickMonster } from './picker.js';
 import { statsGrid, skillList } from './monsterInfo.js';
 import { openRoom, netKind } from '../net/transport.js';
-import { createSession, RULES, ruleLabel } from '../net/session.js';
+import { createSession, ruleLabel } from '../net/session.js';
+import { formationPanel, summonPanel } from './ruleui.js';
 
 export const endPvp = ctx => { if (ctx.pvp) { try { ctx.pvp.session.close(); } catch (e) { /* 何もしない */ } ctx.pvp = null; } };
 
@@ -27,10 +28,11 @@ const bar = (title, onBack, sub) => {
 };
 const randomCode = () => String(globalThis.crypto.getRandomValues(new Uint32Array(1))[0] % 1000000).padStart(6, '0');
 
-// ---- ロビー ----
+// ---- ゲート（部屋）：ゲートを開く／ゲートに入る ----
 export function pvpLobby(root, ctx) {
   endPvp(ctx);
-  let mode = 'menu', rule = RULES[4], code = '', session = null, cancelled = false, hintTimer = 0;
+  let mode = 'menu', code = '', session = null, cancelled = false, hintTimer = 0;
+  const rule = { bring: 3, fight: 3, summon: 'stock' };
   const wrap = h('div', 'page'); root.append(wrap);
   const cleanup = () => { cancelled = true; clearTimeout(hintTimer); if (session && !ctx.pvp) { session.close(); session = null; } };
 
@@ -43,9 +45,9 @@ export function pvpLobby(root, ctx) {
       if (cancelled) { tr.leave(); return; }
       session = createSession(tr, { host, version: ctx.data.version });
       if (status) status.textContent = host ? '相手を待っています…' : 'つないでいます…';
-      const r = await session.handshake(host ? rule : undefined);
+      const r = await session.handshake(host ? { ...rule } : undefined);
       if (cancelled) return;
-      ctx.pvp = { session, rule: r, host, code };
+      ctx.pvp = { session, rule: { ...r, summon: r.summon || 'stock' }, host, code };
       ctx.go('pvpSelect', {});
     } catch (e) {
       if (cancelled) return;
@@ -56,32 +58,34 @@ export function pvpLobby(root, ctx) {
   }
 
   function draw() {
-    wrap.replaceChildren(bar('対戦する', () => { cleanup(); ctx.go('top'); }));
+    wrap.replaceChildren(bar('リンクバトル', () => { if (mode === 'menu') { cleanup(); ctx.go('battleMenu'); } else { cleanup(); mode = 'menu'; draw(); } }));
     const body = h('div', 'list detail-body');
     if (netKind() === 'local') body.append(h('p', 'sub warn', 'テスト用：同じブラウザの、別のタブとつながります'));
     if (mode === 'wait') {
       const box = h('div', 'panel pvp-wait');
-      box.append(h('div', 'sec-l', code ? '合言葉' : ''), h('div', 'pvp-code', code), h('p', 'sub pvp-status', 'つないでいます…'));
+      box.append(h('div', 'sec-l', code ? 'ゲートキー' : ''), h('div', 'pvp-code', code), h('p', 'sub pvp-status', 'つないでいます…'));
       const hint = h('p', 'sub warn pvp-hint', 'つながりにくいときは、両方が同じWi-Fiにつなぐか、アプリを開き直して、もう一度試してください。'); hint.hidden = true;
       const cancel = h('button', 'btn', 'やめる'); cancel.onclick = () => { cleanup(); mode = 'menu'; draw(); };
       box.append(hint, cancel); body.append(box);
-    } else {
-      const mk = h('div', 'panel sel-sec');
-      mk.append(h('div', 'sec-l', '部屋を作る（合言葉を、友だちに伝えます）'));
-      const seg = h('div', 'rule-grid');
-      RULES.forEach(r => { const b = h('button', 'seg-b' + (r === rule ? ' on' : ''), ruleLabel(r)); b.onclick = () => { rule = r; seg.querySelectorAll('.seg-b').forEach(x => x.classList.toggle('on', x === b)); }; seg.append(b); });
-      const create = h('button', 'btn primary big-btn', '部屋を作る');
-      create.onclick = () => { code = randomCode(); connect(true); };
-      mk.append(seg, create);
+    } else if (mode === 'setup') {   // ゲートを開く：条件を決めて、「決定」で、ゲートができる
+      body.append(formationPanel(rule), summonPanel(rule));
+      const open = h('button', 'btn primary big-btn', 'ゲートを開く');
+      open.onclick = () => { code = randomCode(); connect(true); };
+      body.append(open, h('p', 'sub', '開いたゲートの「ゲートキー」を、友だちに伝えてください。'));
+    } else if (mode === 'join') {
       const jn = h('div', 'panel sel-sec');
-      jn.append(h('div', 'sec-l', '部屋に入る（友だちの合言葉を入れます）'));
-      const input = h('input', 'jan-input'); input.type = 'text'; input.inputMode = 'numeric'; input.maxLength = 6; input.placeholder = '000000'; input.autocomplete = 'off'; input.setAttribute('aria-label', '合言葉（6桁）');
-      const go = h('button', 'btn primary big-btn', 'つなぐ'); go.disabled = true;
+      jn.append(h('div', 'sec-l', '友だちのゲートキー（6桁）を入れます'));
+      const input = h('input', 'jan-input'); input.type = 'text'; input.inputMode = 'numeric'; input.maxLength = 6; input.placeholder = '000000'; input.autocomplete = 'off'; input.setAttribute('aria-label', 'ゲートキー（6桁）');
+      const go = h('button', 'btn primary big-btn', 'ゲートに入る'); go.disabled = true;
       input.oninput = () => { input.value = input.value.replace(/[０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0)).replace(/\D/g, '').slice(0, 6); go.disabled = input.value.length !== 6; };
       go.onclick = () => { code = input.value; connect(false); };
       input.onkeydown = e => { if (e.key === 'Enter' && !go.disabled) go.click(); };
-      jn.append(input, go);
-      body.append(mk, jn, h('p', 'sub', '自分のスマホどうしでも、友だちとでも、遊べます。モバイル回線どうしだと、つながらないことがあります。'));
+      jn.append(input, go); body.append(jn);
+      setTimeout(() => input.focus(), 30);
+    } else {
+      const open = h('button', 'btn primary big-btn', 'ゲートを開く'); open.onclick = () => { mode = 'setup'; draw(); };
+      const join = h('button', 'btn big-btn', 'ゲートに入る'); join.onclick = () => { mode = 'join'; draw(); };
+      body.append(open, join, h('p', 'sub', '自分のスマホどうしでも、友だちとでも、遊べます。モバイル回線どうしだと、つながらないことがあります。'));
     }
     wrap.append(body);
   }
@@ -125,10 +129,11 @@ export function pvpSelect(root, ctx) {
 
   async function chooseFree(i) {
     const exclude = pool.filter((x, k) => x && k !== i).map(x => x.jan);
-    const r = await pickMonster(ctx, { exclude, tabs: ['stock', 'number'], title: '持ち込む仲間を選ぶ' });
+    const live = rule.summon === 'live';   // ライブスキャン：ストックは使わない
+    const r = await pickMonster(ctx, { exclude, tabs: live ? ['summon'] : ['stock', 'summon'], title: '持ち込む仲間を選ぶ' });
     if (!r) return;
     const item = { jan: r.jan };
-    if (!stockOf(r.jan)) {
+    if (!live && !stockOf(r.jan)) {
       const p = analyze(r.jan, ctx.data), f = createFighter(p);
       const c = await dialog({ title: '召喚！', text: `${p.monster.name}（${EL[p.monster.el].ja}属性）\nHP ${f.maxHp}／攻撃 ${f.base.atk}／魔法攻撃 ${f.base.mat}／SPD ${f.base.spd}`,
         buttons: [{ label: 'やめる', value: 'x' }, { label: 'この子で戦う', value: 'once' }, { label: '仲間に加えて戦う', value: 'save', primary: true }] });
@@ -156,7 +161,7 @@ export function pvpSelect(root, ctx) {
 
   function draw() {
     wrap.replaceChildren();
-    wrap.append(bar(phase === 'pool' ? '対人戦 持ち込み' : '対人戦 出撃メンバー', async () => {
+    wrap.append(bar(phase === 'pool' ? 'リンクバトル 持ち込み' : 'リンクバトル 出撃メンバー', async () => {
       if (await confirmDialog('対戦をやめて、戻りますか？', 'やめる', '続ける')) { alive = false; await session.bye('leave'); ctx.pvp = null; ctx.go('top'); }
     }, ruleLabel(rule)));
     const body = h('div', 'list sel-body');

@@ -102,6 +102,8 @@ const firstJan = texts => texts.map(normalizeScanned).find(Boolean) || null;
 //   読み取れたとき／30秒たったとき／アプリを裏に回したとき／画面を離れたとき
 // onJan(jan)：読み取れた13桁。onManual()：「番号を入力する」。stop() で止める（画面を離れるとき）
 export const AUTO_STOP_MS = 30000;
+// カメラの下に、いつも出すお願い（文面は、ここで変える）
+export const SCAN_NOTICE = 'お願い：お店の商品のバーコードを、買わずに読み取るのは、やめましょう。まわりの人の迷惑にならないよう、気をつけてください。';
 export function cameraPanel({ onJan, onManual }) {
   const el = h('div', 'cam-panel');
   const view = h('div', 'cam-view');
@@ -123,7 +125,7 @@ export function cameraPanel({ onJan, onManual }) {
   const manual = h('button', 'btn small', '番号を入力する');
   const file = h('input'); file.type = 'file'; file.accept = 'image/*'; file.setAttribute('capture', 'environment'); file.hidden = true;
   row.append(retry, photo, manual);
-  el.append(view, status, row, file);
+  el.append(view, status, row, h('p', 'cam-note', SCAN_NOTICE), file);
 
   let stream = null, timer = null, autoTimer = null, stopped = true, busy = false, last = null, count = 0;
   const say = t => { status.textContent = t; };

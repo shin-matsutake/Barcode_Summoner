@@ -6,15 +6,18 @@
 //  ・両者が同じ番号の乱数で、同じ計算をする（結果が一致する）
 import { hashSeed } from '../core/rng.js';
 
-export const PROTO = 1;
+export const PROTO = 2;   // 2：ルールに summon（召喚ルール）が加わった
 // 対人戦の6つのルール（持ち込み／戦う体数）
 export const RULES = [
   { bring: 1, fight: 1 }, { bring: 3, fight: 1 },
   { bring: 2, fight: 2 }, { bring: 3, fight: 2 },
   { bring: 3, fight: 3 }, { bring: 5, fight: 3 },
 ];
-export const ruleLabel = r => `${r.fight}対${r.fight}（${r.bring}体持ち込み）`;
-export const isValidRule = r => !!r && RULES.some(x => x.bring === r.bring && x.fight === r.fight);
+// 召喚ルール：live＝その場で読み込んだ子だけ（ストックは使わない）／stock＝ストックも使える
+export const SUMMON_RULES = [{ id: 'live', label: 'ライブスキャン', note: 'その場で読み込んだ子だけで戦う（ストックは使わない）' }, { id: 'stock', label: 'ストック解放', note: 'ストックの仲間も使える' }];
+export const summonLabel = id => (SUMMON_RULES.find(x => x.id === id) || SUMMON_RULES[1]).label;
+export const ruleLabel = r => `${r.fight}対${r.fight}（${r.bring}体持ち込み）・${summonLabel(r.summon)}`;
+export const isValidRule = r => !!r && RULES.some(x => x.bring === r.bring && x.fight === r.fight) && (r.summon === undefined || SUMMON_RULES.some(x => x.id === r.summon));
 
 export class NetError extends Error {
   constructor(code, detail) { super(code); this.code = code; this.detail = detail; }

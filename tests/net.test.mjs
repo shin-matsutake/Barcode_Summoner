@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { memoryPair } from '../js/net/transport.js';
-import { createSession, NetError, RULES, isValidRule } from '../js/net/session.js';
+import { createSession, NetError, RULES, isValidRule, ruleLabel } from '../js/net/session.js';
 import { Rng } from '../js/core/rng.js';
 import { analyze } from '../js/core/jan.js';
 import { startSeries, resolveSeriesTurn } from '../js/core/series.js';
@@ -15,6 +15,8 @@ const rej = async (promise, code) => { try { await promise; } catch (e) { assert
 await t('ルール：6つ（1v1・2v2・3v3）', () => {
   assert.equal(RULES.length, 6);
   assert(isValidRule({ bring: 3, fight: 2 })); assert(!isValidRule({ bring: 4, fight: 2 })); assert(!isValidRule(null));
+  assert(isValidRule({ bring: 3, fight: 3, summon: 'live' })); assert(isValidRule({ bring: 3, fight: 3, summon: 'stock' })); assert(!isValidRule({ bring: 3, fight: 3, summon: 'x' }));
+  assert.equal(ruleLabel({ bring: 3, fight: 2, summon: 'live' }), '2対2（3体持ち込み）・ライブスキャン');
 });
 
 await t('あいさつ：同じ版なら、ルールが部屋を作った側から届く', async () => {

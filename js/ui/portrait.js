@@ -13,10 +13,10 @@ export const EL = {
 const missing = new Set();
 const pad = n => String(n).padStart(3, '0');
 
-function loadImage(list, onOk) {
+function loadImage(list, onOk, onFail) {
   const urls = list.filter(u => !missing.has(u));
   const next = i => {
-    if (i >= urls.length) return;
+    if (i >= urls.length) { if (onFail) onFail(); return; }
     const img = new Image();
     img.onload = () => onOk(img);
     img.onerror = () => { missing.add(urls[i]); next(i + 1); };
@@ -37,8 +37,21 @@ export function portrait(monster, { view = 'front', cls = '', fit = {} } = {}) {
   loadImage(list, img => {
     img.alt = monster.name; box.classList.add('has-img'); box.append(img);
     fitArt(box, img, view === 'icon' ? { mode: 'bust', ...fit } : { mode: 'contain', anchor: 'bottom', ...fit });
-  });
+  }, () => box.classList.add('ph-now'));   // 画像がないとわかったら、仮の丸を、すぐ出す（読み込み待ちのときは、少し遅らせて出す）
   return box;
+}
+
+// バトルの前に、画像を読み込んでおく（読み込み待ちの、仮の丸が出ないように）
+const warmed = new Set();
+export function preloadMonsters(monsters) {
+  for (const m of monsters) {
+    for (const suffix of ['F', 'B']) {
+      const u = `images/monsters/M${pad(m.id)}_${suffix}.png`;
+      if (warmed.has(u) || missing.has(u)) continue;
+      warmed.add(u);
+      const img = new Image(); img.onerror = () => missing.add(u); img.src = u;
+    }
+  }
 }
 
 export function elemIcon(el, cls = '') {

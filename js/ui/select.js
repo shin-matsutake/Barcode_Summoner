@@ -10,16 +10,19 @@ import { pickMonster } from './picker.js';
 import { statsGrid, skillList } from './monsterInfo.js';
 import { stageOf } from '../data.js';
 import { ROSTER_MAX } from '../storage.js';
+import { summonLabel } from '../net/session.js';
+import { preloadMonsters } from './portrait.js';
 
 export function select(root, ctx, params) {
   const isCode = params.mode === 'code';
   const { stage, teamIdx, restore } = params;
   let bring, fight, foeTeam, title, subTitle, key, goBack, matchParams;
+  const live = isCode && params.summon === 'live';   // ライブスキャン：その場で読み込んだ子だけ（ストックは使わない）
   if (isCode) {
     foeTeam = params.jans; bring = foeTeam.length; fight = params.fight;
-    title = 'チームコード 選出'; key = 'code';
-    goBack = () => ctx.go('teamCode');
-    matchParams = pt => ({ kind: 'code', mineJans: pt, foeJans: foeTeam.slice(0, fight), ai: params.ai || 1, codeParams: { jans: foeTeam, fight, ai: params.ai || 1 } });
+    title = 'シミュレーション 選出'; key = 'code';
+    goBack = () => ctx.go('simSetup');
+    matchParams = pt => ({ kind: 'code', mineJans: pt, foeJans: foeTeam.slice(0, fight), ai: params.ai || 1, codeParams: { jans: foeTeam, fight, ai: params.ai || 1, summon: params.summon || 'stock' } });
   } else {
     const stg = stageOf(ctx.data, stage);
     ({ bring, fight } = stg.rule);
@@ -28,8 +31,9 @@ export function select(root, ctx, params) {
     goBack = () => ctx.go('tower');
     matchParams = pt => ({ kind: 'tower', stage, teamIdx, mineJans: pt, foeJans: foeTeam.slice(0, fight), ai: stg.ai || 1 });
   }
-  subTitle = `${bring}体持ち込み・${fight}体で戦う`;
+  subTitle = `${bring}体持ち込み・${fight}体で戦う${isCode ? '・' + summonLabel(params.summon || 'stock') : ''}`;
   const foeProf = foeTeam.map(j => analyze(j, ctx.data));
+  preloadMonsters(foeProf.map(p => p.monster));   // バトルの前に、相手の画像を読み込んでおく
   const old = restore && ctx.session[key];
   const roster = () => ctx.store.get().tower.roster;
   let pool, party, sel = -1;
@@ -61,10 +65,10 @@ export function select(root, ctx, params) {
   async function choose(i) {
     const exclude = pool.filter((x, k) => x && k !== i).map(x => x.jan);
     if (isCode) {   // ストック・番号から選ぶ。ストックにいない子は、この試合だけか、仲間に加えるかを選ぶ
-      const r = await pickMonster(ctx, { exclude, tabs: ['stock', 'number'], title: '持ち込む仲間を選ぶ' });
+      const r = await pickMonster(ctx, { exclude, tabs: live ? ['summon'] : ['stock', 'summon'], title: '持ち込む仲間を選ぶ' });
       if (!r) return;
       const item = { jan: r.jan };
-      if (!stockOf(r.jan)) {
+      if (!live && !stockOf(r.jan)) {
         const p = analyze(r.jan, ctx.data), f = createFighter(p);
         const c = await dialog({ title: '召喚！', text: `${p.monster.name}（${EL[p.monster.el].ja}属性）\nHP ${f.maxHp}／攻撃 ${f.base.atk}／魔法攻撃 ${f.base.mat}／SPD ${f.base.spd}`,
           buttons: [{ label: 'やめる', value: 'x' }, { label: 'この子で戦う', value: 'once' }, { label: '仲間に加えて戦う', value: 'save', primary: true }] });
@@ -133,7 +137,7 @@ export function select(root, ctx, params) {
     foe.append(fr);
 
     const filled = pool.filter(Boolean).length, mine = h('div', 'panel sel-sec');
-    mine.append(h('div', 'sec-l', `あなたの持ち込み（${isCode ? 'ストック・番号から' : 'タワーの仲間から'}） ${filled}/${bring}`));
+    mine.append(h('div', 'sec-l', `あなたの持ち込み（${isCode ? (live ? 'その場で読み込み' : 'ストック・召喚から') : 'タワーの仲間から'}） ${filled}/${bring}`));
     const mr = h('div', 'pool'); mr.style.setProperty('--n', bring);
     pool.forEach((it, i) => {
       const c = h('button', 'pcard' + (i === sel ? ' on' : '') + (party.includes(i) ? ' in' : ''));

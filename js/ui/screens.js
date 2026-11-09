@@ -8,7 +8,8 @@ import { tower, quick } from './modes.js';
 import { summon, detail } from './summon.js';
 import { summonFx } from './summonFx.js';
 import { towerRoster, towerAdd, inRoster } from './roster.js';
-import { teamCode, teamCodeMake } from './teamcodeView.js';
+import { teamCodeMake } from './teamcodeView.js';
+import { battleMenu, simSetup } from './simView.js';
 import { pvpLobby, pvpSelect } from './pvpView.js';
 
 const TITLE = 'バーコード・サモナー';
@@ -47,14 +48,14 @@ function top(root, ctx) {
   const menu = h('nav', 'menu');
   const items = [
     ['召喚する', 'summon', '番号を入れて仲間を呼ぶ'],
-    ['対戦する', 'pvpLobby', '友だちと、合言葉で対戦'],
+    ['対戦する', 'battleMenu', 'リンクバトル・シミュレーション'],
     ['CPUタワー', 'tower', `${ctx.data.tower.stages.length}つのステージに挑戦`],
     ['クイックバトル', 'quick', 'CPUどうしの対戦を観戦'],
     ['ストック', 'stock', '召喚した仲間を見る'],
     ['オプション', 'options', '音量・演出・データ'],
   ];
   for (const [label, target, sub] of items) {
-    const b = h('button', 'btn menu-btn' + (target ? '' : ' soon'));
+    const b = h('button', 'btn menu-btn' + (target ? '' : ' soon') + (target === 'summon' ? ' primary' : ''));
     b.append(h('span', 'ml', label), h('span', 'ms', target ? sub : '準備中'));
     b.onclick = () => target ? ctx.go(target) : toast(`「${label}」はこれから追加します`);
     menu.append(b);
@@ -163,4 +164,4 @@ function options(root, ctx) {
   root.append(wrap);
 }
 
-export const screens = { top, stock, options, summon, summonFx, detail, tower, towerRoster, towerAdd, teamCode, teamCodeMake, pvpLobby, pvpSelect, quick, select, match };
+export const screens = { top, stock, options, summon, summonFx, detail, tower, towerRoster, towerAdd, teamCodeMake, battleMenu, simSetup, pvpLobby, pvpSelect, quick, select, match };

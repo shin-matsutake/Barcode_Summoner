@@ -55,13 +55,6 @@ export function tower(root, ctx) {
     b.onclick = () => enterStage(ctx, stg.stage);
     list.append(b);
   }
-  // チームコード（友だちが作ったチームに挑戦する）
-  const tc = h('button', 'panel stage');
-  const tci = h('div', 'info');
-  tci.append(h('div', 'name', 'チームコードで挑戦'), h('div', 'sub', '友だちが作ったチームと、CPUとして戦う'));
-  tc.append(tci, h('span', 'st-tag', 'いつでも'));
-  tc.onclick = () => ctx.go('teamCode');
-  list.append(tc);
   const rb = resetButton(ctx, () => ctx.go('tower'));
   if (rb) list.append(rb);
   wrap.append(list); root.append(wrap);
@@ -88,7 +81,7 @@ export function quick(root, ctx) {
         box.append(row);
       } else box.append(h('p', 'sub', 'まだ選んでいません'));
       const pk = h('button', 'btn small', S[w] ? '選び直す' : '選ぶ');
-      pk.onclick = async () => { const r = await pickMonster(ctx, { tabs: ['stock', 'number', 'random'], title: w === 'a' ? 'Aを選ぶ' : 'Bを選ぶ' }); if (r) { S[w] = r.jan; draw(); } };
+      pk.onclick = async () => { const r = await pickMonster(ctx, { tabs: ['stock', 'summon', 'random'], title: w === 'a' ? 'Aを選ぶ' : 'Bを選ぶ' }); if (r) { S[w] = r.jan; draw(); } };
       box.append(pk); body.append(box);
     }
     const ai = h('div', 'panel opt');

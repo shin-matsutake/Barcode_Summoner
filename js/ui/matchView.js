@@ -2,6 +2,7 @@
 import { h, sleep } from './dom.js';
 import { dialog, confirmDialog, story } from './dialog.js';
 import { enterStage } from './modes.js';
+import { preloadMonsters } from './portrait.js';
 import { stageOf } from '../data.js';
 import { portrait, elemIcon, EL } from './portrait.js';
 import { analyze } from '../core/jan.js';
@@ -25,6 +26,7 @@ export function match(root, ctx, params) {
   const pvp = params.kind === 'pvp' ? params.pvp : null;
   const M = pvp ? pvp.side : 'a';                                 // 自分の側（計算上の）
   const U = w => (M === 'a' ? w : (w === 'a' ? 'b' : 'a'));        // 計算上の側 → 画面の側（自分は下＝'a'）
+  preloadMonsters([...(params.mineJans || []), ...(params.foeJans || [])].map(j => analyze(j, ctx.data).monster));
   const rng = new Rng(pvp ? pvp.seed : Date.now());
   let step = 0, waitingOpp = false, connTimer = 0;
   const watch = !!params.watch, aiB = params.ai || 1, aiA = params.aiA || 1;
@@ -37,7 +39,7 @@ export function match(root, ctx, params) {
   const bt = h('div', 'bt');
   const top = h('header', 'bt-top');
   const menuBtn = h('button', 'btn small', watch ? 'やめる' : 'メニュー');
-  top.append(menuBtn, h('span', 'bt-title', params.kind === 'tower' ? `CPUタワー ステージ${params.stage}` : params.kind === 'code' ? 'チームコード挑戦' : params.kind === 'pvp' ? '対人戦' : 'クイックバトル'));
+  top.append(menuBtn, h('span', 'bt-title', params.kind === 'tower' ? `CPUタワー ステージ${params.stage}` : params.kind === 'code' ? 'シミュレーション' : params.kind === 'pvp' ? 'リンクバトル' : 'クイックバトル'));
 
   // ---- HUD（名前・HP・属性・耐性。自分側はタップで能力値） ----
   function buildHud(w) {
@@ -163,7 +165,10 @@ export function match(root, ctx, params) {
         h('span', `tbadge tb-${sk.type}`, TYPE[sk.type]), h('span', 'sk-pow', `威力 ${sk.power}`));
       b.append(head);
       b.append(h('div', 'sk-text', sk.text));
-      if (!ok.includes(i)) { const lk = h('div', 'chain'); lk.innerHTML = LOCK_SVG; b.append(lk); }
+      if (!ok.includes(i)) {
+        const lk = h('div', 'chain'); lk.innerHTML = LOCK_SVG; b.append(lk);
+        const im = new Image(); im.alt = ''; im.onload = () => lk.replaceChildren(im); im.src = 'images/lock.png';   // 用意した画像があれば、差し替える（なければ、このまま）
+      }
       let pressed = false, pt = 0;
       b.onpointerdown = () => { pressed = false; pt = setTimeout(() => { pressed = true; dialog({ title: sk.name, text: `${EL[sk.el].ja}属性・${TYPE[sk.type]}攻撃・威力 ${sk.power}\n${sk.text}` }); }, 500); };
       b.onpointerup = b.onpointerleave = b.onpointercancel = () => clearTimeout(pt);
@@ -299,14 +304,14 @@ export function match(root, ctx, params) {
       const win = r === M, draw = r !== 'a' && r !== 'b';
       const c = await dialog({ title: '決着', text: draw ? '引き分け' : win ? 'あなたの勝ち！' : 'あなたの負け…', buttons: [{ label: 'ロビーへ', value: 'lobby' }, { label: 'もう一度（再戦）', value: 'again', primary: true }] });
       if (!alive) return;
-      if (c !== 'again') { await pvp.session.bye('leave'); ctx.pvp = null; return ctx.go('pvpLobby'); }
+      if (c !== 'again') { await pvp.session.bye('leave'); ctx.pvp = null; return ctx.go('battleMenu'); }
       const wait = dialog({ text: '相手の返事を待っています…', buttons: [{ label: 'やめる', value: 'x' }] });
       const done = pvp.session.rematch().then(() => 'ok', e => e);
       const res = await Promise.race([done, wait]);
       if (!alive) return;
       if (res === 'ok') { wait.close(); return ctx.go('pvpSelect', {}); }
       wait.close();
-      if (res === 'x') { await pvp.session.bye('leave'); ctx.pvp = null; return ctx.go('pvpLobby'); }
+      if (res === 'x') { await pvp.session.bye('leave'); ctx.pvp = null; return ctx.go('battleMenu'); }
       return pvpFail(res);
     }
     if (params.kind === 'quick') {
@@ -315,9 +320,9 @@ export function match(root, ctx, params) {
       return c === 'again' ? retry() : c === 'new' ? ctx.go('quick') : ctx.go('top');
     }
     if (params.kind === 'code') {
-      const c = await dialog({ title: '決着', text, buttons: [{ label: 'チームコードへ', value: 'code' }, { label: '選出からやり直す', value: 'again', primary: true }] });
+      const c = await dialog({ title: '決着', text, buttons: [{ label: 'シミュレーションへ', value: 'code' }, { label: '選出からやり直す', value: 'again', primary: true }] });
       if (!alive) return;
-      return c === 'again' ? ctx.go('select', { mode: 'code', ...params.codeParams, restore: true }) : ctx.go('teamCode');
+      return c === 'again' ? ctx.go('select', { mode: 'code', ...params.codeParams, restore: true }) : ctx.go('simSetup');
     }
     const stage = params.stage, stg = stageOf(ctx.data, stage), hasNext = !!stageOf(ctx.data, stage + 1);
     if (r === 'a') {
@@ -338,7 +343,7 @@ export function match(root, ctx, params) {
     stopTimer(); const remain = tLeft, wasLocked = locked; locked = true; const wasPaused = paused; paused = true;
     const quit = await confirmDialog(watch ? '観戦をやめて、戻りますか？' : 'バトルをやめて、戻りますか？', watch ? 'やめる' : 'ギブアップ', '続ける');
     if (quit && pvp) { alive = false; stopTimer(); clearInterval(connTimer); waiters.splice(0).forEach(r => r()); await pvp.session.bye('forfeit'); ctx.pvp = null; return ctx.go('top'); }
-    if (quit) { alive = false; waiters.splice(0).forEach(r => r()); return ctx.go(params.kind === 'quick' ? 'quick' : params.kind === 'code' ? 'teamCode' : 'tower'); }
+    if (quit) { alive = false; waiters.splice(0).forEach(r => r()); return ctx.go(params.kind === 'quick' ? 'quick' : params.kind === 'code' ? 'simSetup' : 'tower'); }
     paused = wasPaused; if (!paused) waiters.splice(0).forEach(r => r());
     locked = wasLocked; if (!watch && !wasLocked && alive) startTimer(allowedSlots(fa(), s.battle.turn), remain);
   };
