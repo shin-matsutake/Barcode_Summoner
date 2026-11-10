@@ -6,6 +6,7 @@ import { match } from './matchView.js';
 import { select } from './select.js';
 import { tower, auto } from './modes.js';
 import { hotSetup, hotPlay } from './hotView.js';
+import { story } from './storyView.js';
 import { summon, detail } from './summon.js';
 import { summonFx } from './summonFx.js';
 import { towerRoster, towerAdd, inRoster } from './roster.js';
@@ -51,7 +52,6 @@ function top(root, ctx) {
     ['召喚する', 'summon', 'バーコードを読み取って、仲間を呼ぶ'],
     ['対戦する', 'battleMenu', 'リンクバトル・シミュレーション'],
     ['CPUタワー', 'tower', `${ctx.data.tower.stages.length}つのステージに挑戦`],
-    ['クイックバトル', 'hotSetup', '1台のスマホで、2人で対戦'],
     ['オートバトル', 'auto', 'CPUどうしの対戦を観戦'],
     ['ストック', 'stock', '召喚した仲間を見る'],
     ['チュートリアル', 'tutorial', '遊び方を学ぶ'],
@@ -178,19 +178,23 @@ function options(root, ctx) {
   root.append(wrap);
 }
 
-// チュートリアル（枠だけ。幕の内容は、台本ができてから入れる）
+// チュートリアル：幕の一覧。台本（data/story.json）にある幕は、遊べる。全4幕の想定で、まだ無い幕は「準備中」
 function tutorial(root, ctx) {
   const wrap = h('div', 'page');
   wrap.append(backBar(ctx, 'チュートリアル'));
-  const list = h('div', 'list');
-  list.append(h('p', 'sub', '遊び方を、物語といっしょに学べます。準備ができた幕から、順に遊べるようになります。'));
-  ['第1幕', '第2幕', '第3幕', '第4幕'].forEach(n => {
-    const b = h('button', 'panel stage locked'), info = h('div', 'info');
-    info.append(h('div', 'name', n), h('div', 'sub', 'まだ準備中です'));
-    b.append(info, h('span', 'st-tag', '準備中'));
-    b.disabled = true; list.append(b);
-  });
+  const list = h('div', 'list'), acts = ctx.data.story.acts, done = ctx.store.get().tutorial.done;
+  list.append(h('p', 'sub', '遊び方を、物語といっしょに学べます。'));
+  const TOTAL = 4, names = ['第一幕', '第二幕', '第三幕', '第四幕'];
+  for (let n = 0; n < TOTAL; n++) {
+    const a = acts[n], seen = a && done.includes(a.id);
+    const b = h('button', 'panel stage' + (a ? '' : ' locked') + (seen ? ' done' : '')), info = h('div', 'info');
+    info.append(h('div', 'name', a ? (a.title || names[n]) : names[n]), h('div', 'sub', a ? `${a.lines.length}ページ` : 'まだ準備中です'));
+    b.append(info, h('span', 'st-tag', a ? (seen ? '見た' : 'はじめる') : '準備中'));
+    b.disabled = !a;
+    if (a) b.onclick = () => ctx.go('story', { act: a.id });
+    list.append(b);
+  }
   wrap.append(list); root.append(wrap);
 }
 
-export const screens = { top, tutorial, stock, options, summon, summonFx, detail, tower, towerRoster, towerAdd, teamCodeMake, battleMenu, simSetup, pvpLobby, pvpSelect, auto, hotSetup, hotPlay, select, match };
+export const screens = { top, tutorial, story, stock, options, summon, summonFx, detail, tower, towerRoster, towerAdd, teamCodeMake, battleMenu, simSetup, pvpLobby, pvpSelect, auto, hotSetup, hotPlay, select, match };

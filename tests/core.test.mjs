@@ -363,6 +363,23 @@ t('チームコード：作る・読む（長さ・重複・全角・区切り�
   assert.throws(() => encodeTeam([A, B, C, A, B, C]));
 });
 
+t('台本：data/story.json の形式（幕ごとに、セリフがあり、話者は登場人物の一覧にいる。IDは重ならない）', () => {
+  const st = JSON.parse(fs.readFileSync('data/story.json', 'utf8'));
+  assert(st.acts.length >= 1);
+  for (const a of st.acts) {
+    assert(a.id && a.lines.length > 0, a.id);
+    const ids = new Set();
+    for (const l of a.lines) {
+      assert(l.text || l.note, `${l.id}：セリフもト書きもない`);
+      assert(!ids.has(l.id), `${l.id} が重なっている`); ids.add(l.id);
+      assert(!l.who || st.cast[l.who], `${l.id}：話者「${l.who}」が登場人物の一覧にいない`);
+      assert(/^[A-Za-z0-9_]+$/.test(l.voice || 'x'), `${l.id}：音声IDに、使えない文字がある`);
+      assert(!l.img || /^[A-Za-z0-9_.\-]+$/.test(l.img), `${l.id}：画像のファイル名に、使えない文字がある`);
+    }
+  }
+  for (const [who, c] of Object.entries(st.cast)) assert(c.side === null || c.side === 'L' || c.side === 'R', `${who} の位置`);
+});
+
 t('タワー：data/tower.json の形式（5ステージ×3チーム、持ち込み体数、JANの妥当性）', () => {
   const tw = JSON.parse(fs.readFileSync('data/tower.json')).stages;
   const rules = [[1, 1], [2, 2], [3, 2], [3, 3], [5, 3]];

@@ -23,7 +23,8 @@ export function battleMenu(root, ctx) {
   };
   list.append(
     item('リンクバトル', 'ゲートでつないで、友だちと対戦する', 'pvpLobby'),
-    item('シミュレーション', 'コンピュータと対戦する', 'simSetup'));
+    item('シミュレーション', 'コンピュータと対戦する', 'simSetup'),
+    item('クイックバトル', '1台のスマホで、2人で対戦する', 'hotSetup'));
   wrap.append(list); root.append(wrap);
 }
 

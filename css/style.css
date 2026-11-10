@@ -439,3 +439,27 @@ input:checked+.sw::after{transform:translateX(20px);background:#06263d}
 .rb-m{font-size:15px;font-weight:700}.rb-s{font-size:11px;opacity:.85}
 .hand-msg{font-size:20px;font-weight:700;line-height:1.5;color:var(--text)}
 .pvp-wait .big-btn{align-self:stretch}
+
+/* ---- 物語（チュートリアル） ---- */
+.story{position:relative}
+.story .bar{margin-bottom:4px;align-items:center}
+.st-prog{margin-left:auto;font:12px ui-monospace,Menlo,Consolas,monospace;color:var(--sub)}
+.st-stage{position:relative;flex:1;min-height:0;overflow:hidden}
+.st-sp{position:absolute;bottom:0;height:100%;width:84%;opacity:0;transition:opacity .25s,filter .25s,transform .25s;pointer-events:none}
+.st-sp.on{opacity:1}
+.st-sp.L{left:-8%}.st-sp.R{right:-8%}
+.st-sp img{position:absolute;bottom:0;height:100%;width:100%;object-fit:contain;object-position:bottom}
+.st-sp.L img{object-position:left bottom}.st-sp.R img{object-position:right bottom}
+.st-sp.dim{filter:brightness(.42) saturate(.7)}
+.st-sp.on:not(.dim){transform:translateY(-4px)}
+.st-ph{position:absolute;bottom:8%;left:20%;right:20%;padding:30px 8px;text-align:center;border:1px dashed var(--line);color:var(--sub)}
+.st-winwrap{position:relative;flex:none;margin-top:-34px;z-index:3}
+.st-win{min-height:148px;padding:20px 14px 14px}
+.st-name{position:absolute;top:-13px;left:14px;padding:3px 14px;font-weight:700;font-size:14px;z-index:2;clip-path:polygon(6px 0,100% 0,calc(100% - 6px) 100%,0 100%)}
+.st-name:empty{display:none}
+.st-name.sideL{background:var(--cyan);color:#06263d}.st-name.sideR{background:var(--orange);color:var(--orange-ink)}.st-name.sideN{background:#cfe3f0;color:#102030}
+.st-text{font-size:16px;line-height:1.75;white-space:pre-wrap;min-height:84px}
+.st-win.solo .st-text{font-style:italic;color:#cfe3f0}
+.st-next{position:absolute;right:16px;bottom:10px;color:var(--orange);animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+@media (prefers-reduced-motion:reduce){.st-next{animation:none}.st-sp{transition:none}}

@@ -8,7 +8,7 @@ const defaults = () => ({
   fav: [],        // お気に入り（最大10体）のJANコード
   options: { bgm: 70, se: 70, tempo: 'normal', fx: true, showFoeNick: true },
   tower: { cleared: 0, roster: [] },   // cleared＝クリアした最大のステージ番号／roster＝タワーの仲間のJAN（最大5体。挑戦が終わるまで外せない）
-  tutorialDone: false,
+  tutorial: { done: [] },   // 見終わった幕（'act1' など）
 });
 let state = defaults();
 let volatile = false;
@@ -25,6 +25,7 @@ function migrate(o) {
       cleared: Math.max(0, Math.min(99, Math.floor(Number(o.tower && o.tower.cleared)) || 0)),
       roster: [...new Set(Array.isArray(o.tower && o.tower.roster) ? o.tower.roster.filter(j => typeof j === 'string' && /^\d{13}$/.test(j)) : [])].slice(0, ROSTER_MAX),
     },
+    tutorial: { done: Array.isArray(o.tutorial && o.tutorial.done) ? o.tutorial.done.filter(x => typeof x === 'string').slice(0, 20) : [] },
     fav: Array.isArray(o.fav) ? o.fav.filter(j => /^\d{13}$/.test(j)).slice(0, 10) : [],
   };
 }

@@ -22,7 +22,7 @@ const bar = (title, onBack, sub) => {
 export function hotSetup(root, ctx) {
   const rule = (ctx.session.hotRule = ctx.session.hotRule || { bring: 3, fight: 3, summon: 'live' });
   const wrap = h('div', 'page');
-  wrap.append(bar('クイックバトル', () => ctx.go('top')));
+  wrap.append(bar('クイックバトル', () => ctx.go('battleMenu')));
   const body = h('div', 'list detail-body');
   body.append(h('p', 'sub', '1台のスマホを、2人で順番に使います。持ち込みと作戦、出撃メンバーを、交代で決めて、そのあとは、オートバトルで決着します。'),
     formationPanel(rule), summonPanel(rule));
