@@ -13,12 +13,13 @@ import { startSeries, resolveSeriesTurn } from '../core/series.js';
 import { chooseSlot } from './ai.js';
 
 const TIMER_SEC = 30;
-const DELAY = { slow: 1500, normal: 1000, fast: 550 };
+// バトルのテンポ（1つの出来事の表示時間 ms）：ゆっくり／じっくり（旧：ゆっくり）／ふつう／はやい（旧：ふつう）／高速（旧：はやい）
+const DELAY = { slowest: 2000, slow: 1500, normal: 1250, quick: 1000, fast: 550 };
 const KIND = ['技A', '技B', '固有'];
 const TYPE = { phys: '物理', mag: '魔法' };
 const pct = v => Math.round(v * 100) + '%';
 
-// params: { kind:'tower'|'quick'|'code'|'pvp', stage, mineJans, foeJans, ai, aiA, watch, teamIdx, codeParams, pvp }
+// params: { kind:'tower'|'auto'|'hotseat'|'code'|'pvp', labels, stage, mineJans, foeJans, ai, aiA, watch, teamIdx, codeParams, pvp }
 // 対人戦（kind:'pvp'）：mineJans＝部屋を作った側（a）の出撃順、foeJans＝参加した側（b）の出撃順。pvp＝{ session, side:'a'|'b', seed }
 //   計算は、両方の端で、同じ向き（a＝部屋を作った側）で行う。画面だけ、自分が常に下になるよう、左右を入れ替える。
 export function match(root, ctx, params) {
@@ -32,14 +33,14 @@ export function match(root, ctx, params) {
   const watch = !!params.watch, aiB = params.ai || 1, aiA = params.aiA || 1;
   const teamA = params.mineJans.map(j => analyze(j, ctx.data)), teamB = params.foeJans.map(j => analyze(j, ctx.data));
   const s = startSeries(teamA, teamB);
-  const label = watch ? { a: 'A', b: 'B' } : { a: 'あなた', b: '相手' };
+  const label = params.labels || (watch ? { a: 'A', b: 'B' } : { a: 'あなた', b: '相手' });
   let alive = true, timerId = 0, locked = true, paused = false, speed = 1, tLeft = TIMER_SEC;
   const waiters = [];
 
   const bt = h('div', 'bt');
   const top = h('header', 'bt-top');
   const menuBtn = h('button', 'btn small', watch ? 'やめる' : 'メニュー');
-  top.append(menuBtn, h('span', 'bt-title', params.kind === 'tower' ? `CPUタワー ステージ${params.stage}` : params.kind === 'code' ? 'シミュレーション' : params.kind === 'pvp' ? 'リンクバトル' : 'クイックバトル'));
+  top.append(menuBtn, h('span', 'bt-title', params.kind === 'tower' ? `CPUタワー ステージ${params.stage}` : params.kind === 'code' ? 'シミュレーション' : params.kind === 'pvp' ? 'リンクバトル' : params.kind === 'hotseat' ? 'クイックバトル' : 'オートバトル'));
 
   // ---- HUD（名前・HP・属性・耐性。自分側はタップで能力値） ----
   function buildHud(w) {
@@ -234,7 +235,7 @@ export function match(root, ctx, params) {
       slotB = chooseSlot(view.b, view.a, t, rng, aiB);
     }
     const ev = resolveSeriesTurn(s, slotA, slotB, rng);
-    const d = DELAY[opts.tempo] || 1000;
+    const d = DELAY[opts.tempo] || DELAY.normal;
     const nm = w => view[w].name;
     // ヒットの種別と属性（物理／魔法）。追加攻撃・反撃・相手技のコピーで変わる場合に対応する（表示用の推定）
     const hitN = { a: 0, b: 0 }, nul = { a: false, b: false };
@@ -298,7 +299,7 @@ export function match(root, ctx, params) {
 
   async function finish() {
     const r = s.result;
-    const text = watch ? (r === 'a' ? 'Aの勝ち！' : r === 'b' ? 'Bの勝ち！' : '引き分け') : (r === 'a' ? 'あなたの勝ち！' : r === 'b' ? 'あなたの負け…' : '引き分け');
+    const text = watch ? (r === 'a' ? `${label.a}の勝ち！` : r === 'b' ? `${label.b}の勝ち！` : '引き分け') : (r === 'a' ? 'あなたの勝ち！' : r === 'b' ? 'あなたの負け…' : '引き分け');
     const retry = () => ctx.go('match', { ...params });
     if (pvp) {   // 対人戦：再戦は、両方が押したときだけ（相手の返事を待つ）
       const win = r === M, draw = r !== 'a' && r !== 'b';
@@ -314,10 +315,15 @@ export function match(root, ctx, params) {
       if (res === 'x') { await pvp.session.bye('leave'); ctx.pvp = null; return ctx.go('battleMenu'); }
       return pvpFail(res);
     }
-    if (params.kind === 'quick') {
+    if (params.kind === 'auto') {
       const c = await dialog({ title: '決着', text, buttons: [{ label: 'トップへ', value: 'top' }, { label: '別の2体で', value: 'new' }, { label: 'もう一度', value: 'again', primary: true }] });
       if (!alive) return;
-      return c === 'again' ? retry() : c === 'new' ? ctx.go('quick') : ctx.go('top');
+      return c === 'again' ? retry() : c === 'new' ? ctx.go('auto') : ctx.go('top');
+    }
+    if (params.kind === 'hotseat') {   // クイックバトル（1台で2人）
+      const c = await dialog({ title: '決着', text, buttons: [{ label: 'トップへ', value: 'top' }, { label: 'ルール設定へ', value: 'rules' }, { label: 'もう一度（選出から）', value: 'again', primary: true }] });
+      if (!alive) return;
+      return c === 'again' ? ctx.go('hotPlay') : c === 'rules' ? ctx.go('hotSetup') : ctx.go('top');
     }
     if (params.kind === 'code') {
       const c = await dialog({ title: '決着', text, buttons: [{ label: 'シミュレーションへ', value: 'code' }, { label: '選出からやり直す', value: 'again', primary: true }] });
@@ -343,7 +349,7 @@ export function match(root, ctx, params) {
     stopTimer(); const remain = tLeft, wasLocked = locked; locked = true; const wasPaused = paused; paused = true;
     const quit = await confirmDialog(watch ? '観戦をやめて、戻りますか？' : 'バトルをやめて、戻りますか？', watch ? 'やめる' : 'ギブアップ', '続ける');
     if (quit && pvp) { alive = false; stopTimer(); clearInterval(connTimer); waiters.splice(0).forEach(r => r()); await pvp.session.bye('forfeit'); ctx.pvp = null; return ctx.go('top'); }
-    if (quit) { alive = false; waiters.splice(0).forEach(r => r()); return ctx.go(params.kind === 'quick' ? 'quick' : params.kind === 'code' ? 'simSetup' : 'tower'); }
+    if (quit) { alive = false; waiters.splice(0).forEach(r => r()); return ctx.go(params.kind === 'auto' ? 'auto' : params.kind === 'hotseat' ? 'hotSetup' : params.kind === 'code' ? 'simSetup' : 'tower'); }
     paused = wasPaused; if (!paused) waiters.splice(0).forEach(r => r());
     locked = wasLocked; if (!watch && !wasLocked && alive) startTimer(allowedSlots(fa(), s.battle.turn), remain);
   };

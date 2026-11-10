@@ -17,13 +17,13 @@ export function battleMenu(root, ctx) {
   const item = (name, sub, target) => {
     const b = h('button', 'panel stage'), info = h('div', 'info');
     info.append(h('div', 'name', name), h('div', 'sub', sub));
-    b.append(info, h('span', 'st-tag', '選ぶ'));
+    b.append(info);
     b.onclick = () => ctx.go(target);
     return b;
   };
   list.append(
     item('リンクバトル', 'ゲートでつないで、友だちと対戦する', 'pvpLobby'),
-    item('シミュレーション', 'コンピュータと対戦する（編成・召喚ルールを選べる）', 'simSetup'));
+    item('シミュレーション', 'コンピュータと対戦する', 'simSetup'));
   wrap.append(list); root.append(wrap);
 }
 

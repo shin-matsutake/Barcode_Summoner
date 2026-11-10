@@ -431,4 +431,11 @@ input:checked+.sw::after{transform:translateX(20px);background:#06263d}
 @keyframes sweep{from{top:0;opacity:1}to{top:100%;opacity:0}}
 @keyframes screenin{from{opacity:0;transform:translateY(4px)}}
 @media (prefers-reduced-motion:reduce){#app.scan::after,#app.scan #screen{animation:none}}
-.menu-btn.primary .ms{color:#5a3612}
+/* トップのメニューにも、バーコードの飾り */
+.menu-btn::after{content:"";position:absolute;top:5px;right:16px;width:30px;height:6px;background:var(--barcode) no-repeat;opacity:.45;pointer-events:none}
+/* テンポの5段階：5つ並べる */
+.seg.tempo5{gap:4px}.seg.tempo5 .seg-b{padding:10px 2px;font-size:12px;white-space:nowrap}
+.seg-b.rule-btn{display:flex;flex-direction:column;align-items:center;gap:1px;padding:7px 4px;line-height:1.25}
+.rb-m{font-size:15px;font-weight:700}.rb-s{font-size:11px;opacity:.85}
+.hand-msg{font-size:20px;font-weight:700;line-height:1.5;color:var(--text)}
+.pvp-wait .big-btn{align-self:stretch}

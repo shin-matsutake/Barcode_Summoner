@@ -1,7 +1,7 @@
 // 条件を設定する共通の部品（リンクバトルのゲートを開く画面と、シミュレーションの画面で使う）
 //   rule＝{ bring, fight, summon } を、そのまま書き換える
 import { h } from './dom.js';
-import { RULES, SUMMON_RULES } from '../net/session.js';
+import { RULES, SUMMON_RULES, formationNote } from '../net/session.js';
 
 // 編成：持ち込み体数と、戦う体数（6通り）
 export function formationPanel(rule, onChange = () => {}) {
@@ -9,7 +9,8 @@ export function formationPanel(rule, onChange = () => {}) {
   p.append(h('div', 'sec-l', '編成（持ち込み・戦う体数）'));
   const grid = h('div', 'rule-grid');
   RULES.forEach(r => {
-    const b = h('button', 'seg-b' + (r.bring === rule.bring && r.fight === rule.fight ? ' on' : ''), `${r.fight}対${r.fight}（${r.bring}体）`);
+    const b = h('button', 'seg-b rule-btn' + (r.bring === rule.bring && r.fight === rule.fight ? ' on' : ''));
+    b.append(h('span', 'rb-m', `${r.fight}対${r.fight}`), h('span', 'rb-s', formationNote(r)));
     b.onclick = () => { rule.bring = r.bring; rule.fight = r.fight; grid.querySelectorAll('.seg-b').forEach(x => x.classList.toggle('on', x === b)); onChange(rule); };
     grid.append(b);
   });

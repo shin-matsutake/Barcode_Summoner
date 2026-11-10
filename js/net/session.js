@@ -16,7 +16,9 @@ export const RULES = [
 // 召喚ルール：live＝その場で読み込んだ子だけ（ストックは使わない）／stock＝ストックも使える
 export const SUMMON_RULES = [{ id: 'live', label: 'ライブスキャン', note: 'その場で読み込んだ子だけで戦う（ストックは使わない）' }, { id: 'stock', label: 'ストック解放', note: 'ストックの仲間も使える' }];
 export const summonLabel = id => (SUMMON_RULES.find(x => x.id === id) || SUMMON_RULES[1]).label;
-export const ruleLabel = r => `${r.fight}対${r.fight}（${r.bring}体持ち込み）・${summonLabel(r.summon)}`;
+// 編成の言い方：「3対3」＋「5体から選ぶ」（持ち込みと戦う数が同じなら「全員出撃」）
+export const formationNote = r => (r.bring === r.fight ? '全員出撃' : `${r.bring}体から選ぶ`);
+export const ruleLabel = r => `${r.fight}対${r.fight}・${formationNote(r)}・${summonLabel(r.summon)}`;
 export const isValidRule = r => !!r && RULES.some(x => x.bring === r.bring && x.fight === r.fight) && (r.summon === undefined || SUMMON_RULES.some(x => x.id === r.summon));
 
 export class NetError extends Error {

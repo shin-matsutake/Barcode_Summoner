@@ -4,7 +4,8 @@ import { portrait } from './portrait.js';
 import { analyze } from '../core/jan.js';
 import { match } from './matchView.js';
 import { select } from './select.js';
-import { tower, quick } from './modes.js';
+import { tower, auto } from './modes.js';
+import { hotSetup, hotPlay } from './hotView.js';
 import { summon, detail } from './summon.js';
 import { summonFx } from './summonFx.js';
 import { towerRoster, towerAdd, inRoster } from './roster.js';
@@ -43,19 +44,21 @@ function top(root, ctx) {
   const img = h('img', 'logo-img');
   img.alt = TITLE; img.width = 793; img.height = 253; img.src = 'images/LOGO.png';
   img.onerror = () => img.replaceWith(h('h1', '', TITLE), barcodeStrip());
-  logo.append(img, h('p', 'sub', 'バーコードから仲間を呼び出して戦う'));
+  logo.append(img);
   wrap.append(logo);
   const menu = h('nav', 'menu');
   const items = [
-    ['召喚する', 'summon', '番号を入れて仲間を呼ぶ'],
+    ['召喚する', 'summon', 'バーコードを読み取って、仲間を呼ぶ'],
     ['対戦する', 'battleMenu', 'リンクバトル・シミュレーション'],
     ['CPUタワー', 'tower', `${ctx.data.tower.stages.length}つのステージに挑戦`],
-    ['クイックバトル', 'quick', 'CPUどうしの対戦を観戦'],
+    ['クイックバトル', 'hotSetup', '1台のスマホで、2人で対戦'],
+    ['オートバトル', 'auto', 'CPUどうしの対戦を観戦'],
     ['ストック', 'stock', '召喚した仲間を見る'],
+    ['チュートリアル', 'tutorial', '遊び方を学ぶ'],
     ['オプション', 'options', '音量・演出・データ'],
   ];
   for (const [label, target, sub] of items) {
-    const b = h('button', 'btn menu-btn' + (target ? '' : ' soon') + (target === 'summon' ? ' primary' : ''));
+    const b = h('button', 'btn menu-btn' + (target ? '' : ' soon'));
     b.append(h('span', 'ml', label), h('span', 'ms', target ? sub : '準備中'));
     b.onclick = () => target ? ctx.go(target) : toast(`「${label}」はこれから追加します`);
     menu.append(b);
@@ -95,20 +98,29 @@ function stock(root, ctx) {
 }
 
 function options(root, ctx) {
-  const o = ctx.store.get().options;
-  const save = () => ctx.store.update(() => {});
+  // 設定は、いったん下書き（d）に入れて、「決定」を押したときに、まとめて反映する
+  const saved = ctx.store.get().options, d = { ...saved };
+  const isDirty = () => Object.keys(d).some(k => d[k] !== saved[k]);
   const wrap = h('div', 'page');
-  wrap.append(backBar(ctx, 'オプション'));
-  const body = h('div', 'list');
+  const bar = backBar(ctx, 'オプション');
+  bar.querySelector('.btn').onclick = async () => {
+    if (isDirty() && !(await confirmDialog('変更をまだ反映していません。\n破棄して戻りますか？', '破棄して戻る', '設定に戻る'))) return;
+    ctx.go('top');
+  };
+  wrap.append(bar);
+  const body = h('div', 'list detail-body');
+  const foot = h('div', 'detail-foot');
+  const apply = h('button', 'btn primary big-btn', '決定');
+  const refresh = () => { const dirty = isDirty(); apply.disabled = !dirty; apply.textContent = dirty ? '決定（変更を反映）' : '変更はありません'; };
+  apply.onclick = () => { ctx.store.update(s => { Object.assign(s.options, d); }); Object.assign(saved, d); toast('設定を反映しました'); refresh(); };
 
   const slider = (label, key, note) => {
     const row = h('div', 'panel opt');
     const head = h('div', 'opt-head');
-    const val = h('b', '', String(o[key]));
+    const val = h('b', '', String(d[key]));
     head.append(h('span', '', label), val);
-    const r = h('input'); r.type = 'range'; r.min = 0; r.max = 100; r.value = o[key];
-    r.oninput = () => { o[key] = +r.value; val.textContent = r.value; };
-    r.onchange = save;
+    const r = h('input'); r.type = 'range'; r.min = 0; r.max = 100; r.value = d[key];
+    r.oninput = () => { d[key] = +r.value; val.textContent = r.value; refresh(); };
     row.append(head, r);
     if (note) row.append(h('p', 'sub', note));
     return row;
@@ -116,8 +128,8 @@ function options(root, ctx) {
   const toggle = (label, key, note) => {
     const row = h('label', 'panel opt opt-toggle');
     const t = h('div'); t.append(h('span', '', label)); if (note) t.append(h('p', 'sub', note));
-    const c = h('input'); c.type = 'checkbox'; c.checked = !!o[key];
-    c.onchange = () => { o[key] = c.checked; save(); };
+    const c = h('input'); c.type = 'checkbox'; c.checked = !!d[key];
+    c.onchange = () => { d[key] = c.checked; refresh(); };
     row.append(t, c, h('i', 'sw'));
     return row;
   };
@@ -126,10 +138,10 @@ function options(root, ctx) {
   const tempo = h('div', 'panel opt');
   tempo.append(h('div', 'opt-head', ''));
   tempo.firstChild.append(h('span', '', 'バトルのテンポ'));
-  const seg = h('div', 'seg');
-  [['slow', 'ゆっくり'], ['normal', 'ふつう'], ['fast', 'はやい']].forEach(([v, l]) => {
-    const b = h('button', 'seg-b' + (o.tempo === v ? ' on' : ''), l);
-    b.onclick = () => { o.tempo = v; save(); seg.querySelectorAll('.seg-b').forEach(x => x.classList.toggle('on', x === b)); };
+  const seg = h('div', 'seg tempo5');
+  [['slowest', 'ゆっくり'], ['slow', 'じっくり'], ['normal', 'ふつう'], ['quick', 'はやい'], ['fast', '高速']].forEach(([v, l]) => {
+    const b = h('button', 'seg-b' + (d.tempo === v ? ' on' : ''), l);
+    b.onclick = () => { d.tempo = v; seg.querySelectorAll('.seg-b').forEach(x => x.classList.toggle('on', x === b)); refresh(); };
     seg.append(b);
   });
   tempo.append(seg);
@@ -139,7 +151,7 @@ function options(root, ctx) {
 
   const dataBox = h('div', 'panel opt');
   dataBox.append(h('div', 'opt-head', ''));
-  dataBox.firstChild.append(h('span', '', 'データ'));
+  dataBox.firstChild.append(h('span', '', 'データ（押すと、すぐに実行されます）'));
   const row = h('div', 'btn-row');
   const ex = h('button', 'btn small', '書き出す');
   ex.onclick = () => {
@@ -161,7 +173,24 @@ function options(root, ctx) {
   if (ctx.store.isVolatile()) dataBox.append(h('p', 'sub warn', 'このブラウザでは保存できないため、閉じると消えます。'));
   body.append(dataBox, h('p', 'ver', `データ v${ctx.data.version}`));
   wrap.append(body);
+  foot.append(apply); wrap.append(foot);
+  refresh();
   root.append(wrap);
 }
 
-export const screens = { top, stock, options, summon, summonFx, detail, tower, towerRoster, towerAdd, teamCodeMake, battleMenu, simSetup, pvpLobby, pvpSelect, quick, select, match };
+// チュートリアル（枠だけ。幕の内容は、台本ができてから入れる）
+function tutorial(root, ctx) {
+  const wrap = h('div', 'page');
+  wrap.append(backBar(ctx, 'チュートリアル'));
+  const list = h('div', 'list');
+  list.append(h('p', 'sub', '遊び方を、物語といっしょに学べます。準備ができた幕から、順に遊べるようになります。'));
+  ['第1幕', '第2幕', '第3幕', '第4幕'].forEach(n => {
+    const b = h('button', 'panel stage locked'), info = h('div', 'info');
+    info.append(h('div', 'name', n), h('div', 'sub', 'まだ準備中です'));
+    b.append(info, h('span', 'st-tag', '準備中'));
+    b.disabled = true; list.append(b);
+  });
+  wrap.append(list); root.append(wrap);
+}
+
+export const screens = { top, tutorial, stock, options, summon, summonFx, detail, tower, towerRoster, towerAdd, teamCodeMake, battleMenu, simSetup, pvpLobby, pvpSelect, auto, hotSetup, hotPlay, select, match };

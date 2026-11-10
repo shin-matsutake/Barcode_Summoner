@@ -1,4 +1,4 @@
-// CPUタワーのステージ一覧と、クイックバトル（CPU同士の観戦）
+// CPUタワーのステージ一覧と、オートバトル（CPU同士の観戦。旧クイックバトル）
 import { h } from './dom.js';
 import { portrait, elemIcon, EL } from './portrait.js';
 import { analyze } from '../core/jan.js';
@@ -60,12 +60,12 @@ export function tower(root, ctx) {
   wrap.append(list); root.append(wrap);
 }
 
-export function quick(root, ctx) {
-  const S = ctx.session.quick || (ctx.session.quick = { a: null, b: null, ai: 1 });
+export function auto(root, ctx) {
+  const S = ctx.session.auto || (ctx.session.auto = { a: null, b: null, ai: 1 });
   const wrap = h('div', 'page');
   root.append(wrap);
   const draw = () => {
-    wrap.replaceChildren(backBar(ctx, 'クイックバトル'));
+    wrap.replaceChildren(backBar(ctx, 'オートバトル'));
     const body = h('div', 'list');
     body.append(h('p', 'sub', '2体を選ぶと、CPUどうしが自動で戦います。'));
     for (const w of ['a', 'b']) {
@@ -92,7 +92,7 @@ export function quick(root, ctx) {
     wrap.append(body);
     const foot = h('div', 'detail-foot');
     const go = h('button', 'btn primary big-btn', '対戦開始'); go.disabled = !(S.a && S.b);
-    go.onclick = () => ctx.go('match', { kind: 'quick', mineJans: [S.a], foeJans: [S.b], ai: S.ai, aiA: S.ai, watch: true });
+    go.onclick = () => ctx.go('match', { kind: 'auto', mineJans: [S.a], foeJans: [S.b], ai: S.ai, aiA: S.ai, watch: true });
     foot.append(go); wrap.append(foot);
   };
   draw();

@@ -16,7 +16,7 @@ await t('ルール：6つ（1v1・2v2・3v3）', () => {
   assert.equal(RULES.length, 6);
   assert(isValidRule({ bring: 3, fight: 2 })); assert(!isValidRule({ bring: 4, fight: 2 })); assert(!isValidRule(null));
   assert(isValidRule({ bring: 3, fight: 3, summon: 'live' })); assert(isValidRule({ bring: 3, fight: 3, summon: 'stock' })); assert(!isValidRule({ bring: 3, fight: 3, summon: 'x' }));
-  assert.equal(ruleLabel({ bring: 3, fight: 2, summon: 'live' }), '2対2（3体持ち込み）・ライブスキャン');
+  assert.equal(ruleLabel({ bring: 3, fight: 2, summon: 'live' }), '2対2・3体から選ぶ・ライブスキャン');
 });
 
 await t('あいさつ：同じ版なら、ルールが部屋を作った側から届く', async () => {
