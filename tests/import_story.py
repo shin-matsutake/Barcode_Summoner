@@ -8,6 +8,8 @@ import sys, re, json, os
 from openpyxl import load_workbook
 ALIAS = {'コウタ': 'ボク'}                                  # 台本の表記ゆれ（話者の名前）
 DISPLAY = {'オウサマ': '王様', 'センセイ': '先生'}           # 名前欄に出す名前（ないものは、呼び名のまま）
+# 幕の最後のバトル（なければ、バトルなし）。mine＝貸し出すモンスター、foe＝相手（13桁の番号）、ai＝相手の考え方（1〜4）、labels＝HUDの名前
+BATTLE = {'一幕': {'mine': ['4165334556923'], 'foe': ['4506351352363'], 'ai': 1, 'labels': {'a': 'ボク', 'b': 'ノマン'}}}
 SIDE = {'オウサマ': 'R', 'ノマン': 'R', 'バナド': 'R', 'フウマ': 'L', 'カゲツ': 'L', 'ミズキ': 'L', 'ダイチ': 'L', 'センセイ': 'L'}   # 立ち絵の位置（ボクは、立ち絵なし＝null）
 norm_id = lambda s: re.sub(r'[^0-9A-Za-z]+', '_', str(s or '').strip()).strip('_')
 S = lambda v: ('' if v is None else str(v)).strip()
@@ -31,7 +33,9 @@ def main():
             who = ALIAS.get(S(r[1]), S(r[1]))
             if who and who not in cast: cast[who] = {'display': DISPLAY.get(who, who), 'side': SIDE.get(who), 'role': ''}
             lines.append({'id': norm_id(r[0]), 'who': who, 'note': S(r[2]), 'text': S(r[3]), 'img': S(r[4]), 'voice': norm_id(r[5])})
-        acts.append({'id': f'act{n}', 'title': name, 'lines': lines})
+        act = {'id': f'act{n}', 'title': name, 'lines': lines}
+        if name in BATTLE: act['battle'] = BATTLE[name]
+        acts.append(act)
     data = {'cast': cast, 'acts': acts}
     old = json.load(open(out, encoding='utf-8')) if os.path.exists(out) else None
     json.dump(data, open(out, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)

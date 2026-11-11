@@ -463,3 +463,33 @@ input:checked+.sw::after{transform:translateX(20px);background:#06263d}
 .st-next{position:absolute;right:16px;bottom:10px;color:var(--orange);animation:blink 1s steps(2) infinite}
 @keyframes blink{50%{opacity:0}}
 @media (prefers-reduced-motion:reduce){.st-next{animation:none}.st-sp{transition:none}}
+
+/* ---- バトルに入る演出 ---- */
+.bi{position:absolute;inset:0;z-index:70;overflow:hidden;background:#02070d;animation:bi-in .12s ease-out}
+.bi.out{animation:bi-out .25s ease-in forwards}.bi.still.out{animation:none;opacity:0}
+.bi-bg{position:absolute;inset:-20%;background:repeating-linear-gradient(115deg,transparent 0 22px,rgba(98,230,255,.07) 22px 24px);animation:bi-bg 2.4s linear both}
+.bi-side{position:absolute;left:0;right:0;display:flex;z-index:2}
+.bi-side.R{top:4%;justify-content:flex-end;animation:bi-inR .5s cubic-bezier(.2,.9,.3,1) .15s backwards}
+.bi-side.L{bottom:4%;justify-content:flex-start;animation:bi-inL .5s cubic-bezier(.2,.9,.3,1) .3s backwards}
+.bi-card{--cut:22px;position:relative;width:94%;padding:12px 14px;background:linear-gradient(115deg,color-mix(in srgb,var(--el) 55%,#07121f),#07121f 70%);border-top:2px solid var(--el);border-bottom:2px solid var(--el);display:flex;align-items:flex-end;gap:10px}
+.bi-side.R .bi-card{flex-direction:row-reverse;clip-path:polygon(var(--cut) 0,100% 0,100% 100%,0 100%,0 var(--cut))}
+.bi-side.L .bi-card{clip-path:polygon(0 0,100% 0,100% calc(100% - var(--cut)),calc(100% - var(--cut)) 100%,0 100%)}
+.bi-pt{flex:none;width:60%;aspect-ratio:1;position:relative}.bi-pt .pt{position:absolute;inset:0}
+.bi-name{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;padding-bottom:6px}
+.bi-side.R .bi-name{align-items:flex-end;text-align:right}
+.bi-who{font-size:12px;color:var(--sub);letter-spacing:.12em}.bi-name b{font-size:16px;line-height:1.25;white-space:nowrap}
+.bi-vs{position:absolute;left:50%;top:50%;z-index:4;font:900 72px/1 ui-sans-serif,system-ui,sans-serif;letter-spacing:.04em;color:var(--orange);text-shadow:0 0 18px rgba(240,138,44,.7);transform:translate(-50%,-50%) scale(1);animation:bi-vs .4s cubic-bezier(.2,1.5,.4,1) .8s backwards}
+.bi-start{position:absolute;left:0;right:0;top:calc(50% + 46px);z-index:4;text-align:center;font:700 16px ui-monospace,Menlo,Consolas,monospace;letter-spacing:.5em;color:var(--cyan);animation:bi-start .6s ease-out 1.3s backwards}
+.bi-flash{position:absolute;inset:0;z-index:6;background:#fff;opacity:0;pointer-events:none;animation:bi-flash .4s ease-out .8s}
+.bi-scan{position:absolute;left:0;right:0;top:0;height:2px;z-index:5;background:var(--orange);box-shadow:0 0 12px var(--orange);animation:bi-scan .5s ease-in 1.3s both}
+.bi-side.R .bi-card,.bi-side.L .bi-card{animation:bi-shake .3s linear .8s}
+@keyframes bi-in{from{opacity:0}}@keyframes bi-out{to{opacity:0}}
+@keyframes bi-bg{from{transform:translateX(-6%)}to{transform:translateX(6%)}}
+@keyframes bi-inR{from{transform:translateX(110%)}}@keyframes bi-inL{from{transform:translateX(-110%)}}
+@keyframes bi-vs{from{transform:translate(-50%,-50%) scale(4);opacity:0}}
+@keyframes bi-start{from{letter-spacing:1.2em;opacity:0}}
+@keyframes bi-flash{0%{opacity:.85}100%{opacity:0}}
+@keyframes bi-scan{from{top:0;opacity:1}to{top:100%;opacity:0}}
+@keyframes bi-shake{0%,100%{transform:translate(0)}25%{transform:translate(-4px,2px)}50%{transform:translate(4px,-2px)}75%{transform:translate(-2px,-2px)}}
+.bi.still *{animation:none!important}
+@media (prefers-reduced-motion:reduce){.bi *{animation:none!important}}

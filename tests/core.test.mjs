@@ -376,6 +376,11 @@ t('台本：data/story.json の形式（幕ごとに、セリフがあり、話�
       assert(/^[A-Za-z0-9_]+$/.test(l.voice || 'x'), `${l.id}：音声IDに、使えない文字がある`);
       assert(!l.img || /^[A-Za-z0-9_.\-]+$/.test(l.img), `${l.id}：画像のファイル名に、使えない文字がある`);
     }
+    if (a.battle) {   // 幕の最後のバトル
+      const b = a.battle;
+      for (const k of ['mine', 'foe']) assert(Array.isArray(b[k]) && b[k].length >= 1 && b[k].length <= 5 && b[k].every(j => /^\d{13}$/.test(j)), `${a.id}：battle.${k} は13桁の番号の並び`);
+      assert(b.ai >= 1 && b.ai <= 4, `${a.id}：battle.ai は1〜4`);
+    }
   }
   for (const [who, c] of Object.entries(st.cast)) assert(c.side === null || c.side === 'L' || c.side === 'R', `${who} の位置`);
 });
@@ -452,6 +457,37 @@ t('相手の攻撃をコピーして追加攻撃（M000型）', () => {
   const A = mk('earth', 1, 300, 1, 99999, 0, 0, slots3(cp, cp, cp)), B = mk('wind', 999, 999, 999, 99999, 0, 0, slots3(foe, foe, foe));
   const st = turn1(A, B); assert.equal(hitsOf2(st, 'b').length, 0);                 // 相手の攻撃は打ち消される
   const h = hitsOf2(st, 'a'); assert.equal(h.length, 2); assert.equal(h[1].dmg, calcDamage(A, { el: 'fire', type: 'mag', power: 120 }, B, 1)); // 自分の能力で、相手の技の属性・種別・威力
+});
+t('コピー（M000型）：反動もコピーして、自分が受ける。相手は、打ち消されて受けない', () => {
+  const cp = sk('light', 'phys', 10, [{ op: 'forceFirst' }, { op: 'nullifyFoe' }, { op: 'copyFoe' }]);
+  const foe = sk('fire', 'mag', 120, [{ op: 'recoil', ratio: 0.5 }]);
+  const A = mk('earth', 1, 300, 1, 99999, 0, 0, slots3(cp, cp, cp)), B = mk('wind', 999, 999, 999, 99999, 0, 0, slots3(foe, foe, foe));
+  const st = turn1(A, B);
+  const copyDmg = hitsOf2(st, 'a')[1].dmg;
+  assert.equal(B.hp, B.maxHp - hitsOf2(st, 'a').reduce((n, e) => n + e.dmg, 0));                 // 相手は、自分の反動を受けない（打ち消された）
+  assert.equal(A.hp, A.maxHp - Math.round(copyDmg * 0.5));                                       // コピーした反動は、カーバンクル（A）が受ける
+  assert(st.log.some(e => e.t === 'selfDamage' && e.who === 'a' && e.cause === 'recoil'));
+});
+t('コピー（M000型）：追加攻撃もコピーする（コピーの印がつく）', () => {
+  const cp = sk('light', 'phys', 10, [{ op: 'forceFirst' }, { op: 'nullifyFoe' }, { op: 'copyFoe' }]);
+  const foe = sk('fire', 'mag', 120, [{ op: 'extra', type: 'phys', power: 30 }]);
+  const A = mk('earth', 1, 300, 1, 99999, 0, 0, slots3(cp, cp, cp)), B = mk('wind', 999, 999, 999, 99999, 0, 0, slots3(foe, foe, foe));
+  const st = turn1(A, B), h = hitsOf2(st, 'a');
+  assert.equal(h.length, 3);                                                                      // 本体＋コピー（本体）＋コピー（追加攻撃）
+  assert.deepEqual(h.map(e => !!e.copy), [false, true, true]);
+  assert.deepEqual(h.map(e => !!e.extra), [false, false, true]);
+  assert.equal(h[2].dmg, calcDamage(A, { el: 'fire', type: 'phys', power: 30 }, B, 1));
+});
+t('コピー（M000型）：自分の「次のターンの威力加算」は、コピーした技に乗らない／コピー同士でも終わる', () => {
+  const cp = sk('light', 'phys', 10, [{ op: 'forceFirst' }, { op: 'nullifyFoe' }, { op: 'copyFoe' }]);
+  const foe = sk('fire', 'mag', 120);
+  const A = mk('earth', 1, 300, 1, 99999, 0, 0, slots3(cp, cp, cp)), B = mk('wind', 999, 999, 999, 99999, 0, 0, slots3(foe, foe, foe));
+  A.pending = { powBonus: 500 };
+  const st = turn1(A, B), h = hitsOf2(st, 'a');
+  assert.equal(h[1].dmg, calcDamage(A, { el: 'fire', type: 'mag', power: 120 }, B, 1));          // 加算（500）は、乗らない
+  assert(h[0].dmg > calcDamage(A, { el: 'light', type: 'phys', power: 10 }, B, 1));                // 本体には乗る
+  const X = mk('earth', 1, 300, 1, 99999, 0, 0, slots3(cp, cp, cp)), Y = mk('wind', 1, 300, 1, 99999, 0, 0, slots3(cp, cp, cp));
+  assert.doesNotThrow(() => turn1(X, Y));                                                          // コピーの技どうしでも、止まらない
 });
 t('反動で倒れたとき反撃し、相手を倒せばHP10で生き残る／倒せなければ負け', () => {
   const ct = sk('light', 'phys', 100, [{ op: 'recoil', ratio: 0.5 }, { op: 'counterOnSelfKO', type: 'mag', power: 130, healOnKill: 10 }]);

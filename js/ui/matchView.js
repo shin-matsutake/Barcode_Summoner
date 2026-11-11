@@ -3,6 +3,7 @@ import { h, sleep } from './dom.js';
 import { dialog, confirmDialog, story } from './dialog.js';
 import { enterStage } from './modes.js';
 import { preloadMonsters } from './portrait.js';
+import { playIntro } from './battleIntro.js';
 import { stageOf } from '../data.js';
 import { portrait, elemIcon, EL } from './portrait.js';
 import { analyze } from '../core/jan.js';
@@ -19,7 +20,7 @@ const KIND = ['技A', '技B', '固有'];
 const TYPE = { phys: '物理', mag: '魔法' };
 const pct = v => Math.round(v * 100) + '%';
 
-// params: { kind:'tower'|'auto'|'hotseat'|'code'|'pvp', labels, stage, mineJans, foeJans, ai, aiA, watch, teamIdx, codeParams, pvp }
+// params: { kind:'tower'|'auto'|'hotseat'|'code'|'pvp'|'tutorial', labels, intro, act, stage, mineJans, foeJans, ai, aiA, watch, teamIdx, codeParams, pvp }
 // 対人戦（kind:'pvp'）：mineJans＝部屋を作った側（a）の出撃順、foeJans＝参加した側（b）の出撃順。pvp＝{ session, side:'a'|'b', seed }
 //   計算は、両方の端で、同じ向き（a＝部屋を作った側）で行う。画面だけ、自分が常に下になるよう、左右を入れ替える。
 export function match(root, ctx, params) {
@@ -40,7 +41,7 @@ export function match(root, ctx, params) {
   const bt = h('div', 'bt');
   const top = h('header', 'bt-top');
   const menuBtn = h('button', 'btn small', watch ? 'やめる' : 'メニュー');
-  top.append(menuBtn, h('span', 'bt-title', params.kind === 'tower' ? `CPUタワー ステージ${params.stage}` : params.kind === 'code' ? 'シミュレーション' : params.kind === 'pvp' ? 'リンクバトル' : params.kind === 'hotseat' ? 'クイックバトル' : 'オートバトル'));
+  top.append(menuBtn, h('span', 'bt-title', params.kind === 'tower' ? `CPUタワー ステージ${params.stage}` : params.kind === 'code' ? 'シミュレーション' : params.kind === 'pvp' ? 'リンクバトル' : params.kind === 'hotseat' ? 'クイックバトル' : params.kind === 'tutorial' ? 'チュートリアル' : 'オートバトル'));
 
   // ---- HUD（名前・HP・属性・耐性。自分側はタップで能力値） ----
   function buildHud(w) {
@@ -274,9 +275,9 @@ export function match(root, ctx, params) {
         }
         case 'stunned': say(`${nm(e.who)}は動けない！`); break;
         case 'hit': {
-          const tgt = e.who === 'a' ? 'b' : 'a', hi = hitInfo(e), c = EL[hi.el].c;
+          const tgt = e.who === 'a' ? 'b' : 'a', hi = e.type ? { type: e.type, el: e.el } : hitInfo(e), c = EL[hi.el].c;
           if (e.counter) say(`${nm(e.who)}の反撃！`, `${TYPE[hi.type]}攻撃　${e.dmg}ダメージ`);
-          else say([{ t: `${nm(e.who)}の` }, { t: e.skill, c }, { t: e.extra ? 'の追加攻撃！' : '！' }], `${TYPE[hi.type]}攻撃　${e.dmg}ダメージ${beats(view[tgt].el, hi.el) && !beats(hi.el, view[tgt].el) ? '　効果はいまひとつ' : ''}`);
+          else say(e.copy ? [{ t: `${nm(e.who)}は` }, { t: e.skill, c }, { t: e.extra ? 'の追加攻撃もコピー！' : 'をコピー！' }] : [{ t: `${nm(e.who)}の` }, { t: e.skill, c }, { t: e.extra ? 'の追加攻撃！' : '！' }], `${TYPE[hi.type]}攻撃　${e.dmg}ダメージ${beats(view[tgt].el, hi.el) && !beats(hi.el, view[tgt].el) ? '　効果はいまひとつ' : ''}`);
           await advance(e.who);
           hitFx(tgt, e.dmg, hi.type, c); setHp(tgt, e.foeHp, view[tgt]); break;
         }
@@ -315,6 +316,14 @@ export function match(root, ctx, params) {
       if (res === 'x') { await pvp.session.bye('leave'); ctx.pvp = null; return ctx.go('battleMenu'); }
       return pvpFail(res);
     }
+    if (params.kind === 'tutorial') {
+      const win = r === 'a', c = await dialog({ title: '決着', text: r === 'draw' ? '引き分け！' : win ? 'バトルに勝ちました！' : 'バトルに負けました…', buttons: [{ label: 'もう一度戦う', value: 'again' }, { label: 'つづきへ', value: 'next', primary: true }] });
+      if (!alive) return;
+      if (c === 'again') return ctx.go('match', { ...params });
+      ctx.store.update(st => { if (!st.tutorial.done.includes(params.act)) st.tutorial.done.push(params.act); });
+      await dialog({ title: '第一幕 おわり', text: 'バトルの流れを、体験できました。\nこの先は、これから追加されます。' });
+      return ctx.go('tutorial');
+    }
     if (params.kind === 'auto') {
       const c = await dialog({ title: '決着', text, buttons: [{ label: 'トップへ', value: 'top' }, { label: '別の2体で', value: 'new' }, { label: 'もう一度', value: 'again', primary: true }] });
       if (!alive) return;
@@ -349,7 +358,7 @@ export function match(root, ctx, params) {
     stopTimer(); const remain = tLeft, wasLocked = locked; locked = true; const wasPaused = paused; paused = true;
     const quit = await confirmDialog(watch ? '観戦をやめて、戻りますか？' : 'バトルをやめて、戻りますか？', watch ? 'やめる' : 'ギブアップ', '続ける');
     if (quit && pvp) { alive = false; stopTimer(); clearInterval(connTimer); waiters.splice(0).forEach(r => r()); await pvp.session.bye('forfeit'); ctx.pvp = null; return ctx.go('top'); }
-    if (quit) { alive = false; waiters.splice(0).forEach(r => r()); return ctx.go(params.kind === 'auto' ? 'auto' : params.kind === 'hotseat' ? 'hotSetup' : params.kind === 'code' ? 'simSetup' : 'tower'); }
+    if (quit) { alive = false; waiters.splice(0).forEach(r => r()); return ctx.go(params.kind === 'auto' ? 'auto' : params.kind === 'hotseat' ? 'hotSetup' : params.kind === 'code' ? 'simSetup' : params.kind === 'tutorial' ? 'tutorial' : 'tower'); }
     paused = wasPaused; if (!paused) waiters.splice(0).forEach(r => r());
     locked = wasLocked; if (!watch && !wasLocked && alive) startTimer(allowedSlots(fa(), s.battle.turn), remain);
   };
@@ -365,6 +374,9 @@ export function match(root, ctx, params) {
     else say('相手の選択を待っています…');
   }, 500);
   if (!watch) renderSkills();
-  dialog({ text: params.kind === 'tower' ? `ステージ${params.stage}\nバトル開始！` : 'バトル開始！', buttons: [], auto: 1300 }).then(() => alive && beginTurn());
+  if (params.intro) {   // バトルに入る演出（チュートリアルなど）
+    const lt = s.fighters.a.profile.monster, rt = s.fighters.b.profile.monster;
+    playIntro(root, { left: { monster: lt, label: label.a }, right: { monster: rt, label: label.b }, fx: ctx.store.get().options.fx !== false }).then(() => alive && beginTurn());
+  } else dialog({ text: params.kind === 'tower' ? `ステージ${params.stage}\nバトル開始！` : 'バトル開始！', buttons: [], auto: 1300 }).then(() => alive && beginTurn());
   return () => { alive = false; stopTimer(); clearInterval(connTimer); waiters.splice(0).forEach(r => r()); };
 }

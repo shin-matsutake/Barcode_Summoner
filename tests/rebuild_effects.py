@@ -44,7 +44,7 @@ def parse_line(body,cond):
         s=re.sub(pat,'',s)
     E=lambda t,p,**k:{'op':'extra','type':TY[t],'power':int(p),**k}
     # --- 特殊なもの（先に判定）---
-    take(r'条件、?属性に関係なく相手の攻撃を無効化し、?無効化した攻撃と同じ条件の追加攻撃をする',lambda m:[{'op':'nullifyFoe'},{'op':'copyFoe'}])
+    take(r'条件、?属性に関係なく相手の攻撃を無効化し、?無効化した攻撃(?:と同じ条件の追加攻撃をする|を、?反動や追加効果もふくめて、?コピーして追加で使う)',lambda m:[{'op':'nullifyFoe'},{'op':'copyFoe'}])
     take(r'この効果で受けたダメージで自分のHPが0になった場合、?威力(\d+)の追加(物理|魔法)攻撃(?:を与える)?',lambda m:{'op':'counterOnSelfKO','type':TY[m.group(2)],'power':int(m.group(1))})
     take(r'追加(?:物理|魔法)?攻撃で相手を倒した場合、?(?:体力|HP)を(\d+)回復(?:する)?',lambda m:{'op':'_healOnKill','n':int(m.group(1))})
     take(r'この攻撃で相手を倒した場合、?(?:自分の)?(?:HP|体力)を?(\d+)回復(?:する)?',lambda m:{'op':'onKill','heal':int(m.group(1))})

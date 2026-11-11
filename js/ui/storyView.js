@@ -28,12 +28,15 @@ export function story(root, ctx, params = {}) {
   wrap.append(bar, stage, winWrap);
   root.append(wrap);
 
+  // 会話が終わったら、幕の最後のバトルへ（なければ、幕を見終わったことにして、一覧へ）。バトルの勝ち負けで、物語は分かれない
   const finish = () => {
+    const b = act.battle;
+    if (b) return ctx.go('match', { kind: 'tutorial', act: act.id, mineJans: b.mine, foeJans: b.foe, ai: b.ai || 1, labels: b.labels, intro: true });
     ctx.store.update(s => { if (!s.tutorial.done.includes(act.id)) s.tutorial.done.push(act.id); });
     ctx.go('tutorial');
   };
   back.onclick = async () => { if (await confirmDialog('物語を中断して、戻りますか？', '中断して戻る', '続ける')) ctx.go('tutorial'); };
-  skip.onclick = async () => { if (await confirmDialog('この幕を、最後まで飛ばしますか？', '飛ばす', '続ける')) finish(); };
+  skip.onclick = async () => { if (await confirmDialog(act.battle ? '会話を飛ばして、バトルへ進みますか？' : 'この幕を、最後まで飛ばしますか？', '飛ばす', '続ける')) finish(); };
 
   function setSprite(side, who, img) {
     const el = sp[side];

@@ -76,19 +76,18 @@ function perform(me, foe, sk, isFirst, turn, ev, who, orderOff, x = {}) {
   const c = { isFirst, orderOff, foe, pre: { me: me.hp, foe: foe.hp }, live, ...x };
   const flags = { ignoreRes: !!hasOp(sk, 'ignoreRes') };
   // 技の威力：「次のターンの威力加算」と「このターンの威力追加」は技本体だけに乗る（追加攻撃は別の攻撃なので乗らない）
-  let power = sk.power + (me.cur.powBonus || 0);
+  let power = sk.power + (x.copied ? 0 : (me.cur.powBonus || 0));   // コピーした技には、自分の「次のターンの威力加算」は乗らない
   for (const o of ops(sk)) if (o.op === 'bonus' && condOk(o.cond, c)) power += o.power;
-  for (const e of (me.cur.powBonusEl || [])) if (e.el === sk.el) power += e.n;      // 次の攻撃が指定属性なら加算
+  if (!x.copied) for (const e of (me.cur.powBonusEl || [])) if (e.el === sk.el) power += e.n;      // 次の攻撃が指定属性なら加算
   const hits = [{ type: sk.type, power, main: true }];
   for (const o of ops(sk)) if (o.op === 'extra') {
     if (o.cond && o.cond.startsWith('after')) hits.push({ type: o.type, power: o.power, stat: o.stat, lazy: o.cond }); // 攻撃後に判定
     else if (condOk(o.cond, c)) hits.push({ type: o.type, power: o.power, stat: o.stat });
   }
-  if (x.foeSk) for (const o of ops(sk)) if (o.op === 'copyFoe' && condOk(o.cond, c)) hits.push({ type: x.foeSk.type, power: x.foeSk.power, el: x.foeSk.el, copy: true }); // 相手の攻撃をコピー
   if (x.nulled) { // 打ち消された技：「打消しが発生した場合」の追加攻撃だけが通る
     hits.length = 0;
     for (const o of ops(sk)) if (o.op === 'extra' && o.cond === 'clash') hits.push({ type: o.type, power: o.power, stat: o.stat });
-  } else if (me.cur.powMult) hits[0].power *= me.cur.powMult; // 「次のターンの技の威力を倍」：技本体のみ
+  } else if (!x.copied && me.cur.powMult) hits[0].power *= me.cur.powMult; // 「次のターンの技の威力を倍」：技本体のみ
   let total = 0, mainTotal = 0;
   const factor = Math.pow(0.5, foe.cur.halfN || 0) * Math.pow(2, foe.cur.doubleN || 0); // 半減は重ねがけ（半分×半分＝4分の1）
   const dealt = (h, d) => {
@@ -100,7 +99,7 @@ function perform(me, foe, sk, isFirst, turn, ev, who, orderOff, x = {}) {
     const wasFull = foe.hp === foe.maxHp;
     foe.hp = Math.max(0, foe.hp - d); total += d; if (h.main) mainTotal += d; foe.takenThis += d;
     if (foe.hp <= 0 && C.ENDURE_FULL_HP && wasFull && !foe.endured) { foe.hp = 1; foe.endured = true; }
-    ev.push({ t: 'hit', who, skill: sk.name, dmg: d, foeHp: foe.hp, extra: !h.main && !h.copy });
+    ev.push({ t: 'hit', who, skill: sk.name, dmg: d, foeHp: foe.hp, extra: !h.main && !h.copy, copy: !!x.copied, type: h.type, el: h.el || sk.el });
   };
   for (const h of hits) {
     if (foe.hp <= 0) break;
@@ -131,7 +130,7 @@ function perform(me, foe, sk, isFirst, turn, ev, who, orderOff, x = {}) {
           let d = calcDamage(me, { el: sk.el, type: o.type, power: o.power }, foe, turn, flags);
           if (factor !== 1) d = Math.max(C.MIN_DMG, Math.round(d * factor));
           foe.hp = Math.max(0, foe.hp - d); total += d; foe.takenThis += d;
-          ev.push({ t: 'hit', who, skill: sk.name, dmg: d, foeHp: foe.hp, counter: true });
+          ev.push({ t: 'hit', who, skill: sk.name, dmg: d, foeHp: foe.hp, counter: true, type: o.type, el: sk.el });
           if (foe.hp <= 0 && o.healOnKill) { me.hp = o.healOnKill; me.selfKO = false; ev.push({ t: 'heal', who, n: o.healOnKill, hp: me.hp }); }
         }
         break;
@@ -150,6 +149,15 @@ function perform(me, foe, sk, isFirst, turn, ev, who, orderOff, x = {}) {
   }
   me.hp = Math.max(0, me.hp); foe.hp = Math.max(0, foe.hp);
   if (ops(sk).length) ev.push({ t: 'effect', who, ops: ops(sk).map(o => o.op) });
+  // 相手の攻撃をコピー（copyFoe）：無効化した相手の技を、そのまま追加で使う。
+  //   威力・属性・種別・追加攻撃・反動・回復・追加効果もふくめて、自分が使ったものとして行う（反動は自分が受ける）。
+  //   ただし、先制・後攻・無効化・コピーの効果は、写さない（終わらなくなるため）
+  const cp = !x.copied && !x.nulled && x.foeSk ? ops(sk).find(o => o.op === 'copyFoe' && condOk(o.cond, c)) : null;
+  if (cp && me.hp > 0 && foe.hp > 0) {
+    const META = new Set(['forceFirst', 'forceLast', 'nullifyFoe', 'copyFoe']);
+    const csk = { ...x.foeSk, effects: ops(x.foeSk).filter(o => !META.has(o.op)) };
+    perform(me, foe, csk, isFirst, turn, ev, who, orderOff, { rng: x.rng, copied: true, clash: x.clash, foeNullified: x.foeNullified });
+  }
 }
 // 1ターンを処理。slotA/slotB は技の枠(0〜2)。行動不能なら null
 export function resolveTurn(st, slotA, slotB, rng) {
