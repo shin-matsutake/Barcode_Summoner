@@ -81,7 +81,7 @@ export function match(root, ctx, params) {
     u.meta.replaceChildren(elemIcon(f.el, 'sm'), h('span', '', `物理耐性 ${pct(f.profile.res.phys)}　魔法耐性 ${pct(f.profile.res.mag)}`));
     const total = s.teams[w].length, remain = total - s.idx[w];
     u.dots.textContent = total > 1 ? '●'.repeat(remain) + '○'.repeat(total - remain) : '';
-    sides[U(w)].replaceChildren(portrait(f.profile.monster, { view: U(w) === 'a' ? 'back' : 'front', fit: { scale: U(w) === 'a' ? 1 : 0.9 } }));   // 相手は、少し小さく（遠近感）
+    sides[U(w)].replaceChildren(portrait(f.profile.monster, { view: U(w) === 'a' ? 'back' : 'front', fit: { scale: U(w) === 'a' ? 0.92 : 1.12 } }));   // 相手を大きく、自分を小さく（広角レンズのように、相手が迫る）
     setHp(w, f.hp, f);
   }
 

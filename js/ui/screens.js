@@ -49,8 +49,8 @@ function top(root, ctx) {
   wrap.append(logo);
   const menu = h('nav', 'menu');
   const items = [
-    ['召喚する', 'summon', 'バーコードを読み取って、仲間を呼ぶ'],
-    ['対戦する', 'battleMenu', 'リンクバトル・シミュレーション'],
+    ['召喚する', 'summon', 'バーコードで仲間を呼ぶ'],
+    ['対戦する', 'battleMenu', '友だち・CPU・2人対戦'],
     ['CPUタワー', 'tower', `${ctx.data.tower.stages.length}つのステージに挑戦`],
     ['オートバトル', 'auto', 'CPUどうしの対戦を観戦'],
     ['ストック', 'stock', '召喚した仲間を見る'],

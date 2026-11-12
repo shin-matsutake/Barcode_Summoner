@@ -493,3 +493,28 @@ input:checked+.sw::after{transform:translateX(20px);background:#06263d}
 @keyframes bi-shake{0%,100%{transform:translate(0)}25%{transform:translate(-4px,2px)}50%{transform:translate(4px,-2px)}75%{transform:translate(-2px,-2px)}}
 .bi.still *{animation:none!important}
 @media (prefers-reduced-motion:reduce){.bi *{animation:none!important}}
+
+/* ---- 背景（images/BARK.jpg があるとき）---- */
+#app.has-bg{--dim:.64;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='52' height='90'%3E%3Cpath d='M26 0L52 15V45L26 60L0 45V15Z M26 60V90' fill='none' stroke='%2362e6ff' stroke-opacity='.07'/%3E%3C/svg%3E"),
+    linear-gradient(rgba(3,9,16,var(--dim)),rgba(3,9,16,var(--dim))),
+    var(--bg-img,none) center 58%/cover no-repeat,var(--ink)}
+#app.has-bg[data-screen="top"]{--dim:.12}
+#app.has-bg[data-screen="match"]{--dim:.55}
+#app.has-bg[data-screen="story"],#app.has-bg[data-screen="summonFx"]{--dim:.5}
+/* トップ：メニューをすりガラスにして、円盤を見せる */
+#app.has-bg[data-screen="top"] .menu-btn::before{background:rgba(8,26,44,.5);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+#app.has-bg[data-screen="top"] .menu-btn{color:#eaf8ff}
+
+/* ---- バトル：自分のHUDを半透明にして、立ち絵の下半分に重ねる ---- */
+.hud.me{position:relative;z-index:4;margin-top:-34px}
+.hud.me::before{background:rgba(13,42,69,.66);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)}
+.hud.foe{position:relative;z-index:4}
+.side{z-index:1}
+.foe-side{z-index:2}
+
+/* ---- タワー：下から上へ登る ---- */
+.tower-top{text-align:center;font:700 12px ui-monospace,Menlo,Consolas,monospace;letter-spacing:.4em;color:var(--sub);padding:2px 0}
+.stage.far{opacity:.55}.stage.far .name{letter-spacing:.2em}
+.stage.now{box-shadow:0 0 0 1px var(--orange)}.stage.now .st-tag{color:var(--orange)}

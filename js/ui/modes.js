@@ -30,7 +30,7 @@ export function tower(root, ctx) {
   const list = h('div', 'list'), t = ctx.store.get().tower, cleared = t.cleared;
   const stages = ctx.data.tower.stages;
 
-  // 仲間の欄（押すと一覧）
+  // 仲間の欄（押すと一覧）。塔の入口（いちばん下）に置く
   const rp = h('button', 'panel roster-panel');
   const rh = h('div', 'rp-head');
   rh.append(h('b', '', 'タワーの仲間'), h('span', 'rp-n', `${t.roster.length}/${ROSTER_MAX}`));
@@ -42,22 +42,28 @@ export function tower(root, ctx) {
   }
   rp.append(rh, faces, h('p', 'sub', t.roster.length ? 'タップで一覧を見る・仲間を加える' : 'まず、仲間を加えましょう（挑戦が終わるまで外せません）'));
   rp.onclick = () => ctx.go('towerRoster');
-  list.append(rp);
 
+  // 塔：下（入口）から上（頂上）へ登る。上のステージほど、画面の上。まだ先のステージは「？？？」
   if (!stages.length) list.append(h('div', 'panel empty', 'タワーのデータがありません'));
-  for (const stg of stages) {
-    const open = stg.stage <= cleared + 1, done = stg.stage <= cleared;
-    const b = h('button', 'panel stage' + (open ? '' : ' locked') + (done ? ' done' : ''));
+  list.append(h('div', 'tower-top', '▲ 頂上'));
+  let current = null;
+  for (const stg of [...stages].reverse()) {
+    const open = stg.stage <= cleared + 1, done = stg.stage <= cleared, far = stg.stage > cleared + 2;
+    const b = h('button', 'panel stage' + (open ? '' : ' locked') + (done ? ' done' : '') + (far ? ' far' : ''));
     const info = h('div', 'info');
-    info.append(h('div', 'name', `ステージ${stg.stage}`), h('div', 'sub', `${stg.rule.bring}体持ち込み・${stg.rule.fight}体で戦う`));
-    b.append(info, h('span', 'st-tag', done ? 'クリア済み' : open ? '挑戦できる' : 'ロック中'));
+    if (far) info.append(h('div', 'name', `${stg.stage}F　？？？`), h('div', 'sub', 'まだ、見えません'));
+    else info.append(h('div', 'name', `ステージ${stg.stage}`), h('div', 'sub', `${stg.rule.bring}体持ち込み・${stg.rule.fight}体で戦う`));
+    b.append(info, h('span', 'st-tag', done ? 'クリア済み' : open ? '挑戦できる' : far ? '' : 'ロック中'));
     b.disabled = !open;
     b.onclick = () => enterStage(ctx, stg.stage);
+    if (stg.stage === Math.min(cleared + 1, stages.length ? stages[stages.length - 1].stage : 1)) { b.classList.add('now'); current = b; }
     list.append(b);
   }
+  list.append(h('div', 'tower-top bottom', '▼ 入口'), rp);
   const rb = resetButton(ctx, () => ctx.go('tower'));
   if (rb) list.append(rb);
   wrap.append(list); root.append(wrap);
+  if (current) setTimeout(() => { try { current.scrollIntoView({ block: 'center' }); } catch (e) { /* 何もしない */ } }, 30);   // いまの階が、見えるところへ
 }
 
 export function auto(root, ctx) {
