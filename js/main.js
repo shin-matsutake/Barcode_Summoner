@@ -4,9 +4,8 @@ import { screens } from './ui/screens.js';
 import { closeAllDialogs } from './ui/dialog.js';
 import { h } from './ui/dom.js';
 
-// 背景の画像（images の中）。あれば使う。名前は、ここで変える
-const BG_FILE = 'images/BARK.jpg';
 import { initBackNav } from './ui/backnav.js';
+import { bgFor, setBg } from './ui/bg.js';   // 背景の画像と、画面ごとの使い分けは、ui/bg.js
 
 const root = document.getElementById('screen');
 const ctx = { data: null, store, go, session: {} };
@@ -21,6 +20,7 @@ export function go(name, params = {}) {
   if (app) { app.dataset.screen = name; app.classList.remove('scan'); void app.offsetWidth; app.classList.add('scan'); }
   const fn = screens[name];
   if (!fn) { console.error('画面がありません:', name); return; }
+  setBg(bgFor(name, params));
   cleanup = fn(root, ctx, params) || null;
 }
 
@@ -28,8 +28,6 @@ async function boot() {
   store.load();
   try {
     ctx.data = await loadData();
-    // 画像の場所は、CSSの場所ではなく、ページの場所を基準にして渡す
-    const bg = new Image(); bg.onload = () => { const a = document.getElementById('app'); a.style.setProperty('--bg-img', `url("${new URL(BG_FILE, location.href).href}")`); a.classList.add('has-bg'); }; bg.src = BG_FILE;
     go('top');
     initBackNav(root, ctx);
   } catch (e) {

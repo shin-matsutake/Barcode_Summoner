@@ -7,8 +7,17 @@
 // 使う版は、ここで1か所だけ決める（公開から2週間以上たった版を選ぶこと）
 export const TRYSTERO_URL = 'https://cdn.jsdelivr.net/npm/trystero@0.25.4/+esm';
 export const APP_ID = 'barcode-summoner-pvp-v1';
-// モバイル回線どうしでつながらないときは、ここに TURN サーバーを足す（Trystero の turnConfig）
-export const TURN_CONFIG = null;   // 例：[{ urls: ['turn:example.com:3478'], username: '…', credential: '…' }]
+// モバイル回線どうしは、直接つながらないことが多い。そのとき、この中継サーバー（TURN）を通す。
+// Metered の Open Relay（無料枠あり。使った量は、Metered の管理画面で見られる）。
+// この情報は公開のコードに入る。使われすぎたら、管理画面で「Remove」して、新しく作り直し、ここを差し替える。
+// 同じ場所の直接つながる対戦は、中継を通らないので、枠を使わない。
+const TURN_USER = '3ff89d2f41882597c04644f3', TURN_PASS = '/zMaoSryNBT0OAbJ';
+export const TURN_CONFIG = [
+  { urls: 'turn:global.relay.metered.ca:80', username: TURN_USER, credential: TURN_PASS },
+  { urls: 'turn:global.relay.metered.ca:80?transport=tcp', username: TURN_USER, credential: TURN_PASS },
+  { urls: 'turn:global.relay.metered.ca:443', username: TURN_USER, credential: TURN_PASS },
+  { urls: 'turns:global.relay.metered.ca:443?transport=tcp', username: TURN_USER, credential: TURN_PASS },   // 443番のTLS：厳しい回線でも通りやすい
+];   // 使わないとき（直接つなぐだけ）は null にする
 
 export const netKind = () => {
   try { return new URLSearchParams(location.search).get('net') === 'local' ? 'local' : 'trystero'; } catch (e) { return 'trystero'; }

@@ -1,4 +1,5 @@
 import { h } from './dom.js';
+import { setBg, getBg } from './bg.js';
 const layer = () => document.getElementById('dialog');
 
 // メッセージのダイアログ。押されたボタンの value を返す（自動で閉じたときは null）
@@ -45,9 +46,14 @@ export function toast(msg) {
 }
 
 // ストーリーの文を1ページずつ出す（pages は文字列または文字列の配列）。タップ（ボタン）で次へ
-export async function story(pages, title = '') {
+// opts.bg：その間だけ使う背景（bg.js のキー。例：'towerStory'）。終わったら、もとの背景にもどす
+export async function story(pages, title = '', opts = {}) {
   const list = (Array.isArray(pages) ? pages : [pages]).map(String).filter(t => t.trim());
-  for (let i = 0; i < list.length; i++) {
-    await dialog({ title, text: list[i], buttons: [{ label: i < list.length - 1 ? '次へ' : 'OK', value: true }] });
-  }
+  const prev = getBg();
+  if (opts.bg) setBg(opts.bg);
+  try {
+    for (let i = 0; i < list.length; i++) {
+      await dialog({ title, text: list[i], buttons: [{ label: i < list.length - 1 ? '次へ' : 'OK', value: true }] });
+    }
+  } finally { if (opts.bg) setBg(prev); }
 }

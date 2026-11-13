@@ -145,7 +145,17 @@ function options(root, ctx) {
     seg.append(b);
   });
   tempo.append(seg);
-  body.append(tempo,
+  const auto = h('div', 'panel opt');   // 物語のオートの速さ
+  auto.append(h('div', 'opt-head', ''));
+  auto.firstChild.append(h('span', '', '物語のオートの速さ'));
+  const aseg = h('div', 'seg tempo5');
+  [['fast', 'はやい'], ['normal', 'ふつう'], ['slow', 'ゆっくり']].forEach(([v, l]) => {
+    const b = h('button', 'seg-b' + ((d.autoSpeed || 'normal') === v ? ' on' : ''), l);
+    b.onclick = () => { d.autoSpeed = v; aseg.querySelectorAll('.seg-b').forEach(x => x.classList.toggle('on', x === b)); refresh(); };
+    aseg.append(b);
+  });
+  auto.append(aseg, h('p', 'sub', 'セリフが出そろってから、次へ進むまでの待ち時間（声があるときは、鳴り終わるまで待ちます）'));
+  body.append(tempo, auto,
     toggle('バトル演出', 'fx', 'ダメージを受けたときの揺れ'),
     toggle('相手のニックネームを表示', 'showFoeNick', 'オフにすると、相手のモンスターは本来の名前だけ表示します'));
 
