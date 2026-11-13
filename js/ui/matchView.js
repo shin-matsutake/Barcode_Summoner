@@ -1,10 +1,11 @@
 // バトル画面。勝ち抜き戦（1〜3体）に対応。自分が操作するモードと、CPU同士を観戦するモードがある。
-import { h, sleep } from './dom.js';
+import { h, sleep, today } from './dom.js';
 import { dialog, confirmDialog, story } from './dialog.js';
 import { enterStage } from './modes.js';
 import { preloadMonsters } from './portrait.js';
 import { playIntro } from './battleIntro.js';
 import { stageOf } from '../data.js';
+import { afterBattle, releaseInfo } from '../towerRules.js';
 import { portrait, elemIcon, EL } from './portrait.js';
 import { analyze } from '../core/jan.js';
 import { beats } from '../core/rules.js';
@@ -19,6 +20,9 @@ const DELAY = { slowest: 2000, slow: 1500, normal: 1250, quick: 1000, fast: 550 
 const KIND = ['技A', '技B', '固有'];
 const TYPE = { phys: '物理', mag: '魔法' };
 const pct = v => Math.round(v * 100) + '%';
+
+// 立ち絵の大きさ（V9）。V8に戻すときは foe:1.12 / me:0.92 と、style.css の「V9 バトルの配置」のブロックを消す
+const BT_SCALE = { foe: 1.2, me: 1.0 };
 
 // params: { kind:'tower'|'auto'|'hotseat'|'code'|'pvp'|'tutorial', labels, intro, act, stage, mineJans, foeJans, ai, aiA, watch, teamIdx, codeParams, pvp }
 // 対人戦（kind:'pvp'）：mineJans＝部屋を作った側（a）の出撃順、foeJans＝参加した側（b）の出撃順。pvp＝{ session, side:'a'|'b', seed }
@@ -81,7 +85,7 @@ export function match(root, ctx, params) {
     u.meta.replaceChildren(elemIcon(f.el, 'sm'), h('span', '', `物理耐性 ${pct(f.profile.res.phys)}　魔法耐性 ${pct(f.profile.res.mag)}`));
     const total = s.teams[w].length, remain = total - s.idx[w];
     u.dots.textContent = total > 1 ? '●'.repeat(remain) + '○'.repeat(total - remain) : '';
-    sides[U(w)].replaceChildren(portrait(f.profile.monster, { view: U(w) === 'a' ? 'back' : 'front', fit: { scale: U(w) === 'a' ? 0.92 : 1.12 } }));   // 相手を大きく、自分を小さく（広角レンズのように、相手が迫る）
+    sides[U(w)].replaceChildren(portrait(f.profile.monster, { view: U(w) === 'a' ? 'back' : 'front', fit: { scale: U(w) === 'a' ? BT_SCALE.me : BT_SCALE.foe } }));   // 相手を大きく（広角レンズのように、相手が迫る）。自分の下半分は、メッセージが重なる
     setHp(w, f.hp, f);
   }
 
@@ -91,8 +95,8 @@ export function match(root, ctx, params) {
   turnBox.append(h('span', '', 'TURN'), turnNum, rage);
   const warn = h('div', 'warn'), msg = h('div', 'msg panel'), m1 = h('div', 'm1'), m2 = h('div', 'm2');
   msg.append(m1, m2);
-  mid.append(msg, warn);
-  arena.append(sides.b, mid, sides.a, turnBox);   // ターンは、左上に重ねる（場所を節約）
+  mid.append(msg);
+  arena.append(sides.b, sides.a, mid, warn, turnBox);   // メッセージは自分の絵の下半分に重ねる。ターンは左上、相打ちの警告は右上に重ねる（場所を節約）
 
   const timer = h('div', 'timer'), tfill = h('i'), tnum = h('b'); timer.append(tfill, tnum);
   const skills = h('div', 'skills');
@@ -341,7 +345,7 @@ export function match(root, ctx, params) {
     }
     const stage = params.stage, stg = stageOf(ctx.data, stage), hasNext = !!stageOf(ctx.data, stage + 1);
     if (r === 'a') {
-      ctx.store.update(st => { st.tower.cleared = Math.max(st.tower.cleared, stage); });
+      ctx.store.update(st => afterBattle(st.tower, { stage, won: true, party: params.mineJans, date: today() }));   // クリアと、出撃メンバーの記録（隠しボーナスの判定用）
       if (stg && stg.outro) { await story(stg.outro, `ステージ${stage}`); if (!alive) return; }
       const btns = [{ label: 'タワーへ', value: 'tower' }];
       if (hasNext) btns.push({ label: '次のステージへ', value: 'next', primary: true });
@@ -349,7 +353,10 @@ export function match(root, ctx, params) {
       if (!alive) return;
       return c === 'next' ? enterStage(ctx, stage + 1) : ctx.go('tower');
     }
-    const c = await dialog({ title: '決着', text, buttons: [{ label: 'タワーへ', value: 'tower' }, { label: '選出からやり直す', value: 'again', primary: true }] });
+    ctx.store.update(st => afterBattle(st.tower, { stage, won: false }));   // 負け：次に仲間を魔界に戻せる状態にする
+    const rel = releaseInfo(ctx.store.get().tower);
+    const hint = rel.can ? (rel.mode === 'limited' ? '\n\n選出の画面で、仲間を1体、魔界に戻せます。' : '\n\n選出の画面で、仲間を魔界に戻して、入れ替えられます。') : '';
+    const c = await dialog({ title: '決着', text: text + hint, buttons: [{ label: 'タワーへ', value: 'tower' }, { label: '選出からやり直す', value: 'again', primary: true }] });
     if (!alive) return;
     ctx.go(c === 'again' ? 'select' : 'tower', c === 'again' ? { stage, teamIdx: params.teamIdx, restore: true } : {});
   }
@@ -358,6 +365,7 @@ export function match(root, ctx, params) {
     stopTimer(); const remain = tLeft, wasLocked = locked; locked = true; const wasPaused = paused; paused = true;
     const quit = await confirmDialog(watch ? '観戦をやめて、戻りますか？' : 'バトルをやめて、戻りますか？', watch ? 'やめる' : 'ギブアップ', '続ける');
     if (quit && pvp) { alive = false; stopTimer(); clearInterval(connTimer); waiters.splice(0).forEach(r => r()); await pvp.session.bye('forfeit'); ctx.pvp = null; return ctx.go('top'); }
+    if (quit && params.kind === 'tower') ctx.store.update(st => afterBattle(st.tower, { stage: params.stage, won: false }));   // ギブアップも、負けと同じ扱い
     if (quit) { alive = false; waiters.splice(0).forEach(r => r()); return ctx.go(params.kind === 'auto' ? 'auto' : params.kind === 'hotseat' ? 'hotSetup' : params.kind === 'code' ? 'simSetup' : params.kind === 'tutorial' ? 'tutorial' : 'tower'); }
     paused = wasPaused; if (!paused) waiters.splice(0).forEach(r => r());
     locked = wasLocked; if (!watch && !wasLocked && alive) startTimer(allowedSlots(fa(), s.battle.turn), remain);

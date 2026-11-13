@@ -7,7 +7,7 @@ import { pickMonster } from './picker.js';
 import { AI_LABELS } from './ai.js';
 import { story } from './dialog.js';
 import { resetButton } from './roster.js';
-import { ROSTER_MAX } from '../storage.js';
+import { ROSTER_MAX, rosterCap, releaseText } from '../towerRules.js';
 import { stageOf, randomTeamIdx } from '../data.js';
 
 function backBar(ctx, title) {
@@ -16,11 +16,14 @@ function backBar(ctx, title) {
 }
 
 // ステージに入る：ステージの前の文（intro。あれば）→ 選出（仲間が足りなくても入れる。空き枠から召喚できる）
+// 相手チームは、そのステージをクリアするまで固定（出入りして、引き直せないように）
 export async function enterStage(ctx, n) {
   const stg = stageOf(ctx.data, n);
   if (!stg) return ctx.go('tower');
-  if (stg.intro && n > ctx.store.get().tower.cleared) await story(stg.intro, `ステージ${n}`);
-  const teamIdx = randomTeamIdx(stg);
+  const t = ctx.store.get().tower, fixed = t.foe && t.foe.stage === n && stg.teams[t.foe.teamIdx] ? t.foe.teamIdx : null;
+  if (fixed == null && stg.intro && n > t.cleared) await story(stg.intro, `ステージ${n}`);
+  let teamIdx = fixed;
+  if (teamIdx == null) { teamIdx = randomTeamIdx(stg); ctx.store.update(s => { s.tower.foe = { stage: n, teamIdx }; }); }
   ctx.go('select', { stage: n, teamIdx });
 }
 
@@ -33,14 +36,15 @@ export function tower(root, ctx) {
   // 仲間の欄（押すと一覧）。塔の入口（いちばん下）に置く
   const rp = h('button', 'panel roster-panel');
   const rh = h('div', 'rp-head');
-  rh.append(h('b', '', 'タワーの仲間'), h('span', 'rp-n', `${t.roster.length}/${ROSTER_MAX}`));
+  const cap = rosterCap(cleared);
+  rh.append(h('b', '', 'タワーの仲間'), h('span', 'rp-n', `${t.roster.length}/${cap}`));
   const faces = h('div', 'rp-faces');
   for (let i = 0; i < ROSTER_MAX; i++) {
     const j = t.roster[i];
     if (j) faces.append(portrait(analyze(j, ctx.data).monster, { view: 'icon', cls: 'xs' }));
-    else faces.append(h('div', 'rp-empty', '＋'));
+    else faces.append(h('div', 'rp-empty' + (i >= cap ? ' rp-lock' : ''), i >= cap ? '🔒' : '＋'));   // 🔒＝まだ開いていない枠
   }
-  rp.append(rh, faces, h('p', 'sub', t.roster.length ? 'タップで一覧を見る・仲間を加える' : 'まず、仲間を加えましょう（挑戦が終わるまで外せません）'));
+  rp.append(rh, faces, h('p', 'sub', t.roster.length ? 'タップで一覧を見る・仲間を加える・魔界に戻す' : 'まず、仲間を加えましょう'), h('p', 'sub rel-line', releaseText(t)));
   rp.onclick = () => ctx.go('towerRoster');
 
   // 塔：下（入口）から上（頂上）へ登る。上のステージほど、画面の上。まだ先のステージは「？？？」

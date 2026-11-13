@@ -124,7 +124,7 @@ export function detail(root, ctx, { jan, isNew = false }) {
   const nm = h('div', 'd-name'); nm.append(elemIcon(p.monster.el), h('b', '', p.monster.name));
   head.append(nm);
   if (p.monster.desc) head.append(h('p', 'sub desc', p.monster.desc));
-  if (!isNew && inRoster(ctx, jan)) head.append(h('p', 'sub tower-tag', 'タワーの仲間（挑戦が終わるまで外せません）'));
+  if (!isNew && inRoster(ctx, jan)) head.append(h('p', 'sub tower-tag', 'タワーの仲間（魔界に戻すのは、タワーの仲間の一覧から）'));
   const nickRow = h('label', 'nick');
   nickRow.append(h('span', '', 'ニックネーム'));
   const nick = h('input'); nick.type = 'text'; nick.maxLength = 10; nick.placeholder = '10文字まで（なくてもOK）';
@@ -162,7 +162,7 @@ export function detail(root, ctx, { jan, isNew = false }) {
   const del = h('button', 'btn small danger', '魔界に戻す');
   del.onclick = async () => {
     const msg = isNew ? '魔界に戻します。この仲間は保存されません。\n同じ番号で、また召喚できます。' : 'この仲間を魔界に戻します。ストックから消えます。\n同じ番号で、また召喚できます。';
-    if (!isNew && inRoster(ctx, jan)) { await dialog({ title: '戻せません', text: 'この仲間は、タワー挑戦中の仲間です。\nタワーの「最初からやり直す」のあとで、魔界に戻せます。' }); return; }
+    if (!isNew && inRoster(ctx, jan)) { await dialog({ title: '戻せません', text: 'この仲間は、タワーの仲間です。\n先に、タワーの仲間の一覧で魔界に戻してから、ストックから消してください。' }); return; }
     if (!(await confirmDialog(msg, '魔界に戻す', 'やめる'))) return;
     if (!isNew) ctx.store.update(s => { s.stock = s.stock.filter(x => x.jan !== jan); s.fav = s.fav.filter(x => x !== jan); });
     toast('魔界に戻しました'); ctx.go(isNew ? 'summon' : 'stock');

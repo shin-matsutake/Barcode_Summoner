@@ -2,14 +2,15 @@
 //   params.mode が 'code'（チームコード挑戦）… 自分の持ち込みは、ストック・番号から。仲間にいない子は「この試合だけ」も選べる
 //   それ以外（CPUタワー） … 自分の持ち込みは、タワーの仲間から
 import { h, today } from './dom.js';
-import { dialog } from './dialog.js';
+import { dialog, confirmDialog } from './dialog.js';
 import { portrait, elemIcon, EL } from './portrait.js';
 import { analyze } from '../core/jan.js';
 import { createFighter } from '../core/battle.js';
 import { pickMonster } from './picker.js';
 import { statsGrid, skillList } from './monsterInfo.js';
 import { stageOf } from '../data.js';
-import { ROSTER_MAX } from '../storage.js';
+import { rosterCap, releaseInfo, releaseText, startBattle } from '../towerRules.js';
+import { fullMessage, releaseCompanion } from './roster.js';
 import { summonLabel } from '../net/session.js';
 import { preloadMonsters } from './portrait.js';
 
@@ -81,14 +82,19 @@ export function select(root, ctx, params) {
       sel = i; keep(); draw();
       return;
     }
-    const avail = roster().some(j => !exclude.includes(j)), canAdd = roster().length < ROSTER_MAX;
+    const avail = roster().some(j => !exclude.includes(j)), canAdd = roster().length < rosterCap(ctx.store.get().tower.cleared);
     let how = avail ? 'pick' : 'add';
     if (avail && canAdd) {   // 仲間から選ぶか、新しく召喚するか
       how = await dialog({ title: '仲間を選ぶ', text: 'タワーの仲間から選びますか？\n新しく召喚して、仲間に加えますか？',
         buttons: [{ label: 'やめる', value: '' }, { label: '仲間から', value: 'pick' }, { label: '新しく召喚', value: 'add', primary: true }] });
     }
     if (how === 'add') {
-      if (!canAdd) { await dialog({ title: '仲間はいっぱいです', text: `タワーの仲間は${ROSTER_MAX}体までです。` }); return; }
+      if (!canAdd) {   // いっぱい：魔界に戻せるなら、仲間をタップして戻すと、召喚できる
+        const m = fullMessage(ctx), canRel = releaseInfo(ctx.store.get().tower).can;
+        await dialog({ title: m.title, text: canRel ? '先に、持ち込んでいる仲間をタップして「魔界に戻す」を選ぶと、空いた枠に新しく召喚できます。' : m.text });
+        return;
+      }
+      if (!avail && !(await confirmDialog('新しく召喚して、仲間に加えますか？', '召喚する', 'やめる'))) return;   // 選べる仲間がいないときも、いきなり進まず、聞く
       return addMore(i);
     }
     if (how !== 'pick') return;
@@ -120,6 +126,17 @@ export function select(root, ctx, params) {
     del.onclick = () => { pool[sel] = null; party = party.filter(k => k !== sel); sel = -1; keep(); draw(); };
     row.append(tog, rep, del);
     box.append(head, grid, sk, row);
+    if (!isCode && releaseInfo(ctx.store.get().tower).can) {   // 魔界に戻せるとき：仲間を外して、空いた枠に新しく召喚できる
+      const rel = h('button', 'btn small danger', '魔界に戻す');
+      rel.onclick = async () => {
+        const jan = it.jan;
+        if (!(await releaseCompanion(ctx, jan))) return;
+        pool = pool.map(x => x && x.jan === jan ? null : x);
+        party = party.filter(k => pool[k]);
+        sel = -1; keep(); draw();
+      };
+      const rr = h('div', 'btn-row'); rr.append(rel); box.append(rr);
+    }
     return box;
   }
 
@@ -150,6 +167,7 @@ export function select(root, ctx, params) {
       mr.append(c);
     });
     mine.append(mr);
+    if (!isCode) mine.append(h('p', 'sub rel-line', releaseText(ctx.store.get().tower)));
     if (filled < bring) mine.append(h('p', 'sub warn', isCode ? '空いている枠をタップして選びます（少ない人数でも挑戦できますが、不利になります）。' : '空いている枠をタップすると、仲間を選ぶ・召喚できます（少ない人数でも挑戦できますが、不利になります）。'));
     body.append(foe, mine);
     if (sel >= 0 && pool[sel]) body.append(detailPanel());
@@ -175,6 +193,7 @@ export function select(root, ctx, params) {
     go.disabled = !ready;
     go.onclick = () => {
       keep();
+      if (!isCode) ctx.store.update(s => startBattle(s.tower));   // 負けたあとの「魔界に戻せる」は、戦いが始まるまで
       if (isCode) {   // 「仲間に加えて戦う」を選んだ子を、ストックに保存する
         ctx.store.update(s => {
           for (const it of pool) if (it && it.saveOnStart && !s.stock.some(x => x.jan === it.jan)) s.stock.push({ jan: it.jan, nick: '', date: today() });
