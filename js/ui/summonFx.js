@@ -1,22 +1,35 @@
 // 召喚の演出：線で描く魔法陣。輪のふちに13桁の数字を並べて回す。
 // 2つの軸：①バーコードの運（加算値の合計の割合）→ 粒子の量と魔法陣のふち
 //          ②種の格（モンスター番号の範囲）→ 輪の数（063〜086＝2重／087〜098＝3重／000と099＝3重のあと砕ける）
-import { h } from './dom.js';
+import { h, today } from './dom.js';
 import { portrait, EL } from './portrait.js';
 import { analyze, baseValue, STAT_RULES, isValidFormat } from '../core/jan.js';
+import { recordSummon, seedFrom } from '../dex.js';
 
 const NS = 'http://www.w3.org/2000/svg';
 const C = 200;   // 魔法陣の中心（viewBox 400×400）
 
 // ---- 演出の段階を決める ----
+export const luckTier = luck => (luck >= 0.70 ? 3 : luck >= 0.55 ? 2 : luck >= 0.40 ? 1 : 0);   // 運：0＝低／1＝ふつう／2＝高／3＝最高
+export function speciesRank(id) {   // 格：種の番号で決まる輪の数
+  const shatter = id === 0 || id === 99;
+  return { rings: shatter || id >= 87 ? 3 : id >= 63 ? 2 : 1, shatter };
+}
 export function fxLevel(jan, data) {
   const d = [...jan].map(Number);
   const luck = ['hp', 'atk', 'mat', 'spd'].reduce((a, k) => a + baseValue(d, STAT_RULES[k]), 0) / 396;   // 0〜1
-  const tier = luck >= 0.70 ? 3 : luck >= 0.55 ? 2 : luck >= 0.40 ? 1 : 0;
   const id = analyze(jan, data).speciesId;
-  const shatter = id === 0 || id === 99;
-  const rings = shatter || id >= 87 ? 3 : id >= 63 ? 2 : 1;
-  return { luck, tier, id, rings, shatter };
+  return { luck, tier: luckTier(luck), id, ...speciesRank(id) };
+}
+
+// ---- 図鑑への登録 ----
+// 古い保存データの引き継ぎ：いまのストックとタワーの仲間から、図鑑の記録を作る（1回だけ）
+export function ensureDexSeed(ctx) {
+  const s = ctx.store.get(); if (s.dex.seeded) return;
+  const items = [...s.stock.map(x => ({ jan: x.jan, date: x.date || '' })), ...s.tower.roster.map(j => ({ jan: j, date: '' }))];
+  const rec = [];
+  for (const it of items) { try { const lv = fxLevel(it.jan, ctx.data); rec.push({ speciesId: lv.id, jan: it.jan, luck: lv.luck, date: it.date }); } catch (e) { /* 読めない番号は飛ばす */ } }
+  ctx.store.update(st => { seedFrom(st.dex, rec); });
 }
 
 // テスト用：指定した段階になる、チェックデジットの正しい13桁を探す
@@ -129,6 +142,7 @@ function buildShards(jan) {
 // after＝{ screen, params }：演出のあとに行く画面（なければ、ふつうの召喚の詳細へ）
 export function summonFx(root, ctx, { jan, demo = false, after = null }) {
   const p = analyze(jan, ctx.data), lv = fxLevel(jan, ctx.data);
+  if (!demo) { ensureDexSeed(ctx); ctx.store.update(st => { recordSummon(st.dex, lv.id, { jan, luck: lv.luck, date: today() }); }); }   // 召喚した時点で、図鑑に登録（ストックに保存しなくても）
   const fx = h('div', `sfx lk${lv.tier} rk${lv.rings}${lv.shatter ? ' shat' : ''}`);
   fx.style.setProperty('--el', EL[p.monster.el].c);
   const mc = h('div', 'mc');

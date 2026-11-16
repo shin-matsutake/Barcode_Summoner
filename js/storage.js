@@ -1,5 +1,6 @@
 // 保存。localStorage のキーは barcodeSummoner_v1。使えない環境ではその場かぎり（メモリのみ）で動く。
 import { ROSTER_MAX, defaultTower, normalizeTower } from './towerRules.js';
+import { emptyDex, normalizeDex } from './dex.js';
 const KEY = 'barcodeSummoner_v1';
 const SCHEMA = 1;
 export { ROSTER_MAX };   // タワーの仲間の最大数
@@ -9,6 +10,7 @@ const defaults = () => ({
   fav: [],        // お気に入り（最大10体）のJANコード
   options: { bgm: 70, se: 70, tempo: 'normal', fx: true, showFoeNick: true, autoSpeed: 'normal', storyAuto: false },   // autoSpeed：物語のオートの待ち時間（fast／normal／slow）。storyAuto：オートを入れたままにするか
   tower: defaultTower(),   // 中身と、仲間のルールは js/towerRules.js
+  dex: emptyDex(),   // 図鑑の記録。中身は js/dex.js
   tutorial: { done: [] },   // 見終わった幕（'act1' など）
 });
 let state = defaults();
@@ -23,6 +25,7 @@ function migrate(o) {
     options: { ...d.options, ...(o.options || {}) },
     stock: Array.isArray(o.stock) ? o.stock.filter(validItem).map(it => ({ jan: it.jan, nick: String(it.nick || '').slice(0, 10), date: String(it.date || '') })) : [],
     tower: normalizeTower(o.tower),
+    dex: normalizeDex(o.dex),
     tutorial: { done: Array.isArray(o.tutorial && o.tutorial.done) ? o.tutorial.done.filter(x => typeof x === 'string').slice(0, 20) : [] },
     fav: Array.isArray(o.fav) ? o.fav.filter(j => /^\d{13}$/.test(j)).slice(0, 10) : [],
   };

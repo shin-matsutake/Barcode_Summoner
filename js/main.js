@@ -5,7 +5,8 @@ import { closeAllDialogs } from './ui/dialog.js';
 import { h } from './ui/dom.js';
 
 import { initBackNav } from './ui/backnav.js';
-import { bgFor, setBg } from './ui/bg.js';   // 背景の画像と、画面ごとの使い分けは、ui/bg.js
+import { bgFor, setBg } from './ui/bg.js';
+import { ensureDexSeed } from './ui/summonFx.js';   // 古い保存データから、図鑑の記録を作る   // 背景の画像と、画面ごとの使い分けは、ui/bg.js
 
 const root = document.getElementById('screen');
 const ctx = { data: null, store, go, session: {} };
@@ -28,6 +29,7 @@ async function boot() {
   store.load();
   try {
     ctx.data = await loadData();
+    ensureDexSeed(ctx);
     go('top');
     initBackNav(root, ctx);
   } catch (e) {

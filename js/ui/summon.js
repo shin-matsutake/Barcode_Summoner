@@ -6,6 +6,7 @@ import { analyze, isValidCheckDigit } from '../core/jan.js';
 import { createFighter } from '../core/battle.js';
 import { inRoster } from './roster.js';
 import { findJan } from './summonFx.js';
+import { chipsOfJan } from './quality.js';
 import { cameraPanel } from './scanner.js';
 
 const KIND = ['技A', '技B', '固有'];
@@ -122,7 +123,7 @@ export function detail(root, ctx, { jan, isNew = false }) {
   const head = h('div', 'panel d-head');
   head.append(portrait(p.monster, { view: 'front', cls: 'd-pic' }));
   const nm = h('div', 'd-name'); nm.append(elemIcon(p.monster.el), h('b', '', p.monster.name));
-  head.append(nm);
+  head.append(nm, chipsOfJan(jan, ctx.data));   // 運と格（強さの目安）
   if (p.monster.desc) head.append(h('p', 'sub desc', p.monster.desc));
   if (!isNew && inRoster(ctx, jan)) head.append(h('p', 'sub tower-tag', 'タワーの仲間（魔界に戻すのは、タワーの仲間の一覧から）'));
   const nickRow = h('label', 'nick');

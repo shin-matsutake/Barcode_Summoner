@@ -568,3 +568,36 @@ input:checked+.sw::after{transform:translateX(20px);background:#06263d}
 .st-log-name{font-size:12px;font-weight:700;color:var(--cyan);margin-bottom:2px}
 .st-log-name.sideR{color:var(--amber)}.st-log-name.sideN{color:var(--sub)}
 .st-log-text{font-size:14px;line-height:1.55;white-space:pre-wrap;word-break:break-word}
+
+/* ---- 格・運の札 ---- */
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 0}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:1px 8px;border:1px solid rgba(98,230,255,.35);border-radius:10px;font-size:11px;line-height:1.6;background:rgba(8,26,44,.45)}
+.chip i{font-style:normal;color:var(--sub)}
+.chip b{font-weight:700;letter-spacing:.04em}
+.chip-luck.lk0 b{color:#8fa3b5}.chip-luck.lk1 b{color:#b8d4e8}.chip-luck.lk2 b{color:#ffd166}.chip-luck.lk3 b{color:#ffb020;text-shadow:0 0 6px rgba(255,176,32,.5)}
+.chip-rank b{color:var(--cyan)}
+.stock-tools{display:flex;gap:8px;flex-wrap:wrap}
+
+/* ---- 図鑑 ---- */
+.dex-sum{display:flex;flex-direction:column;gap:6px}
+.dex-line{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;align-items:center}
+.dex-line .dex-bar{grid-column:1 / -1;height:6px;border-radius:3px;background:rgba(98,230,255,.15);overflow:hidden}
+.dex-line .dex-bar i{display:block;height:100%;background:var(--cyan)}
+.dex-line b{justify-self:end}
+.dex-done{margin:2px 0 0;text-align:center;color:var(--amber);font-weight:700}
+.dex-h{margin:10px 2px 4px;font-size:14px;color:var(--cyan)}
+.dex-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.dex-cell{display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 2px 5px;border:1px solid rgba(98,230,255,.28);border-radius:8px;background:rgba(8,26,44,.5);color:inherit;font:inherit;min-width:0}
+button.dex-cell:active{background:rgba(98,230,255,.18)}
+.dex-cell.unknown{opacity:.55;border-style:dashed}
+.dex-pic{width:100%;aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.dex-pic .pt{width:100%;height:100%}
+.dex-img{max-width:100%;max-height:100%;object-fit:contain}
+.dex-q{font-size:26px;font-weight:700;color:var(--sub)}
+.dex-no{font-size:9px;color:var(--sub);letter-spacing:.03em}
+.dex-name{font-size:9px;line-height:1.2;text-align:center;max-width:100%;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;word-break:break-all;min-height:2.4em}
+.dex-detail{max-height:82dvh;display:flex;flex-direction:column;gap:8px;width:min(94%,420px)}
+.dex-d{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:8px;text-align:left}
+.dex-bigimg{max-width:100%;max-height:34dvh;object-fit:contain;align-self:center}
+.dex-detail .pt.d-pic{width:auto;height:22dvh;max-height:170px;aspect-ratio:1/1;align-self:center}
+@media (max-height:620px){.dex-detail .pt.d-pic{height:15dvh}.dex-detail{max-height:90dvh}}

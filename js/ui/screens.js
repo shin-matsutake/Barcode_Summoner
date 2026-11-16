@@ -9,6 +9,8 @@ import { hotSetup, hotPlay } from './hotView.js';
 import { story } from './storyView.js';
 import { summon, detail } from './summon.js';
 import { summonFx } from './summonFx.js';
+import { dexScreen } from './dexView.js';
+import { chipsOfJan } from './quality.js';
 import { towerRoster, towerAdd, inRoster } from './roster.js';
 import { teamCodeMake } from './teamcodeView.js';
 import { battleMenu, simSetup } from './simView.js';
@@ -73,10 +75,13 @@ function stock(root, ctx) {
   wrap.append(backBar(ctx, 'ストック'));
   const list = h('div', 'list');
   const items = ctx.store.get().stock;
+  const tools = h('div', 'stock-tools');   // 図鑑は、ストックが空でも見られる
+  const dx = h('button', 'btn small', '図鑑を見る'); dx.onclick = () => ctx.go('dex'); tools.append(dx);
   if (items.length) {
     const mk = h('button', 'btn small', 'チームコードを作る');
-    mk.onclick = () => ctx.go('teamCodeMake'); list.append(mk);
+    mk.onclick = () => ctx.go('teamCodeMake'); tools.append(mk);
   }
+  list.append(tools);
   if (!items.length) {
     const e = h('div', 'panel empty');
     e.append(h('p', 'big', 'まだ誰も召喚していません'), h('p', 'sub', 'トップの「召喚する」から番号を入れると、ここに仲間が並びます。'));
@@ -89,6 +94,7 @@ function stock(root, ctx) {
     row.append(portrait(p.monster, { view: 'icon', cls: 'sm' }));
     const info = h('div', 'info');
     info.append(h('div', 'name', it.nick ? `${it.nick}（${p.monster.name}）` : p.monster.name), h('div', 'sub', `HP ${p.stats.hp}　召喚日 ${it.date || '-'}`));
+    info.append(chipsOfJan(it.jan, ctx.data));   // 運と格
     if (inRoster(ctx, it.jan)) info.append(h('span', 'tower-tag', 'タワーの仲間'));
     row.append(info);
     list.append(row);
@@ -207,4 +213,4 @@ function tutorial(root, ctx) {
   wrap.append(list); root.append(wrap);
 }
 
-export const screens = { top, tutorial, story, stock, options, summon, summonFx, detail, tower, towerRoster, towerAdd, teamCodeMake, battleMenu, simSetup, pvpLobby, pvpSelect, auto, hotSetup, hotPlay, select, match };
+export const screens = { top, tutorial, story, stock, options, summon, summonFx, detail, dex: dexScreen, tower, towerRoster, towerAdd, teamCodeMake, battleMenu, simSetup, pvpLobby, pvpSelect, auto, hotSetup, hotPlay, select, match };

@@ -26,3 +26,18 @@ JSONの effects を手で直したときは、文章（text）と効果が合っ
 { "stage": 1, "rule": {...}, "teams": [...], "intro": ["最初の文", "次の文"], "outro": "クリア後の文" }
 ```
 ステージを増やすときは、`stages` の最後に足し（番号は続き番号）、`data/version.json` の version を上げる。
+
+## タワーの敵・ステージを、Excelで管理する（tests/tower_xlsx.py）
+
+タワーの階層ごとのルール・敵チーム・敵のAI・物語の文は、管理表（Excel）で直して、`data/tower.json` に取り込む。
+
+```
+python3 tests/tower_xlsx.py template タワー管理表.xlsx    # いまの tower.json から、管理表の元を作る（初回だけ）
+python3 tests/tower_xlsx.py import   タワー管理表.xlsx    # 管理表 → data/tower.json。敵の強さを測って、確認シートに書く
+   --no-rate  測定しない（速い）／ --n 60  通過率の試行回数／ --no-bump  データの版を上げない
+```
+- 管理表で直すのは、黄色いセルだけ（「使い方」シートに詳しく書いてある）。取り込みのたびに、「確認(自動)」「敵の一覧(自動)」が書き直される。
+- tower.json が変わると、データの版（data/version.json）を自動で1つ上げる。
+- 強さの測定は `tests/rate_tower.mjs`（Node）。単独でも、`node tests/rate_tower.mjs` で動く。
+- 敵チームが1つもない階層は、tower.json に出ない。固有モンスター（Uで始まるID）を含むチームは、ゲーム側が未対応のため、出力されない。
+- tower.json の `ai`（敵のAI）は、ゲームが読む。`boss`・`foe`（敵キャラ名・立ち絵）は、今は保存だけ（ゲームでは使わない）。
