@@ -1,15 +1,15 @@
 // タワーの仲間（枠はステージと同じ数で、最大5体。空き枠があれば召喚できる。魔界に戻せるのは、決まった機会だけ。ルールは js/towerRules.js）
 //  towerRoster … 仲間の一覧    towerAdd … 仲間を加える（カメラ（準備中）→ 番号入力／ストックから）
-import { h, today } from './dom.js?v=20261118-2';
-import { dialog, confirmDialog, toast } from './dialog.js?v=20261118-2';
-import { portrait, elemIcon, EL } from './portrait.js?v=20261118-2';
-import { analyze, isValidCheckDigit } from '../core/jan.js?v=20261118-2';
-import { createFighter } from '../core/battle.js?v=20261118-2';
-import { pickMonster } from './picker.js?v=20261118-2';
-import { cameraPanel } from './scanner.js?v=20261118-2';
-import { statsGrid, skillList } from './monsterInfo.js?v=20261118-2';
-import { ROSTER_MAX, rosterCap, releaseInfo, releaseText, addToRoster, releaseFromRoster, defaultTower } from '../towerRules.js?v=20261118-2';
-import { stageOf } from '../data.js?v=20261118-2';
+import { h, today } from './dom.js?v=20261118-4';
+import { dialog, confirmDialog, toast } from './dialog.js?v=20261118-4';
+import { portrait, elemIcon, EL } from './portrait.js?v=20261118-4';
+import { analyze, isValidCheckDigit } from '../core/jan.js?v=20261118-4';
+import { createFighter } from '../core/battle.js?v=20261118-4';
+import { pickMonster } from './picker.js?v=20261118-4';
+import { cameraPanel } from './scanner.js?v=20261118-4';
+import { statsGrid, skillList } from './monsterInfo.js?v=20261118-4';
+import { ROSTER_MAX, rosterCap, releaseInfo, releaseText, addToRoster, releaseFromRoster, defaultTower } from '../towerRules.js?v=20261118-4';
+import { stageOf } from '../data.js?v=20261118-4';
 
 export const rosterOf = ctx => ctx.store.get().tower.roster;
 export const inRoster = (ctx, jan) => rosterOf(ctx).includes(jan);

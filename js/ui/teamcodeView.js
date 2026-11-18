@@ -1,9 +1,9 @@
 // チームコードを作る（ストックから選ぶ）。コードに挑戦するのは、シミュレーション（simView.js）
-import { h } from './dom.js?v=20261118-2';
-import { toast } from './dialog.js?v=20261118-2';
-import { portrait, elemIcon } from './portrait.js?v=20261118-2';
-import { analyze } from '../core/jan.js?v=20261118-2';
-import { encodeTeam, TEAM_MAX } from '../core/teamcode.js?v=20261118-2';
+import { h } from './dom.js?v=20261118-4';
+import { toast } from './dialog.js?v=20261118-4';
+import { portrait, elemIcon } from './portrait.js?v=20261118-4';
+import { analyze } from '../core/jan.js?v=20261118-4';
+import { encodeTeam, TEAM_MAX } from '../core/teamcode.js?v=20261118-4';
 
 function backBar(title, onBack) {
   const bar = h('header', 'bar'), b = h('button', 'btn small', '戻る');

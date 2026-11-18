@@ -1,7 +1,7 @@
 // 音：BGM・効果音（SE）。音のファイルは、sound/ の下（BGM/…、se/…）
 //   ・最初の画面で「音を出す／消音」を選ぶ（setSound）。消音のあいだは、どの音も鳴らさない
 //   ・BGM は <audio> を1つだけ使い回す（iPhone でも、最初のタップのあとなら、曲を切り替えられる）
-//   ・SE は Web Audio（すぐ鳴る）。音のファイルは .ogg。.ogg が鳴らない端末では、同じ名前の .mp3 を探す（select だけは .mp3）
+//   ・SE は Web Audio（すぐ鳴る）。音のファイルは、すべて .mp3
 // ---- ここから下の「決めごと」は、ブラウザなしでもテストできる ----
 export const SE_TIER_EDGES = [0.2, 0.4, 0.6];   // ダメージが相手の最大HPの何割か：2割未満＝1／2割以上＝2／4割以上＝3／6割以上＝4
 export const damageTier = (dmg, maxHp) => {
@@ -33,9 +33,7 @@ const vol = k => Math.max(0, Math.min(1, ((live[k] != null ? live[k] : (volSourc
 export const setSound = v => { on = !!v; if (on) ac(); applyBgm(); };
 
 const HAS = typeof window !== 'undefined' && typeof Audio !== 'undefined';
-const canOgg = () => { try { return !!new Audio().canPlayType('audio/ogg; codecs="vorbis"'); } catch (e) { return false; } };
-let ogg = null;
-const fileUrl = key => key === 'se/select' ? 'sound/se/select.mp3' : `sound/${key}.${(ogg ??= canOgg()) ? 'ogg' : 'mp3'}`;
+const fileUrl = key => `sound/${key}.mp3`;
 
 let actx = null; const bufs = new Map();
 function ac() {

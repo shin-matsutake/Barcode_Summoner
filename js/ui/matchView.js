@@ -1,19 +1,19 @@
 // バトル画面。勝ち抜き戦（1〜3体）に対応。自分が操作するモードと、CPU同士を観戦するモードがある。
-import { h, sleep, today } from './dom.js?v=20261118-2';
-import { dialog, confirmDialog, story } from './dialog.js?v=20261118-2';
-import { enterStage } from './modes.js?v=20261118-2';
-import { preloadMonsters } from './portrait.js?v=20261118-2';
-import { playIntro } from './battleIntro.js?v=20261118-2';
-import { stageOf } from '../data.js?v=20261118-2';
-import { afterBattle, releaseInfo } from '../towerRules.js?v=20261118-2';
-import { portrait, elemIcon, EL } from './portrait.js?v=20261118-2';
-import { analyze } from '../core/jan.js?v=20261118-2';
-import { beats } from '../core/rules.js?v=20261118-2';
-import { Rng } from '../core/rng.js?v=20261118-2';
-import { allowedSlots, rageMult, effStat, CONFIG } from '../core/battle.js?v=20261118-2';
-import { startSeries, resolveSeriesTurn } from '../core/series.js?v=20261118-2';
-import { chooseSlot } from './ai.js?v=20261118-2';
-import { playAttackSe } from '../audio.js?v=20261118-2';
+import { h, sleep, today } from './dom.js?v=20261118-4';
+import { dialog, confirmDialog, story } from './dialog.js?v=20261118-4';
+import { enterStage } from './modes.js?v=20261118-4';
+import { preloadMonsters } from './portrait.js?v=20261118-4';
+import { playIntro } from './battleIntro.js?v=20261118-4';
+import { stageOf } from '../data.js?v=20261118-4';
+import { afterBattle, releaseInfo } from '../towerRules.js?v=20261118-4';
+import { portrait, elemIcon, EL } from './portrait.js?v=20261118-4';
+import { analyze } from '../core/jan.js?v=20261118-4';
+import { beats } from '../core/rules.js?v=20261118-4';
+import { Rng } from '../core/rng.js?v=20261118-4';
+import { allowedSlots, rageMult, effStat, CONFIG } from '../core/battle.js?v=20261118-4';
+import { startSeries, resolveSeriesTurn } from '../core/series.js?v=20261118-4';
+import { chooseSlot } from './ai.js?v=20261118-4';
+import { playAttackSe } from '../audio.js?v=20261118-4';
 
 const TIMER_SEC = 30;
 // バトルのテンポ（1つの出来事の表示時間 ms）：ゆっくり／じっくり（旧：ゆっくり）／ふつう／はやい（旧：ふつう）／高速（旧：はやい）

@@ -6,21 +6,24 @@
 //           最後の1行では止まる（いきなりバトルに入らない）。ログを開いている間・確認のダイアログの間は、止まる
 //   ログ：ここまでの会話を、さかのぼって読む
 //   音声：audio/voice/<音声ID>.mp3 があれば、セリフに合わせて鳴らす（なければ、鳴らさない）
-import { soundOn } from '../audio.js?v=20261118-2';
-import { h } from './dom.js?v=20261118-2';
-import { confirmDialog } from './dialog.js?v=20261118-2';
+import { soundOn } from '../audio.js?v=20261118-4';
+import { h } from './dom.js?v=20261118-4';
+import { confirmDialog } from './dialog.js?v=20261118-4';
 
 const CHAR_MS = 32;   // 1文字が出る間隔（ミリ秒）
 
 // オートの待ち時間（文字が出そろってから、次へ進むまで）＝ base ＋ 1文字あたり × 文字数
 export const AUTO = { fast: { base: 500, per: 22 }, normal: { base: 900, per: 42 }, slow: { base: 1500, per: 70 } };
 export const autoWaitMs = (len, speed = 'normal') => { const a = AUTO[speed] || AUTO.normal; return Math.round(a.base + a.per * Math.max(0, len)); };
+const SPRITE_WAIT_MS = 1500;   // 立ち絵の読み込みを待つ最長（これを過ぎたら、読み込み中でも進める）
+const SPRITE_FADE_MS = 180;    // 立ち絵が入れ替わる・出る・消えるときの、ふわっとする長さ
+const PRELOAD_AHEAD = 6;       // 何人ぶん先まで、立ち絵を先に読み込んでおくか
 const VOICE_GAP = 600;   // 声が鳴り終わってから、次へ進むまで
 
 export function story(root, ctx, params = {}) {
   const S = ctx.data.story, act = S.acts.find(a => a.id === params.act);
   if (!act) { ctx.go('tutorial'); return; }
-  let i = 0, typing = false, timer = 0, voice = null, alive = true;
+  let i = 0, typing = false, timer = 0, voice = null, alive = true, seq = 0, waiting = false;   // seq・waiting：立ち絵が出るのを待っているあいだ
   let autoOn = !!ctx.store.get().options.storyAuto, autoTimer = 0, paused = false, voiceBusy = false;
   const log = [];   // 見た行のログ { name, side, text }
   const shown = { L: null, R: null };   // それぞれの側に出ている立ち絵 { who, img }
@@ -92,17 +95,41 @@ export function story(root, ctx, params = {}) {
     list.scrollTop = list.scrollHeight; setTimeout(() => close.focus(), 0);
   };
 
-  function setSprite(side, who, img) {
+  // 立ち絵：先に読み込んでおく → 準備ができてから、ふわっと入れ替える（前の絵は、同時に消える）
+  const imgUrl = img => `images/story/${!img ? 'sample.png' : /\.\w+$/.test(img) ? img : img + '.png'}`;   // 画像ID（C705_H）→ images/story/C705_H.png
+  const pics = new Map();   // url → { im, ok: Promise<boolean> }
+  const load = url => {
+    if (!pics.has(url)) {
+      const im = new Image(); im.src = url;
+      const ok = (im.decode ? im.decode() : new Promise((res, rej) => { im.onload = res; im.onerror = rej; })).then(() => true, () => false);
+      pics.set(url, { im, ok });
+    }
+    return pics.get(url).ok;
+  };
+  const preload = from => {   // from 行目から先の、立ち絵が出る行の画像を、読み込んでおく
+    const seen = new Set();
+    for (let k = from; k < act.lines.length && seen.size < PRELOAD_AHEAD; k++) {
+      const l = act.lines[k], c = S.cast[l.who];
+      if (c && c.side && l.img) { const u = imgUrl(l.img); if (!seen.has(u)) { seen.add(u); load(u); } }
+    }
+  };
+  const tok = { L: 0, R: 0 };
+  async function setSprite(side, who, img) {
     const el = sp[side];
-    if (!who) { el.replaceChildren(); el.classList.remove('on'); shown[side] = null; return; }
+    if (!who) { tok[side]++; el.replaceChildren(); el.classList.remove('on'); shown[side] = null; return; }
     if (!img && shown[side] && shown[side].who === who) return;   // 画像の指定がない行は、その人の、いまの立ち絵のまま
     if (shown[side] && shown[side].who === who && shown[side].img === img) return;   // 同じ人は、そのまま
-    shown[side] = { who, img };
-    const im = new Image(); im.alt = who;
-    const label = (S.cast[who] && S.cast[who].display) || who;
-    im.onerror = () => { el.replaceChildren(h('div', 'st-ph', label)); };   // 立ち絵がないときは、名前の仮の札
-    im.src = `images/story/${!img ? 'sample.png' : /\.\w+$/.test(img) ? img : img + '.png'}`;   // 画像ID（C705_H）→ images/story/C705_H.png
-    el.replaceChildren(im); el.classList.add('on');
+    shown[side] = { who, img }; const my = ++tok[side];
+    const url = imgUrl(img);
+    const ok = await Promise.race([load(url), new Promise(r => setTimeout(() => r(null), SPRITE_WAIT_MS))]);   // 準備ができるまで待つ（待ちすぎない）
+    if (!alive || my !== tok[side]) return;   // そのあいだに、次の指定が来ていたら、やめる
+    let node;
+    if (ok === false) { node = h('div', 'st-ph', (S.cast[who] && S.cast[who].display) || who); }   // 立ち絵がないときは、名前の仮の札
+    else { node = new Image(); node.alt = who; node.src = url; }
+    node.classList.add('in');
+    const old = [...el.children]; old.forEach(o => o.classList.add('out'));
+    el.append(node); el.classList.add('on');
+    setTimeout(() => old.forEach(o => o.remove()), SPRITE_FADE_MS);
   }
 
   function playVoice(id) {
@@ -119,10 +146,10 @@ export function story(root, ctx, params = {}) {
     } catch (e) { voiceBusy = false; }
   }
 
-  function show() {
-    const l = act.lines[i], c = S.cast[l.who] || { display: l.who || '', side: null };
+  // 1行ぶんの流れ：立ち絵が出る → 文字が出る → 声が鳴る（立ち絵がない行は、待たずに文字から）
+  async function show() {
+    const my = ++seq, l = act.lines[i], c = S.cast[l.who] || { display: l.who || '', side: null };
     clearInterval(timer); clearTimeout(autoTimer);
-    if (c.side) setSprite(c.side, l.who, l.img);
     ['L', 'R'].forEach(s => sp[s].classList.toggle('dim', !c.side || c.side !== s));   // しゃべっていない側は、暗く
     name.textContent = l.who ? c.display : '';
     name.className = 'st-name ' + (c.side === 'L' ? 'sideL' : c.side === 'R' ? 'sideR' : 'sideN');
@@ -131,6 +158,8 @@ export function story(root, ctx, params = {}) {
     const body = l.text || l.note || '';
     log[i] = { name: l.who ? c.display : '', side: c.side, text: body };
     text.textContent = ''; next.style.visibility = 'hidden'; typing = true;
+    preload(i + 1);
+    if (c.side) { waiting = true; await setSprite(c.side, l.who, l.img); waiting = false; if (!alive || my !== seq) return; }
     let k = 0;
     timer = setInterval(() => { text.textContent = body.slice(0, ++k); if (k >= body.length) done(); }, CHAR_MS);
     if (!body) done();
@@ -138,13 +167,13 @@ export function story(root, ctx, params = {}) {
   }
   function done() { clearInterval(timer); typing = false; next.style.visibility = 'visible'; const l = act.lines[i]; text.textContent = l.text || l.note || ''; scheduleAuto(); }
   function advance() {
-    if (!alive) return;
+    if (!alive || waiting) return;   // 立ち絵が出るのを待っているあいだは、進めない
     if (typing) return done();
     if (i + 1 >= act.lines.length) return finish();
     i++; show();
   }
   const tap = e => { if (e.target.closest('.bar') || e.target.closest('.st-tools')) return; advance(); };
   wrap.addEventListener('click', tap);
-  show();
+  preload(0); show();
   return () => { alive = false; clearInterval(timer); clearTimeout(autoTimer); if (voice) { try { voice.pause(); } catch (e) { /* 何もしない */ } } };
 }

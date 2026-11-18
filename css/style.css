@@ -445,11 +445,14 @@ input:checked+.sw::after{transform:translateX(20px);background:#06263d}
 .story{position:relative}
 .story .bar{margin-bottom:4px;align-items:center}
 .st-prog{margin-left:auto;font:12px ui-monospace,Menlo,Consolas,monospace;color:var(--sub)}
-.st-stage{position:relative;flex:1;min-height:0;overflow:hidden}
-.st-sp{position:absolute;bottom:0;height:100%;width:84%;opacity:0;transition:opacity .25s,filter .25s,transform .25s;pointer-events:none}
+.st-stage{position:relative;flex:1;min-height:0;overflow:hidden;container-type:inline-size;--sp-shift:22%}   /* --sp-shift：立ち絵を下へずらす量（顔を文字に近づける。メッセージ欄に隠れる足元ぶん）。0で、ずらさない */
+.st-sp{position:absolute;bottom:0;height:min(100%,150cqw);width:84%;z-index:1;opacity:0;transition:opacity .25s,filter .25s,transform .25s;pointer-events:none}
 .st-sp.on{opacity:1}
+.st-sp.on:not(.dim){z-index:2}   /* しゃべっている人を手前に */
 .st-sp.L{left:-8%}.st-sp.R{right:-8%}
-.st-sp img{position:absolute;bottom:0;height:100%;width:100%;object-fit:contain;object-position:bottom}
+.st-sp img{position:absolute;bottom:calc(var(--sp-shift) * -1);height:100%;width:100%;object-fit:contain;object-position:bottom}
+.st-sp .in{animation:spIn 180ms ease-out both}.st-sp .out{animation:spOut 180ms ease-in both}
+@keyframes spIn{from{opacity:0}to{opacity:1}}@keyframes spOut{from{opacity:1}to{opacity:0}}
 .st-sp.L img{object-position:left bottom}.st-sp.R img{object-position:right bottom}
 .st-sp.dim{filter:brightness(.42) saturate(.7)}
 .st-sp.on:not(.dim){transform:translateY(-4px)}

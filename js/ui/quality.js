@@ -2,8 +2,8 @@
 //   運＝バーコードから決まる、4つの能力の平均の高さ（低 ☆☆☆／ふつう ★☆☆／高 ★★☆／最高 ★★★）
 //   格＝種の番号で決まる輪の数（1重／2重／3重／砕ける）
 // どちらも、強さの目安にはなるが、強さそのものではない（技や耐性で、同じ運でも大きく変わる）
-import { h } from './dom.js?v=20261118-2';
-import { fxLevel, luckTier, speciesRank } from './summonFx.js?v=20261118-2';
+import { h } from './dom.js?v=20261118-4';
+import { fxLevel, luckTier, speciesRank } from './summonFx.js?v=20261118-4';
 
 export const LUCK_JA = ['低', 'ふつう', '高', '最高'];
 export const luckStars = tier => '★'.repeat(tier) + '☆'.repeat(3 - tier);

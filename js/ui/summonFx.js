@@ -1,11 +1,11 @@
 // 召喚の演出：線で描く魔法陣。輪のふちに13桁の数字を並べて回す。
 // 2つの軸：①バーコードの運（加算値の合計の割合）→ 粒子の量と魔法陣のふち
 //          ②種の格（モンスター番号の範囲）→ 輪の数（063〜086＝2重／087〜098＝3重／000と099＝3重のあと砕ける）
-import { h, today } from './dom.js?v=20261118-2';
-import { portrait, EL } from './portrait.js?v=20261118-2';
-import { analyze, baseValue, STAT_RULES, isValidFormat } from '../core/jan.js?v=20261118-2';
-import { recordSummon, seedFrom } from '../dex.js?v=20261118-2';
-import { playSummonSe } from '../audio.js?v=20261118-2';
+import { h, today } from './dom.js?v=20261118-4';
+import { portrait, EL } from './portrait.js?v=20261118-4';
+import { analyze, baseValue, STAT_RULES, isValidFormat } from '../core/jan.js?v=20261118-4';
+import { recordSummon, seedFrom } from '../dex.js?v=20261118-4';
+import { playSummonSe } from '../audio.js?v=20261118-4';
 
 const NS = 'http://www.w3.org/2000/svg';
 const C = 200;   // 魔法陣の中心（viewBox 400×400）
