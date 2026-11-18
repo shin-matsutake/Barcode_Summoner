@@ -525,7 +525,7 @@ input:checked+.sw::after{transform:translateX(20px);background:#06263d}
 .stage.far{opacity:.55}.stage.far .name{letter-spacing:.2em}
 .stage.now{box-shadow:0 0 0 1px var(--orange)}.stage.now .st-tag{color:var(--orange)}
 
-/* ===== V9 バトルの配置（戻すときは、このブロックを全部消して、matchView.js の BT_SCALE を 1.12 / 0.92 にする） ===== */
+/* ===== V9 バトルの配置（戻すときは、このブロックを全部消して、matchView.js の BT_SCALE を 1.1 / 1.0 に、短い画面の上下の比率を 5.6fr 4.4fr にする） ===== */
 .arena{grid-template-rows:6fr 4fr;gap:0}
 .hud.me{margin-top:-26px}
 .mid{position:absolute;left:0;right:0;bottom:26px;z-index:3;padding:0 6px;pointer-events:none}
@@ -535,7 +535,7 @@ input:checked+.sw::after{transform:translateX(20px);background:#06263d}
 .mid .msg::before{background:rgba(8,26,44,.55);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
 .arena > .warn{position:absolute;right:6px;top:2px;z-index:3;min-height:0;text-shadow:0 1px 3px #000}   /* バトルの相打ちの警告だけ。ほかの画面の .warn には効かせない */
 @media (max-height:800px){
-  .arena{grid-template-rows:5.6fr 4.4fr}
+  .arena{grid-template-rows:5fr 4fr}
   .hud.me{margin-top:-22px}.mid{bottom:22px}
   .mid .msg{min-height:38px;padding:3px 10px}.mid .m1{font-size:13px}.mid .m2{font-size:12px}
 }
@@ -601,3 +601,9 @@ button.dex-cell:active{background:rgba(98,230,255,.18)}
 .dex-bigimg{max-width:100%;max-height:34dvh;object-fit:contain;align-self:center}
 .dex-detail .pt.d-pic{width:auto;height:22dvh;max-height:170px;aspect-ratio:1/1;align-self:center}
 @media (max-height:620px){.dex-detail .pt.d-pic{height:15dvh}.dex-detail{max-height:90dvh}}
+
+/* ---- 最初の画面：音の確認 ---- */
+.gate{min-height:100%;display:flex;align-items:center;justify-content:center;padding:20px 16px}
+.gate-box{width:100%;max-width:420px;display:flex;flex-direction:column;gap:12px;text-align:center}
+.gate-box h2{margin:0}
+.gate-box p{margin:0}

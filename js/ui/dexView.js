@@ -1,11 +1,11 @@
 // 図鑑の画面。モンスター100種（召喚したら登録。まだなら「？」）と、data/dex.json の entries（登場人物など）
 //   一覧の絵は、画面に入ったときに読み込む（100枚をいっぺんに読まない）
-import { h } from './dom.js';
-import { portrait, elemIcon, EL } from './portrait.js';
-import { ensureDexSeed } from './summonFx.js';
-import { STAT_RULES } from '../core/jan.js';
-import { dexCounts, dexComplete, SPECIES_TOTAL } from '../dex.js';
-import { chipsOfSpecies } from './quality.js';
+import { h } from './dom.js?v=20261118-1';
+import { portrait, elemIcon, EL } from './portrait.js?v=20261118-1';
+import { ensureDexSeed } from './summonFx.js?v=20261118-1';
+import { STAT_RULES } from '../core/jan.js?v=20261118-1';
+import { dexCounts, dexComplete, SPECIES_TOTAL } from '../dex.js?v=20261118-1';
+import { chipsOfSpecies } from './quality.js?v=20261118-1';
 
 const pad = n => String(n).padStart(3, '0');
 const KIND_JA = { character: '登場人物', reward: '報酬', special: '特別なモンスター' };

@@ -1,7 +1,7 @@
 // 条件を設定する共通の部品（リンクバトルのゲートを開く画面と、シミュレーションの画面で使う）
 //   rule＝{ bring, fight, summon } を、そのまま書き換える
-import { h } from './dom.js';
-import { RULES, SUMMON_RULES, formationNote } from '../net/session.js';
+import { h } from './dom.js?v=20261118-1';
+import { RULES, SUMMON_RULES, formationNote } from '../net/session.js?v=20261118-1';
 
 // 編成：持ち込み体数と、戦う体数（6通り）
 export function formationPanel(rule, onChange = () => {}) {

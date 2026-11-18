@@ -9,7 +9,7 @@ from openpyxl import load_workbook
 ALIAS = {'コウタ': 'ボク'}                                  # 台本の表記ゆれ（話者の名前）
 DISPLAY = {'オウサマ': '王様', 'センセイ': '先生'}           # 名前欄に出す名前（ないものは、呼び名のまま）
 # 幕の最後のバトル（なければ、バトルなし）。mine＝貸し出すモンスター、foe＝相手（13桁の番号）、ai＝相手の考え方（1〜4）、labels＝HUDの名前
-BATTLE = {'一幕': {'mine': ['2716517559495'], 'foe': ['1033836826208'], 'ai': 1, 'labels': {'a': 'ボク', 'b': 'ノマン'}}}   # ボク＝シャドウウルフ、ノマン＝エアーゴブリン（お互いランダムに技を選ぶと勝率約49%、ダメージを読んで選ぶと約59%、平均約4.1ターン）
+BATTLE = {'一幕': {'mine': ['6759900504500'], 'foe': ['1033836826208'], 'ai': 1, 'labels': {'a': 'ボク', 'b': 'ノマン'}}}   # ボク＝シャドウウルフ（効果つきの技。旧：2716517559495）、ノマン＝エアーゴブリン。4000回の試算：お互いランダム59%、ダメージを読む77%、平均約4.3ターン（3ターン決着は0%）
 SIDE = {'オウサマ': 'R', 'ノマン': 'R', 'バナド': 'R', 'フウマ': 'L', 'カゲツ': 'L', 'ミズキ': 'L', 'ダイチ': 'L', 'センセイ': 'L'}   # 立ち絵の位置（ボクは、立ち絵なし＝null）
 norm_id = lambda s: re.sub(r'[^0-9A-Za-z]+', '_', str(s or '').strip()).strip('_')
 S = lambda v: ('' if v is None else str(v)).strip()
@@ -29,10 +29,10 @@ def main():
                 who = ALIAS.get(S(r[1]), S(r[1])); cast[who] = {'display': DISPLAY.get(who, who), 'side': SIDE.get(who), 'role': S(r[3])}
         lines = []
         for ri, r in enumerate(ws.iter_rows(min_row=header + 1, values_only=True), header + 1):
-            if not S(r[0]): continue
+            if not S(r[0]) or S(r[0]).startswith('列'): continue   # 空の行と、表の見出し（列1〜列6）は読まない
             who = ALIAS.get(S(r[1]), S(r[1]))
             if who and who not in cast: cast[who] = {'display': DISPLAY.get(who, who), 'side': SIDE.get(who), 'role': ''}
-            lines.append({'id': norm_id(r[0]), 'who': who, 'note': S(r[2]), 'text': S(r[3]), 'img': S(r[4]), 'voice': norm_id(r[5])})
+            lines.append({'id': norm_id(r[0]), 'who': who, 'note': S(r[2]), 'text': S(r[3]), 'img': S(r[4]).replace('.png',''), 'voice': norm_id(r[5])})
         act = {'id': f'act{n}', 'title': name, 'lines': lines}
         if name in BATTLE: act['battle'] = BATTLE[name]
         acts.append(act)

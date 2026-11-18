@@ -1,6 +1,6 @@
 // 保存。localStorage のキーは barcodeSummoner_v1。使えない環境ではその場かぎり（メモリのみ）で動く。
-import { ROSTER_MAX, defaultTower, normalizeTower } from './towerRules.js';
-import { emptyDex, normalizeDex } from './dex.js';
+import { ROSTER_MAX, defaultTower, normalizeTower } from './towerRules.js?v=20261118-1';
+import { emptyDex, normalizeDex } from './dex.js?v=20261118-1';
 const KEY = 'barcodeSummoner_v1';
 const SCHEMA = 1;
 export { ROSTER_MAX };   // タワーの仲間の最大数

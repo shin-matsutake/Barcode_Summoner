@@ -116,4 +116,35 @@ t('説明の文：状況ごとに変わる', () => {
   assert.match(R.releaseText(withRoster(5, 5, { releasesLeft: 1 })), /1回/);
 });
 
+// ---- 敵の顔ぶれ（ランダム） ----
+const seq = (...v) => { let i = 0; return () => v[i++ % v.length]; };
+t('敵の顔ぶれ：持ち込みから、戦う数だけ。管理表の順に並ぶ。引くたびに変わる', () => {
+  const team = ['a', 'b', 'c', 'd', 'e'], seen = new Set();
+  for (let k = 0; k < 200; k++) {
+    const p = R.pickFoeParty(team, 3);
+    assert.equal(p.length, 3); assert.equal(new Set(p).size, 3);
+    assert.deepEqual(p, [...p].sort(), '管理表の順');
+    seen.add(p.join(''));
+  }
+  assert(seen.size >= 8, '10通りのうち、たいてい8通り以上は出る：' + seen.size);
+});
+t('敵の顔ぶれ：戦う数が持ち込み以上なら、全員（管理表の順）', () => {
+  assert.deepEqual(R.pickFoeParty(['a', 'b', 'c'], 3), ['a', 'b', 'c']);
+  assert.deepEqual(R.pickFoeParty(['a'], 1), ['a']);
+  assert.deepEqual(R.pickFoeParty(['a', 'b'], 5), ['a', 'b']);
+});
+t('敵の顔ぶれ：固有モンスターは、いつも出て、最後の枠に並ぶ', () => {
+  const team = ['1', '2', '900:3', '4', '5'];
+  for (let k = 0; k < 100; k++) { const p = R.pickFoeParty(team, 3); assert.equal(p[2], '900:3'); assert.equal(new Set(p).size, 3); }
+  const two = ['1', '2', '3', '901:4', '900:5'];
+  for (let k = 0; k < 100; k++) { const p = R.pickFoeParty(two, 3); assert.deepEqual(p.slice(1), ['901:4', '900:5']); }
+});
+t('敵の顔ぶれ：固有モンスターが戦う数より多いときは、その中から選ぶ', () => {
+  const team = ['1', '900:2', '901:3', '902:4', '903:5'];
+  for (let k = 0; k < 100; k++) { const p = R.pickFoeParty(team, 3); assert(p.every(R.isUniqueFoe)); assert.equal(new Set(p).size, 3); }
+});
+t('敵の顔ぶれ：乱数を固定すれば、同じ結果（テストしやすい）', () => {
+  assert.deepEqual(R.pickFoeParty(['a', 'b', 'c', 'd', 'e'], 3, seq(0, 0, 0)), R.pickFoeParty(['a', 'b', 'c', 'd', 'e'], 3, seq(0, 0, 0)));
+});
+
 console.log(`\n${n} tests passed`);

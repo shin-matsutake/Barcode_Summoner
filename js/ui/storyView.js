@@ -6,8 +6,9 @@
 //           最後の1行では止まる（いきなりバトルに入らない）。ログを開いている間・確認のダイアログの間は、止まる
 //   ログ：ここまでの会話を、さかのぼって読む
 //   音声：audio/voice/<音声ID>.mp3 があれば、セリフに合わせて鳴らす（なければ、鳴らさない）
-import { h } from './dom.js';
-import { confirmDialog } from './dialog.js';
+import { soundOn } from '../audio.js?v=20261118-1';
+import { h } from './dom.js?v=20261118-1';
+import { confirmDialog } from './dialog.js?v=20261118-1';
 
 const CHAR_MS = 32;   // 1文字が出る間隔（ミリ秒）
 
@@ -94,19 +95,20 @@ export function story(root, ctx, params = {}) {
   function setSprite(side, who, img) {
     const el = sp[side];
     if (!who) { el.replaceChildren(); el.classList.remove('on'); shown[side] = null; return; }
+    if (!img && shown[side] && shown[side].who === who) return;   // 画像の指定がない行は、その人の、いまの立ち絵のまま
     if (shown[side] && shown[side].who === who && shown[side].img === img) return;   // 同じ人は、そのまま
     shown[side] = { who, img };
     const im = new Image(); im.alt = who;
     const label = (S.cast[who] && S.cast[who].display) || who;
     im.onerror = () => { el.replaceChildren(h('div', 'st-ph', label)); };   // 立ち絵がないときは、名前の仮の札
-    im.src = `images/story/${img || 'sample.png'}`;
+    im.src = `images/story/${!img ? 'sample.png' : /\.\w+$/.test(img) ? img : img + '.png'}`;   // 画像ID（C705_H）→ images/story/C705_H.png
     el.replaceChildren(im); el.classList.add('on');
   }
 
   function playVoice(id) {
     if (voice) { try { voice.pause(); } catch (e) { /* 何もしない */ } voice = null; }
     voiceBusy = false;
-    if (!id) return;
+    if (!id || !soundOn()) return;   // 消音のときは鳴らさない
     try {
       const a = new Audio(`audio/voice/${id}.mp3`); a.volume = Math.max(0, Math.min(1, (ctx.store.get().options.se || 0) / 100));
       voice = a;

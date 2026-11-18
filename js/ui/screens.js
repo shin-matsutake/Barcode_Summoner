@@ -1,20 +1,23 @@
-import { h } from './dom.js';
-import { dialog, confirmDialog, toast } from './dialog.js';
-import { portrait } from './portrait.js';
-import { analyze } from '../core/jan.js';
-import { match } from './matchView.js';
-import { select } from './select.js';
-import { tower, auto } from './modes.js';
-import { hotSetup, hotPlay } from './hotView.js';
-import { story } from './storyView.js';
-import { summon, detail } from './summon.js';
-import { summonFx } from './summonFx.js';
-import { dexScreen } from './dexView.js';
-import { chipsOfJan } from './quality.js';
-import { towerRoster, towerAdd, inRoster } from './roster.js';
-import { teamCodeMake } from './teamcodeView.js';
-import { battleMenu, simSetup } from './simView.js';
-import { pvpLobby, pvpSelect } from './pvpView.js';
+import { h } from './dom.js?v=20261118-1';
+import { dialog, confirmDialog, toast } from './dialog.js?v=20261118-1';
+import { portrait } from './portrait.js?v=20261118-1';
+import { analyze } from '../core/jan.js?v=20261118-1';
+import { match } from './matchView.js?v=20261118-1';
+import { select } from './select.js?v=20261118-1';
+import { tower, auto } from './modes.js?v=20261118-1';
+import { hotSetup, hotPlay } from './hotView.js?v=20261118-1';
+import { story } from './storyView.js?v=20261118-1';
+import { summon, detail } from './summon.js?v=20261118-1';
+import { summonFx } from './summonFx.js?v=20261118-1';
+import { dexScreen } from './dexView.js?v=20261118-1';
+import { chipsOfJan } from './quality.js?v=20261118-1';
+import { towerRoster, towerAdd, inRoster } from './roster.js?v=20261118-1';
+import { teamCodeMake } from './teamcodeView.js?v=20261118-1';
+import { battleMenu, simSetup } from './simView.js?v=20261118-1';
+import { pvpLobby, pvpSelect } from './pvpView.js?v=20261118-1';
+import { soundGate } from './soundGate.js?v=20261118-1';
+import { soundOn, setSound } from '../audio.js?v=20261118-1';
+import { BUILD } from '../version.js?v=20261118-1';
 
 const TITLE = 'バーコード・サモナー';
 
@@ -66,7 +69,7 @@ function top(root, ctx) {
     menu.append(b);
   }
   wrap.append(menu);
-  wrap.append(h('p', 'ver', `データ v${ctx.data.version}`));
+  wrap.append(h('p', 'ver', `ver ${BUILD} ／ データ v${ctx.data.version}`));
   root.append(wrap);
 }
 
@@ -139,7 +142,17 @@ function options(root, ctx) {
     row.append(t, c, h('i', 'sw'));
     return row;
   };
-  body.append(slider('BGM音量', 'bgm'), slider('効果音の音量', 'se', '音の素材をフォルダに入れると鳴るようになります'));
+  const snd = h('div', 'panel opt');   // いまの音（起動のあいだだけ。押すと、すぐに切り替わる）
+  snd.append(h('div', 'opt-head', ''));
+  snd.firstChild.append(h('span', '', '音（この起動のあいだ）'));
+  const sseg = h('div', 'seg');
+  [[true, '音を出す'], [false, '消音']].forEach(([v, l]) => {
+    const b = h('button', 'seg-b' + (soundOn() === v ? ' on' : ''), l);
+    b.onclick = () => { setSound(v); sseg.querySelectorAll('.seg-b').forEach(x => x.classList.toggle('on', x === b)); };
+    sseg.append(b);
+  });
+  snd.append(sseg, h('p', 'sub', 'アプリを開くたびに、最初の画面で選びます'));
+  body.append(snd, slider('BGM音量', 'bgm'), slider('効果音の音量', 'se', '音の素材をフォルダに入れると鳴るようになります'));
 
   const tempo = h('div', 'panel opt');
   tempo.append(h('div', 'opt-head', ''));
@@ -187,7 +200,7 @@ function options(root, ctx) {
   row.append(ex, im, rs, file);
   dataBox.append(row);
   if (ctx.store.isVolatile()) dataBox.append(h('p', 'sub warn', 'このブラウザでは保存できないため、閉じると消えます。'));
-  body.append(dataBox, h('p', 'ver', `データ v${ctx.data.version}`));
+  body.append(dataBox, h('p', 'ver', `ver ${BUILD} ／ データ v${ctx.data.version}`));
   wrap.append(body);
   foot.append(apply); wrap.append(foot);
   refresh();
@@ -213,4 +226,4 @@ function tutorial(root, ctx) {
   wrap.append(list); root.append(wrap);
 }
 
-export const screens = { top, tutorial, story, stock, options, summon, summonFx, detail, dex: dexScreen, tower, towerRoster, towerAdd, teamCodeMake, battleMenu, simSetup, pvpLobby, pvpSelect, auto, hotSetup, hotPlay, select, match };
+export const screens = { top, tutorial, story, stock, options, summon, summonFx, detail, dex: dexScreen, tower, towerRoster, towerAdd, teamCodeMake, battleMenu, simSetup, pvpLobby, pvpSelect, soundGate, auto, hotSetup, hotPlay, select, match };

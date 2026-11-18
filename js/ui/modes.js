@@ -1,14 +1,14 @@
 // CPUタワーのステージ一覧と、オートバトル（CPU同士の観戦。旧クイックバトル）
-import { h } from './dom.js';
-import { portrait, elemIcon, EL } from './portrait.js';
-import { analyze } from '../core/jan.js';
-import { createFighter } from '../core/battle.js';
-import { pickMonster } from './picker.js';
-import { AI_LABELS } from './ai.js';
-import { story } from './dialog.js';
-import { resetButton } from './roster.js';
-import { ROSTER_MAX, rosterCap, releaseText } from '../towerRules.js';
-import { stageOf, randomTeamIdx } from '../data.js';
+import { h } from './dom.js?v=20261118-1';
+import { portrait, elemIcon, EL } from './portrait.js?v=20261118-1';
+import { analyze } from '../core/jan.js?v=20261118-1';
+import { createFighter } from '../core/battle.js?v=20261118-1';
+import { pickMonster } from './picker.js?v=20261118-1';
+import { AI_LABELS } from './ai.js?v=20261118-1';
+import { story } from './dialog.js?v=20261118-1';
+import { resetButton } from './roster.js?v=20261118-1';
+import { ROSTER_MAX, rosterCap, releaseText } from '../towerRules.js?v=20261118-1';
+import { stageOf, randomTeamIdx } from '../data.js?v=20261118-1';
 
 function backBar(ctx, title) {
   const bar = h('header', 'bar'), b = h('button', 'btn small', '戻る');

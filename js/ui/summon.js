@@ -1,13 +1,13 @@
 // 召喚（番号の入力）・召喚の演出・モンスターの詳細（確認／ニックネーム）
-import { h } from './dom.js';
-import { dialog, confirmDialog, toast } from './dialog.js';
-import { portrait, elemIcon, EL } from './portrait.js';
-import { analyze, isValidCheckDigit } from '../core/jan.js';
-import { createFighter } from '../core/battle.js';
-import { inRoster } from './roster.js';
-import { findJan } from './summonFx.js';
-import { chipsOfJan } from './quality.js';
-import { cameraPanel } from './scanner.js';
+import { h } from './dom.js?v=20261118-1';
+import { dialog, confirmDialog, toast } from './dialog.js?v=20261118-1';
+import { portrait, elemIcon, EL } from './portrait.js?v=20261118-1';
+import { analyze, isValidCheckDigit } from '../core/jan.js?v=20261118-1';
+import { createFighter } from '../core/battle.js?v=20261118-1';
+import { inRoster } from './roster.js?v=20261118-1';
+import { findJan } from './summonFx.js?v=20261118-1';
+import { chipsOfJan } from './quality.js?v=20261118-1';
+import { cameraPanel } from './scanner.js?v=20261118-1';
 
 const KIND = ['技A', '技B', '固有'];
 const TYPE = { phys: '物理', mag: '魔法' };

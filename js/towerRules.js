@@ -95,3 +95,15 @@ export function releaseText(t, short = false) {
   if (r.mode === 'limited') return short ? `魔界に戻せる回数：${r.left}回` : `魔界に戻せる回数：${r.left}回（ステージの戦いが終わると、1回に戻ります）`;
   return r.can ? '負けたあとなので、仲間を魔界に戻せます' : `ステージ${FREE_RELEASE_UNTIL}までは、負けたあとだけ魔界に戻せます`;
 }
+
+// ---- 敵の顔ぶれ：持ち込み（team）から、戦う数（fight）だけを、バトルを始めるたびに引き直す ----
+// ・固有モンスター（"900:…" の形）を優先して出す。最後の枠に並べる（複数なら、複数とも。戦う数以上なら、その中から選ぶ）
+// ・ほかは、ランダムに選んで、管理表（team）の順に並べる
+export const isUniqueFoe = m => /^9\d\d:/.test(String(m));
+export function pickFoeParty(team, fight, rand = Math.random) {
+  const idx = team.map((_, i) => i), n = Math.max(0, Math.min(fight, team.length));
+  const draw = (pool, k) => { const a = pool.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a.slice(0, k).sort((x, y) => x - y); };
+  const uniq = idx.filter(i => isUniqueFoe(team[i])), plain = idx.filter(i => !isUniqueFoe(team[i]));
+  const u = uniq.length >= n ? draw(uniq, n) : uniq, p = draw(plain, n - u.length);
+  return [...p, ...u].map(i => team[i]);
+}

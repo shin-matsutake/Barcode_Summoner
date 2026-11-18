@@ -1,18 +1,18 @@
 // バトル画面。勝ち抜き戦（1〜3体）に対応。自分が操作するモードと、CPU同士を観戦するモードがある。
-import { h, sleep, today } from './dom.js';
-import { dialog, confirmDialog, story } from './dialog.js';
-import { enterStage } from './modes.js';
-import { preloadMonsters } from './portrait.js';
-import { playIntro } from './battleIntro.js';
-import { stageOf } from '../data.js';
-import { afterBattle, releaseInfo } from '../towerRules.js';
-import { portrait, elemIcon, EL } from './portrait.js';
-import { analyze } from '../core/jan.js';
-import { beats } from '../core/rules.js';
-import { Rng } from '../core/rng.js';
-import { allowedSlots, rageMult, effStat, CONFIG } from '../core/battle.js';
-import { startSeries, resolveSeriesTurn } from '../core/series.js';
-import { chooseSlot } from './ai.js';
+import { h, sleep, today } from './dom.js?v=20261118-1';
+import { dialog, confirmDialog, story } from './dialog.js?v=20261118-1';
+import { enterStage } from './modes.js?v=20261118-1';
+import { preloadMonsters } from './portrait.js?v=20261118-1';
+import { playIntro } from './battleIntro.js?v=20261118-1';
+import { stageOf } from '../data.js?v=20261118-1';
+import { afterBattle, releaseInfo } from '../towerRules.js?v=20261118-1';
+import { portrait, elemIcon, EL } from './portrait.js?v=20261118-1';
+import { analyze } from '../core/jan.js?v=20261118-1';
+import { beats } from '../core/rules.js?v=20261118-1';
+import { Rng } from '../core/rng.js?v=20261118-1';
+import { allowedSlots, rageMult, effStat, CONFIG } from '../core/battle.js?v=20261118-1';
+import { startSeries, resolveSeriesTurn } from '../core/series.js?v=20261118-1';
+import { chooseSlot } from './ai.js?v=20261118-1';
 
 const TIMER_SEC = 30;
 // バトルのテンポ（1つの出来事の表示時間 ms）：ゆっくり／じっくり（旧：ゆっくり）／ふつう／はやい（旧：ふつう）／高速（旧：はやい）
@@ -22,7 +22,7 @@ const TYPE = { phys: '物理', mag: '魔法' };
 const pct = v => Math.round(v * 100) + '%';
 
 // 立ち絵の大きさ（V9）。V8に戻すときは foe:1.12 / me:0.92 と、style.css の「V9 バトルの配置」のブロックを消す
-const BT_SCALE = { foe: 1.1, me: 1.0 };
+const BT_SCALE = { foe: 0.95, me: 1.0 };
 
 // params: { kind:'tower'|'auto'|'hotseat'|'code'|'pvp'|'tutorial', labels, intro, act, stage, mineJans, foeJans, ai, aiA, watch, teamIdx, codeParams, pvp }
 // 対人戦（kind:'pvp'）：mineJans＝部屋を作った側（a）の出撃順、foeJans＝参加した側（b）の出撃順。pvp＝{ session, side:'a'|'b', seed }
@@ -242,6 +242,13 @@ export function match(root, ctx, params) {
     const ev = resolveSeriesTurn(s, slotA, slotB, rng);
     const d = DELAY[opts.tempo] || DELAY.normal;
     const nm = w => view[w].name;
+    // 属性の有利・不利のひとこと。受けた側（b＝相手／a＝自分）の苦手・得意な属性を突いたかどうか
+    const affinityNote = (tgt, el) => {
+      const who = tgt === 'b' ? '相手' : '自分', te = view[tgt].el;
+      if (beats(el, te) && !beats(te, el)) return `　${who}の苦手な属性！`;
+      if (beats(te, el) && !beats(el, te)) return `　${who}の得意な属性…効きにくい`;
+      return '';
+    };
     // ヒットの種別と属性（物理／魔法）。追加攻撃・反撃・相手技のコピーで変わる場合に対応する（表示用の推定）
     const hitN = { a: 0, b: 0 }, nul = { a: false, b: false };
     const slotOf = e => view[e.who].profile.slots.find(x => x.name === e.skill);
@@ -281,7 +288,7 @@ export function match(root, ctx, params) {
         case 'hit': {
           const tgt = e.who === 'a' ? 'b' : 'a', hi = e.type ? { type: e.type, el: e.el } : hitInfo(e), c = EL[hi.el].c;
           if (e.counter) say(`${nm(e.who)}の反撃！`, `${TYPE[hi.type]}攻撃　${e.dmg}ダメージ`);
-          else say(e.copy ? [{ t: `${nm(e.who)}は` }, { t: e.skill, c }, { t: e.extra ? 'の追加攻撃もコピー！' : 'をコピー！' }] : [{ t: `${nm(e.who)}の` }, { t: e.skill, c }, { t: e.extra ? 'の追加攻撃！' : '！' }], `${TYPE[hi.type]}攻撃　${e.dmg}ダメージ${beats(view[tgt].el, hi.el) && !beats(hi.el, view[tgt].el) ? '　効果はいまひとつ' : ''}`);
+          else say(e.copy ? [{ t: `${nm(e.who)}は` }, { t: e.skill, c }, { t: e.extra ? 'の追加攻撃もコピー！' : 'をコピー！' }] : [{ t: `${nm(e.who)}の` }, { t: e.skill, c }, { t: e.extra ? 'の追加攻撃！' : '！' }], `${TYPE[hi.type]}攻撃　${e.dmg}ダメージ${affinityNote(tgt, hi.el)}`);
           await advance(e.who);
           hitFx(tgt, e.dmg, hi.type, c); setHp(tgt, e.foeHp, view[tgt]); break;
         }

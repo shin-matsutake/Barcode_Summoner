@@ -8,7 +8,7 @@ const data={monsters:JSON.parse(fs.readFileSync(D+'monsters.json')).monsters,ski
 const r=new Rng(8888);
 const duel=(pa,pb,la,lb)=>{const st=newBattle(createFighter(pa),createFighter(pb));while(!st.over)resolveTurn(st,chooseSlot(st.a,st.b,st.turn,r,la),chooseSlot(st.b,st.a,st.turn,r,lb),r);return [st.result==='a'?1:st.result==='draw'?.5:0,st.turn,st.result];};
 const f=x=>(100*x).toFixed(0)+'%';
-const pairs=[['A シャドウウルフ（闇）','2716517559495','1033836826208'],['B ウィンドウルフ（風）','5923379421434','1033836826208'],['C ウィンドウルフ（風）別個体','8867523194317','1033836826208']];
+const pairs=[['0 新案 シャドウウルフ（効果つき技）','6759900504500','1033836826208'],['A シャドウウルフ（闇・旧）','2716517559495','1033836826208'],['B ウィンドウルフ（風）','5923379421434','1033836826208'],['C ウィンドウルフ（風）別個体','8867523194317','1033836826208']];
 for(const [n,a,b] of pairs){
   const A=analyze(a,data),B=analyze(b,data);
   console.log(`\n■ ${n} ${a}  vs  ${B.monster.name} ${b}`);

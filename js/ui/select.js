@@ -1,18 +1,18 @@
 // 選出画面：相手の持ち込み（公開情報だけ）／自分の持ち込み／詳細／出撃メンバー（順番）
 //   params.mode が 'code'（チームコード挑戦）… 自分の持ち込みは、ストック・番号から。仲間にいない子は「この試合だけ」も選べる
 //   それ以外（CPUタワー） … 自分の持ち込みは、タワーの仲間から
-import { h, today } from './dom.js';
-import { dialog, confirmDialog } from './dialog.js';
-import { portrait, elemIcon, EL } from './portrait.js';
-import { analyze } from '../core/jan.js';
-import { createFighter } from '../core/battle.js';
-import { pickMonster } from './picker.js';
-import { statsGrid, skillList } from './monsterInfo.js';
-import { stageOf } from '../data.js';
-import { rosterCap, releaseInfo, releaseText, startBattle } from '../towerRules.js';
-import { fullMessage, releaseCompanion } from './roster.js';
-import { summonLabel } from '../net/session.js';
-import { preloadMonsters } from './portrait.js';
+import { h, today } from './dom.js?v=20261118-1';
+import { dialog, confirmDialog } from './dialog.js?v=20261118-1';
+import { portrait, elemIcon, EL } from './portrait.js?v=20261118-1';
+import { analyze } from '../core/jan.js?v=20261118-1';
+import { createFighter } from '../core/battle.js?v=20261118-1';
+import { pickMonster } from './picker.js?v=20261118-1';
+import { statsGrid, skillList } from './monsterInfo.js?v=20261118-1';
+import { stageOf } from '../data.js?v=20261118-1';
+import { rosterCap, releaseInfo, releaseText, startBattle, pickFoeParty } from '../towerRules.js?v=20261118-1';
+import { fullMessage, releaseCompanion } from './roster.js?v=20261118-1';
+import { summonLabel } from '../net/session.js?v=20261118-1';
+import { preloadMonsters } from './portrait.js?v=20261118-1';
 
 export function select(root, ctx, params) {
   const isCode = params.mode === 'code';
@@ -30,7 +30,7 @@ export function select(root, ctx, params) {
     foeTeam = stg.teams[teamIdx].slice(0, bring);   // 相手の持ち込み（データのチームが多くても、持ち込み数まで）
     title = `ステージ${stage} 選出`; key = 'tower' + stage;
     goBack = () => ctx.go('tower');
-    matchParams = pt => ({ kind: 'tower', stage, teamIdx, mineJans: pt, foeJans: foeTeam.slice(0, fight), ai: stg.ai || 1 });
+    matchParams = pt => ({ kind: 'tower', stage, teamIdx, mineJans: pt, foeJans: pickFoeParty(foeTeam, fight), ai: stg.ai || 1 });   // 戦う相手は、バトルを始めるたびに、持ち込みから引き直す
   }
   subTitle = `${bring}体持ち込み・${fight}体で戦う${isCode ? '・' + summonLabel(params.summon || 'stock') : ''}`;
   const foeProf = foeTeam.map(j => analyze(j, ctx.data));
