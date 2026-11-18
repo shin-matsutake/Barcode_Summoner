@@ -1,14 +1,14 @@
 // 対人戦（オンライン）：pvpLobby＝部屋を作る／入る、pvpSelect＝持ち込み→出撃メンバー（それぞれ、相手と同時に確定）
-import { h, today } from './dom.js?v=20261118-1';
-import { dialog, confirmDialog, toast } from './dialog.js?v=20261118-1';
-import { portrait, elemIcon, EL } from './portrait.js?v=20261118-1';
-import { analyze } from '../core/jan.js?v=20261118-1';
-import { createFighter } from '../core/battle.js?v=20261118-1';
-import { pickMonster } from './picker.js?v=20261118-1';
-import { statsGrid, skillList } from './monsterInfo.js?v=20261118-1';
-import { openRoom, netKind } from '../net/transport.js?v=20261118-1';
-import { createSession, ruleLabel } from '../net/session.js?v=20261118-1';
-import { formationPanel, summonPanel } from './ruleui.js?v=20261118-1';
+import { h, today } from './dom.js?v=20261118-2';
+import { dialog, confirmDialog, toast } from './dialog.js?v=20261118-2';
+import { portrait, elemIcon, EL } from './portrait.js?v=20261118-2';
+import { analyze } from '../core/jan.js?v=20261118-2';
+import { createFighter } from '../core/battle.js?v=20261118-2';
+import { pickMonster } from './picker.js?v=20261118-2';
+import { statsGrid, skillList } from './monsterInfo.js?v=20261118-2';
+import { openRoom, netKind } from '../net/transport.js?v=20261118-2';
+import { createSession, ruleLabel } from '../net/session.js?v=20261118-2';
+import { formationPanel, summonPanel } from './ruleui.js?v=20261118-2';
 
 export const endPvp = ctx => { if (ctx.pvp) { try { ctx.pvp.session.close(); } catch (e) { /* 何もしない */ } ctx.pvp = null; } };
 

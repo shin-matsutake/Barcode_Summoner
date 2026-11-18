@@ -1,23 +1,23 @@
-import { h } from './dom.js?v=20261118-1';
-import { dialog, confirmDialog, toast } from './dialog.js?v=20261118-1';
-import { portrait } from './portrait.js?v=20261118-1';
-import { analyze } from '../core/jan.js?v=20261118-1';
-import { match } from './matchView.js?v=20261118-1';
-import { select } from './select.js?v=20261118-1';
-import { tower, auto } from './modes.js?v=20261118-1';
-import { hotSetup, hotPlay } from './hotView.js?v=20261118-1';
-import { story } from './storyView.js?v=20261118-1';
-import { summon, detail } from './summon.js?v=20261118-1';
-import { summonFx } from './summonFx.js?v=20261118-1';
-import { dexScreen } from './dexView.js?v=20261118-1';
-import { chipsOfJan } from './quality.js?v=20261118-1';
-import { towerRoster, towerAdd, inRoster } from './roster.js?v=20261118-1';
-import { teamCodeMake } from './teamcodeView.js?v=20261118-1';
-import { battleMenu, simSetup } from './simView.js?v=20261118-1';
-import { pvpLobby, pvpSelect } from './pvpView.js?v=20261118-1';
-import { soundGate } from './soundGate.js?v=20261118-1';
-import { soundOn, setSound } from '../audio.js?v=20261118-1';
-import { BUILD } from '../version.js?v=20261118-1';
+import { h } from './dom.js?v=20261118-2';
+import { dialog, confirmDialog, toast } from './dialog.js?v=20261118-2';
+import { portrait } from './portrait.js?v=20261118-2';
+import { analyze } from '../core/jan.js?v=20261118-2';
+import { match } from './matchView.js?v=20261118-2';
+import { select } from './select.js?v=20261118-2';
+import { tower, auto } from './modes.js?v=20261118-2';
+import { hotSetup, hotPlay } from './hotView.js?v=20261118-2';
+import { story } from './storyView.js?v=20261118-2';
+import { summon, detail } from './summon.js?v=20261118-2';
+import { summonFx } from './summonFx.js?v=20261118-2';
+import { dexScreen } from './dexView.js?v=20261118-2';
+import { chipsOfJan } from './quality.js?v=20261118-2';
+import { towerRoster, towerAdd, inRoster } from './roster.js?v=20261118-2';
+import { teamCodeMake } from './teamcodeView.js?v=20261118-2';
+import { battleMenu, simSetup } from './simView.js?v=20261118-2';
+import { pvpLobby, pvpSelect } from './pvpView.js?v=20261118-2';
+import { soundGate } from './soundGate.js?v=20261118-2';
+import { soundOn, setSound } from '../audio.js?v=20261118-2';
+import { BUILD } from '../version.js?v=20261118-2';
 
 const TITLE = 'バーコード・サモナー';
 
@@ -129,7 +129,7 @@ function options(root, ctx) {
     const val = h('b', '', String(d[key]));
     head.append(h('span', '', label), val);
     const r = h('input'); r.type = 'range'; r.min = 0; r.max = 100; r.value = d[key];
-    r.oninput = () => { d[key] = +r.value; val.textContent = r.value; refresh(); };
+    r.oninput = () => { d[key] = +r.value; val.textContent = r.value; setLiveVolume(key, +r.value); refresh(); };   // 動かしているあいだは、すぐ音量に反映（保存はしない）
     row.append(head, r);
     if (note) row.append(h('p', 'sub', note));
     return row;

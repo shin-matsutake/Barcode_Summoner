@@ -1,6 +1,6 @@
 // 能力値と技の表示（選出画面・タワーの仲間の一覧で共通）
-import { h } from './dom.js?v=20261118-1';
-import { elemIcon, EL } from './portrait.js?v=20261118-1';
+import { h } from './dom.js?v=20261118-2';
+import { elemIcon, EL } from './portrait.js?v=20261118-2';
 
 const TYPE = { phys: '物理', mag: '魔法' };
 const KIND = ['技A', '技B', '固有'];

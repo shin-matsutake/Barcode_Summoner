@@ -1,10 +1,11 @@
 // 召喚の演出：線で描く魔法陣。輪のふちに13桁の数字を並べて回す。
 // 2つの軸：①バーコードの運（加算値の合計の割合）→ 粒子の量と魔法陣のふち
 //          ②種の格（モンスター番号の範囲）→ 輪の数（063〜086＝2重／087〜098＝3重／000と099＝3重のあと砕ける）
-import { h, today } from './dom.js?v=20261118-1';
-import { portrait, EL } from './portrait.js?v=20261118-1';
-import { analyze, baseValue, STAT_RULES, isValidFormat } from '../core/jan.js?v=20261118-1';
-import { recordSummon, seedFrom } from '../dex.js?v=20261118-1';
+import { h, today } from './dom.js?v=20261118-2';
+import { portrait, EL } from './portrait.js?v=20261118-2';
+import { analyze, baseValue, STAT_RULES, isValidFormat } from '../core/jan.js?v=20261118-2';
+import { recordSummon, seedFrom } from '../dex.js?v=20261118-2';
+import { playSummonSe } from '../audio.js?v=20261118-2';
 
 const NS = 'http://www.w3.org/2000/svg';
 const C = 200;   // 魔法陣の中心（viewBox 400×400）
@@ -140,9 +141,11 @@ function buildShards(jan) {
 
 // params: { jan, demo }（demo＝テスト用。保存せず、終わったら召喚の画面に戻る）
 // after＝{ screen, params }：演出のあとに行く画面（なければ、ふつうの召喚の詳細へ）
-export function summonFx(root, ctx, { jan, demo = false, after = null }) {
+export function summonFx(root, ctx, params) {
+  const { jan, demo = false, after = null } = params;
   const p = analyze(jan, ctx.data), lv = fxLevel(jan, ctx.data);
   if (!demo) { ensureDexSeed(ctx); ctx.store.update(st => { recordSummon(st.dex, lv.id, { jan, luck: lv.luck, date: today() }); }); }   // 召喚した時点で、図鑑に登録（ストックに保存しなくても）
+  playSummonSe(lv.tier, lv.id >= 100 || !!params.unique);   // 運で音が変わる。固有（M100以上）は専用の音
   const fx = h('div', `sfx lk${lv.tier} rk${lv.rings}${lv.shatter ? ' shat' : ''}`);
   fx.style.setProperty('--el', EL[p.monster.el].c);
   const mc = h('div', 'mc');

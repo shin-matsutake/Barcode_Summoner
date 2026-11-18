@@ -1,6 +1,6 @@
 {
   "type": "module",
   "scripts": {
-    "test": "node --import ./tests/strip_v_register.mjs tests/core.test.mjs && node --import ./tests/strip_v_register.mjs tests/net.test.mjs && node --import ./tests/strip_v_register.mjs tests/tower.test.mjs && node --import ./tests/strip_v_register.mjs tests/story.test.mjs && node --import ./tests/strip_v_register.mjs tests/dex.test.mjs"
+    "test": "node --import ./tests/strip_v_register.mjs tests/core.test.mjs && node --import ./tests/strip_v_register.mjs tests/net.test.mjs && node --import ./tests/strip_v_register.mjs tests/tower.test.mjs && node --import ./tests/strip_v_register.mjs tests/story.test.mjs && node --import ./tests/strip_v_register.mjs tests/dex.test.mjs && node --import ./tests/strip_v_register.mjs tests/audio.test.mjs"
   }
 }

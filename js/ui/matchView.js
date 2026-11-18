@@ -1,18 +1,19 @@
 // バトル画面。勝ち抜き戦（1〜3体）に対応。自分が操作するモードと、CPU同士を観戦するモードがある。
-import { h, sleep, today } from './dom.js?v=20261118-1';
-import { dialog, confirmDialog, story } from './dialog.js?v=20261118-1';
-import { enterStage } from './modes.js?v=20261118-1';
-import { preloadMonsters } from './portrait.js?v=20261118-1';
-import { playIntro } from './battleIntro.js?v=20261118-1';
-import { stageOf } from '../data.js?v=20261118-1';
-import { afterBattle, releaseInfo } from '../towerRules.js?v=20261118-1';
-import { portrait, elemIcon, EL } from './portrait.js?v=20261118-1';
-import { analyze } from '../core/jan.js?v=20261118-1';
-import { beats } from '../core/rules.js?v=20261118-1';
-import { Rng } from '../core/rng.js?v=20261118-1';
-import { allowedSlots, rageMult, effStat, CONFIG } from '../core/battle.js?v=20261118-1';
-import { startSeries, resolveSeriesTurn } from '../core/series.js?v=20261118-1';
-import { chooseSlot } from './ai.js?v=20261118-1';
+import { h, sleep, today } from './dom.js?v=20261118-2';
+import { dialog, confirmDialog, story } from './dialog.js?v=20261118-2';
+import { enterStage } from './modes.js?v=20261118-2';
+import { preloadMonsters } from './portrait.js?v=20261118-2';
+import { playIntro } from './battleIntro.js?v=20261118-2';
+import { stageOf } from '../data.js?v=20261118-2';
+import { afterBattle, releaseInfo } from '../towerRules.js?v=20261118-2';
+import { portrait, elemIcon, EL } from './portrait.js?v=20261118-2';
+import { analyze } from '../core/jan.js?v=20261118-2';
+import { beats } from '../core/rules.js?v=20261118-2';
+import { Rng } from '../core/rng.js?v=20261118-2';
+import { allowedSlots, rageMult, effStat, CONFIG } from '../core/battle.js?v=20261118-2';
+import { startSeries, resolveSeriesTurn } from '../core/series.js?v=20261118-2';
+import { chooseSlot } from './ai.js?v=20261118-2';
+import { playAttackSe } from '../audio.js?v=20261118-2';
 
 const TIMER_SEC = 30;
 // バトルのテンポ（1つの出来事の表示時間 ms）：ゆっくり／じっくり（旧：ゆっくり）／ふつう／はやい（旧：ふつう）／高速（旧：はやい）
@@ -22,7 +23,7 @@ const TYPE = { phys: '物理', mag: '魔法' };
 const pct = v => Math.round(v * 100) + '%';
 
 // 立ち絵の大きさ（V9）。V8に戻すときは foe:1.12 / me:0.92 と、style.css の「V9 バトルの配置」のブロックを消す
-const BT_SCALE = { foe: 0.95, me: 1.0 };
+const BT_SCALE = { foe: 1.0, me: 1.0 };
 
 // params: { kind:'tower'|'auto'|'hotseat'|'code'|'pvp'|'tutorial', labels, intro, act, stage, mineJans, foeJans, ai, aiA, watch, teamIdx, codeParams, pvp }
 // 対人戦（kind:'pvp'）：mineJans＝部屋を作った側（a）の出撃順、foeJans＝参加した側（b）の出撃順。pvp＝{ session, side:'a'|'b', seed }
@@ -265,8 +266,17 @@ export function match(root, ctx, params) {
     };
     const col = sk => EL[sk ? sk.el : 'dark'].c;
     const skOf = w => { const i = w === 'a' ? slotA : slotB; return i != null ? view[w].profile.slots[i] : null; };
+    // 攻撃の音：1つの技（連続技・追加攻撃もまとめて）の合計ダメージが、相手の最大HPの何割かで、音が変わる。技ごとに1回だけ鳴らす
+    const seTotal = new Map();
+    { let last = null;
+      ev.forEach((e, i) => {
+        if (e.t !== 'hit') { last = null; return; }
+        if (e.counter) { seTotal.set(i, e.dmg); last = null; return; }
+        const k = e.who + '|' + e.skill;
+        if (last && last.k === k) seTotal.set(last.i, seTotal.get(last.i) + e.dmg); else { last = { k, i }; seTotal.set(i, e.dmg); }
+      }); }
     let mutualShown = false;
-    for (const e of ev) {
+    for (const [ei, e] of ev.entries()) {
       if (!alive) return;
       let w = d;
       switch (e.t) {
@@ -290,6 +300,7 @@ export function match(root, ctx, params) {
           if (e.counter) say(`${nm(e.who)}の反撃！`, `${TYPE[hi.type]}攻撃　${e.dmg}ダメージ`);
           else say(e.copy ? [{ t: `${nm(e.who)}は` }, { t: e.skill, c }, { t: e.extra ? 'の追加攻撃もコピー！' : 'をコピー！' }] : [{ t: `${nm(e.who)}の` }, { t: e.skill, c }, { t: e.extra ? 'の追加攻撃！' : '！' }], `${TYPE[hi.type]}攻撃　${e.dmg}ダメージ${affinityNote(tgt, hi.el)}`);
           await advance(e.who);
+          if (seTotal.has(ei)) playAttackSe(hi.type, seTotal.get(ei), view[tgt].maxHp);
           hitFx(tgt, e.dmg, hi.type, c); setHp(tgt, e.foeHp, view[tgt]); break;
         }
         case 'heal': say(`${nm(e.who)}は回復した！`, `HPが${e.n}回復`); setHp(e.who, e.hp, view[e.who]); break;

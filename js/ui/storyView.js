@@ -6,9 +6,9 @@
 //           最後の1行では止まる（いきなりバトルに入らない）。ログを開いている間・確認のダイアログの間は、止まる
 //   ログ：ここまでの会話を、さかのぼって読む
 //   音声：audio/voice/<音声ID>.mp3 があれば、セリフに合わせて鳴らす（なければ、鳴らさない）
-import { soundOn } from '../audio.js?v=20261118-1';
-import { h } from './dom.js?v=20261118-1';
-import { confirmDialog } from './dialog.js?v=20261118-1';
+import { soundOn } from '../audio.js?v=20261118-2';
+import { h } from './dom.js?v=20261118-2';
+import { confirmDialog } from './dialog.js?v=20261118-2';
 
 const CHAR_MS = 32;   // 1文字が出る間隔（ミリ秒）
 

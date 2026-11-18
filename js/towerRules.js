@@ -97,9 +97,9 @@ export function releaseText(t, short = false) {
 }
 
 // ---- 敵の顔ぶれ：持ち込み（team）から、戦う数（fight）だけを、バトルを始めるたびに引き直す ----
-// ・固有モンスター（"900:…" の形）を優先して出す。最後の枠に並べる（複数なら、複数とも。戦う数以上なら、その中から選ぶ）
+// ・固有モンスター（"100:…" のように、番号が100以上）を優先して出す。最後の枠に並べる（複数なら、複数とも。戦う数以上なら、その中から選ぶ）
 // ・ほかは、ランダムに選んで、管理表（team）の順に並べる
-export const isUniqueFoe = m => /^9\d\d:/.test(String(m));
+export const isUniqueFoe = m => { const x = /^M?(\d{3,}):/.exec(String(m)); return !!x && +x[1] >= 100; };   // 固有＝番号が100以上（"100:…" の形）
 export function pickFoeParty(team, fight, rand = Math.random) {
   const idx = team.map((_, i) => i), n = Math.max(0, Math.min(fight, team.length));
   const draw = (pool, k) => { const a = pool.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a.slice(0, k).sort((x, y) => x - y); };

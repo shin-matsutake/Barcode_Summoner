@@ -1,10 +1,10 @@
 // モンスターを1体選ぶ画面（ストックから／召喚＝カメラか番号／ランダム）
-import { h } from './dom.js?v=20261118-1';
-import { portrait, elemIcon } from './portrait.js?v=20261118-1';
-import { analyze, isValidCheckDigit } from '../core/jan.js?v=20261118-1';
-import { randomJan } from './summon.js?v=20261118-1';
-import { cameraPanel } from './scanner.js?v=20261118-1';
-import { toast } from './dialog.js?v=20261118-1';
+import { h } from './dom.js?v=20261118-2';
+import { portrait, elemIcon } from './portrait.js?v=20261118-2';
+import { analyze, isValidCheckDigit } from '../core/jan.js?v=20261118-2';
+import { randomJan } from './summon.js?v=20261118-2';
+import { cameraPanel } from './scanner.js?v=20261118-2';
+import { toast } from './dialog.js?v=20261118-2';
 
 // 戻り値：{ jan } または null（やめた）
 export function pickMonster(ctx, { exclude = [], tabs = ['stock', 'summon'], title = '仲間を選ぶ' } = {}) {
