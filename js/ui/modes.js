@@ -1,14 +1,14 @@
 // CPUタワーのステージ一覧と、オートバトル（CPU同士の観戦。旧クイックバトル）
-import { h } from './dom.js?v=20261118-4';
-import { portrait, elemIcon, EL } from './portrait.js?v=20261118-4';
-import { analyze } from '../core/jan.js?v=20261118-4';
-import { createFighter } from '../core/battle.js?v=20261118-4';
-import { pickMonster } from './picker.js?v=20261118-4';
-import { AI_LABELS } from './ai.js?v=20261118-4';
-import { story } from './dialog.js?v=20261118-4';
-import { resetButton } from './roster.js?v=20261118-4';
-import { ROSTER_MAX, rosterCap, releaseText } from '../towerRules.js?v=20261118-4';
-import { stageOf, randomTeamIdx } from '../data.js?v=20261118-4';
+import { h } from './dom.js?v=20261118-5';
+import { portrait, elemIcon, EL } from './portrait.js?v=20261118-5';
+import { analyze } from '../core/jan.js?v=20261118-5';
+import { createFighter } from '../core/battle.js?v=20261118-5';
+import { pickMonster } from './picker.js?v=20261118-5';
+import { AI_LABELS } from './ai.js?v=20261118-5';
+import { story } from './dialog.js?v=20261118-5';
+import { resetButton } from './roster.js?v=20261118-5';
+import { ROSTER_MAX, rosterCap, releaseText } from '../towerRules.js?v=20261118-5';
+import { stageOf, randomTeamIdx } from '../data.js?v=20261118-5';
 
 function backBar(ctx, title) {
   const bar = h('header', 'bar'), b = h('button', 'btn small', '戻る');

@@ -6,9 +6,9 @@
 //           最後の1行では止まる（いきなりバトルに入らない）。ログを開いている間・確認のダイアログの間は、止まる
 //   ログ：ここまでの会話を、さかのぼって読む
 //   音声：audio/voice/<音声ID>.mp3 があれば、セリフに合わせて鳴らす（なければ、鳴らさない）
-import { soundOn } from '../audio.js?v=20261118-4';
-import { h } from './dom.js?v=20261118-4';
-import { confirmDialog } from './dialog.js?v=20261118-4';
+import { soundOn } from '../audio.js?v=20261118-5';
+import { h } from './dom.js?v=20261118-5';
+import { confirmDialog } from './dialog.js?v=20261118-5';
 
 const CHAR_MS = 32;   // 1文字が出る間隔（ミリ秒）
 
@@ -34,15 +34,15 @@ export function story(root, ctx, params = {}) {
   const logBtn = h('button', 'btn small', 'ログ'), autoBtn = h('button', 'btn small st-auto', 'オート');
   const prog = h('span', 'st-prog', '');
   bar.append(back, h('h1', '', act.title), prog);
-  const tools = h('div', 'st-tools');   // 画面が狭くても収まるように、タイトルの行とは分ける
+  const tools = h('div', 'st-tools');
   tools.append(logBtn, autoBtn, skip);
   const stage = h('div', 'st-stage');
   const sp = { L: h('div', 'st-sp L'), R: h('div', 'st-sp R') };
   stage.append(sp.L, sp.R);
   const winWrap = h('div', 'st-winwrap'), win = h('div', 'panel st-win');   // 名前の札は、枠の外に出すので、枠（panel）の外に置く
   const name = h('div', 'st-name'), text = h('div', 'st-text'), next = h('span', 'st-next', '▼');
-  win.append(text, next); winWrap.append(name, win);
-  wrap.append(bar, tools, stage, winWrap);
+  win.append(text, next); winWrap.append(name, tools, win);   // ログ・オート・スキップは、名前の札と同じ行の右端（高さを使わない）
+  wrap.append(bar, stage, winWrap);
   root.append(wrap);
 
   // 会話が終わったら、幕の最後のバトルへ（なければ、幕を見終わったことにして、一覧へ）。バトルの勝ち負けで、物語は分かれない
@@ -157,6 +157,7 @@ export function story(root, ctx, params = {}) {
     prog.textContent = `${i + 1}/${act.lines.length}`;
     const body = l.text || l.note || '';
     log[i] = { name: l.who ? c.display : '', side: c.side, text: body };
+    text.style.minHeight = ''; text.textContent = body; text.style.minHeight = text.offsetHeight + 'px';   // 全文の高さを先に決める（2行が基本。3行の行だけ広がる。文字が出ている途中で、枠が伸びない）
     text.textContent = ''; next.style.visibility = 'hidden'; typing = true;
     preload(i + 1);
     if (c.side) { waiting = true; await setSprite(c.side, l.who, l.img); waiting = false; if (!alive || my !== seq) return; }

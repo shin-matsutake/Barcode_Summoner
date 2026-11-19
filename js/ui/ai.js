@@ -1,7 +1,7 @@
 // CPUの思考。コアは変更せず、画面側で「どの技を選ぶか」だけを差し替える。
 // level 1 ランダム（コアと同じ） / 2 威力が高い技を多めに / 3 ダメージを予測して選ぶ / 4 3に加えて、HPが減ると回復も考える
 // tower.json の各ステージに "ai": 1〜4 を書くと、そのステージのCPUの強さが変わる（なければ1）。
-import { allowedSlots, calcDamage } from '../core/battle.js?v=20261118-4';
+import { allowedSlots, calcDamage } from '../core/battle.js?v=20261118-5';
 
 export const AI_LABELS = ['ランダム', '威力重視', 'ダメージ予測', '慎重'];
 const hasOp = (s, name) => !!(s.effects && s.effects.some(o => o.op === name));

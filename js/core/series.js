@@ -5,7 +5,7 @@
 //  - 戦闘ごとにターン数・レイジはリセットする。「前のターンに使った枠」は持ち越す（フィニッシュに使った技は、次の戦闘の1ターン目も使えない）
 //  - 威力アップなどの効果はリセットしない：倒れるまで続く能力変化と、最後のターンに付いた「次のターン効果」は
 //    次の戦闘の1ターン目に持ち越す。行動不能（反動の拘束など）は持ち越さない
-import { createFighter, newBattle, resolveTurn, aiChoose } from './battle.js?v=20261118-4';
+import { createFighter, newBattle, resolveTurn, aiChoose } from './battle.js?v=20261118-5';
 
 // 勝者を次の戦闘へ引き継ぐ。lastTurn は終わった戦闘の最終ターン番号
 export function carryOver(f, lastTurn) {

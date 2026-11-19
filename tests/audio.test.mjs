@@ -30,7 +30,7 @@ t('バトルのBGM：9曲からランダム。前の曲とは重ならない', (
   assert.equal(seen.size, 9);
   assert.equal(A.battleBgmKey(7), 'BGM/BGM_07');
 });
-t('画面ごとのBGM：メニューが基本。タワーはタワー。チュートリアルは、いまの曲のまま', () => {
+t('画面ごとのBGM：メニューが基本。タワーはタワー。チュートリアルは ccl', () => {
   assert.equal(A.bgmFor('top'), 'BGM/Menu');
   assert.equal(A.bgmFor('stock'), 'BGM/Menu');
   assert.equal(A.bgmFor('summonFx'), 'BGM/Menu');
@@ -40,8 +40,8 @@ t('画面ごとのBGM：メニューが基本。タワーはタワー。チュ�
   assert.equal(A.bgmFor('select', { mode: 'code' }), 'BGM/Menu');
   assert.equal(A.bgmFor('match', { kind: 'tower' }), 'battle');
   assert.equal(A.bgmFor('match', { kind: 'code' }), 'battle');
-  assert.equal(A.bgmFor('match', { kind: 'tutorial' }), null);
-  assert.equal(A.bgmFor('story'), null);
+  assert.equal(A.bgmFor('match', { kind: 'tutorial' }), 'BGM/ccl');
+  assert.equal(A.bgmFor('story'), 'BGM/ccl');
   assert.equal(A.bgmFor('soundGate'), null);
 });
 t('消音：ブラウザなしでも、音を出す・消すを切り替えられる（鳴らす関数は何も起こさない）', async () => {

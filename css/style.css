@@ -458,11 +458,11 @@ input:checked+.sw::after{transform:translateX(20px);background:#06263d}
 .st-sp.on:not(.dim){transform:translateY(-4px)}
 .st-ph{position:absolute;bottom:8%;left:20%;right:20%;padding:30px 8px;text-align:center;border:1px dashed var(--line);color:var(--sub)}
 .st-winwrap{position:relative;flex:none;margin-top:-34px;z-index:3}
-.st-win{min-height:148px;padding:20px 14px 14px}
+.st-win{padding:18px 14px 12px}
 .st-name{position:absolute;top:-13px;left:14px;padding:3px 14px;font-weight:700;font-size:14px;z-index:2;clip-path:polygon(6px 0,100% 0,calc(100% - 6px) 100%,0 100%)}
 .st-name:empty{display:none}
 .st-name.sideL{background:var(--cyan);color:#06263d}.st-name.sideR{background:var(--orange);color:var(--orange-ink)}.st-name.sideN{background:#cfe3f0;color:#102030}
-.st-text{font-size:16px;line-height:1.75;white-space:pre-wrap;min-height:84px}
+.st-text{font-size:16px;line-height:1.75;white-space:pre-wrap;min-height:56px}   /* 2行ぶん。3行の行は、storyView.js が、表示の前に広げる */
 .st-win.solo .st-text{font-style:italic;color:#cfe3f0}
 .st-next{position:absolute;right:16px;bottom:10px;color:var(--orange);animation:blink 1s steps(2) infinite}
 @keyframes blink{50%{opacity:0}}
@@ -561,8 +561,8 @@ input:checked+.sw::after{transform:translateX(20px);background:#06263d}
 .rel-line{color:var(--cyan);margin-top:8px}
 
 /* ---- 物語：ログ・オート・スキップのボタン、ログの表示 ---- */
-.st-tools{display:flex;justify-content:flex-end;gap:6px;margin:0 0 4px}
-.st-tools .btn{min-height:30px;padding:2px 12px;font-size:12px}
+.st-tools{position:absolute;right:6px;top:-40px;z-index:4;display:flex;gap:6px}   /* 名前の札と同じ行の右端 */
+.st-tools .btn{min-height:34px;padding:2px 12px;font-size:12px}
 .st-auto.on{background:var(--cyan);color:#06263d}.st-auto.on::before{background:var(--cyan)}
 .st-log{max-height:78dvh;display:flex;flex-direction:column;gap:8px;width:min(92%,420px)}
 .st-log-list{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding-right:4px;text-align:left}

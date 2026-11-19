@@ -1,23 +1,23 @@
-import { h } from './dom.js?v=20261118-4';
-import { dialog, confirmDialog, toast } from './dialog.js?v=20261118-4';
-import { portrait } from './portrait.js?v=20261118-4';
-import { analyze } from '../core/jan.js?v=20261118-4';
-import { match } from './matchView.js?v=20261118-4';
-import { select } from './select.js?v=20261118-4';
-import { tower, auto } from './modes.js?v=20261118-4';
-import { hotSetup, hotPlay } from './hotView.js?v=20261118-4';
-import { story } from './storyView.js?v=20261118-4';
-import { summon, detail } from './summon.js?v=20261118-4';
-import { summonFx } from './summonFx.js?v=20261118-4';
-import { dexScreen } from './dexView.js?v=20261118-4';
-import { chipsOfJan } from './quality.js?v=20261118-4';
-import { towerRoster, towerAdd, inRoster } from './roster.js?v=20261118-4';
-import { teamCodeMake } from './teamcodeView.js?v=20261118-4';
-import { battleMenu, simSetup } from './simView.js?v=20261118-4';
-import { pvpLobby, pvpSelect } from './pvpView.js?v=20261118-4';
-import { soundGate } from './soundGate.js?v=20261118-4';
-import { soundOn, setSound } from '../audio.js?v=20261118-4';
-import { BUILD } from '../version.js?v=20261118-4';
+import { h } from './dom.js?v=20261118-5';
+import { dialog, confirmDialog, toast } from './dialog.js?v=20261118-5';
+import { portrait } from './portrait.js?v=20261118-5';
+import { analyze } from '../core/jan.js?v=20261118-5';
+import { match } from './matchView.js?v=20261118-5';
+import { select } from './select.js?v=20261118-5';
+import { tower, auto } from './modes.js?v=20261118-5';
+import { hotSetup, hotPlay } from './hotView.js?v=20261118-5';
+import { story } from './storyView.js?v=20261118-5';
+import { summon, detail } from './summon.js?v=20261118-5';
+import { summonFx } from './summonFx.js?v=20261118-5';
+import { dexScreen } from './dexView.js?v=20261118-5';
+import { chipsOfJan } from './quality.js?v=20261118-5';
+import { towerRoster, towerAdd, inRoster } from './roster.js?v=20261118-5';
+import { teamCodeMake } from './teamcodeView.js?v=20261118-5';
+import { battleMenu, simSetup } from './simView.js?v=20261118-5';
+import { pvpLobby, pvpSelect } from './pvpView.js?v=20261118-5';
+import { soundGate } from './soundGate.js?v=20261118-5';
+import { soundOn, setSound, setLiveVolume, playSe } from '../audio.js?v=20261118-5';
+import { BUILD } from '../version.js?v=20261118-5';
 
 const TITLE = 'バーコード・サモナー';
 
@@ -130,6 +130,7 @@ function options(root, ctx) {
     head.append(h('span', '', label), val);
     const r = h('input'); r.type = 'range'; r.min = 0; r.max = 100; r.value = d[key];
     r.oninput = () => { d[key] = +r.value; val.textContent = r.value; setLiveVolume(key, +r.value); refresh(); };   // 動かしているあいだは、すぐ音量に反映（保存はしない）
+    r.onchange = () => { if (key === 'se') playSe('se/select'); };   // 効果音の音量は、スライダーを離したときに、選択音で確かめる
     row.append(head, r);
     if (note) row.append(h('p', 'sub', note));
     return row;
@@ -152,7 +153,7 @@ function options(root, ctx) {
     sseg.append(b);
   });
   snd.append(sseg, h('p', 'sub', 'アプリを開くたびに、最初の画面で選びます'));
-  body.append(snd, slider('BGM音量', 'bgm'), slider('効果音の音量', 'se', '音の素材をフォルダに入れると鳴るようになります'));
+  body.append(snd, slider('BGM音量', 'bgm', '動かしているあいだ、音量がすぐ変わります'), slider('効果音の音量', 'se', 'スライダーを離すと、選択音が鳴ります'));
 
   const tempo = h('div', 'panel opt');
   tempo.append(h('div', 'opt-head', ''));

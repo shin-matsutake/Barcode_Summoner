@@ -5,8 +5,8 @@
 // どちらも使えない／カメラの許可が出ない／カメラがない、ときは、
 //   ③ 写真を撮って読み取る（カメラアプリを使うので、ほとんどの端末で動く）
 //   ④ 番号を手で入れる
-import { h } from './dom.js?v=20261118-4';
-import { isValidCheckDigit } from '../core/jan.js?v=20261118-4';
+import { h } from './dom.js?v=20261118-5';
+import { isValidCheckDigit } from '../core/jan.js?v=20261118-5';
 
 const ZXING_URLS = [
   'https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js',

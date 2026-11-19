@@ -1,18 +1,18 @@
 // 選出画面：相手の持ち込み（公開情報だけ）／自分の持ち込み／詳細／出撃メンバー（順番）
 //   params.mode が 'code'（チームコード挑戦）… 自分の持ち込みは、ストック・番号から。仲間にいない子は「この試合だけ」も選べる
 //   それ以外（CPUタワー） … 自分の持ち込みは、タワーの仲間から
-import { h, today } from './dom.js?v=20261118-4';
-import { dialog, confirmDialog } from './dialog.js?v=20261118-4';
-import { portrait, elemIcon, EL } from './portrait.js?v=20261118-4';
-import { analyze } from '../core/jan.js?v=20261118-4';
-import { createFighter } from '../core/battle.js?v=20261118-4';
-import { pickMonster } from './picker.js?v=20261118-4';
-import { statsGrid, skillList } from './monsterInfo.js?v=20261118-4';
-import { stageOf } from '../data.js?v=20261118-4';
-import { rosterCap, releaseInfo, releaseText, startBattle, pickFoeParty } from '../towerRules.js?v=20261118-4';
-import { fullMessage, releaseCompanion } from './roster.js?v=20261118-4';
-import { summonLabel } from '../net/session.js?v=20261118-4';
-import { preloadMonsters } from './portrait.js?v=20261118-4';
+import { h, today } from './dom.js?v=20261118-5';
+import { dialog, confirmDialog } from './dialog.js?v=20261118-5';
+import { portrait, elemIcon, EL } from './portrait.js?v=20261118-5';
+import { analyze } from '../core/jan.js?v=20261118-5';
+import { createFighter } from '../core/battle.js?v=20261118-5';
+import { pickMonster } from './picker.js?v=20261118-5';
+import { statsGrid, skillList } from './monsterInfo.js?v=20261118-5';
+import { stageOf } from '../data.js?v=20261118-5';
+import { rosterCap, releaseInfo, releaseText, startBattle, pickFoeParty } from '../towerRules.js?v=20261118-5';
+import { fullMessage, releaseCompanion } from './roster.js?v=20261118-5';
+import { summonLabel } from '../net/session.js?v=20261118-5';
+import { preloadMonsters } from './portrait.js?v=20261118-5';
 
 export function select(root, ctx, params) {
   const isCode = params.mode === 'code';

@@ -1,8 +1,8 @@
 // バトルに入る演出：画面が光り、左右からモンスターが現れて、「VS」→「BATTLE START」
 //   playIntro(root, { left:{ monster, label }, right:{ monster, label }, fx }) → 終わると解決する Promise。タップで飛ばせる
 //   fx が false（オプションの「バトル演出」オフ）のときや、「動きを減らす」設定のときは、短い静止表示
-import { h } from './dom.js?v=20261118-4';
-import { portrait, elemIcon, EL } from './portrait.js?v=20261118-4';
+import { h } from './dom.js?v=20261118-5';
+import { portrait, elemIcon, EL } from './portrait.js?v=20261118-5';
 
 const card = (side, { monster, label }) => {
   const c = h('div', `bi-side ${side}`), box = h('div', 'bi-card');

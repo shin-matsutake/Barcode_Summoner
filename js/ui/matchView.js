@@ -1,19 +1,19 @@
 // バトル画面。勝ち抜き戦（1〜3体）に対応。自分が操作するモードと、CPU同士を観戦するモードがある。
-import { h, sleep, today } from './dom.js?v=20261118-4';
-import { dialog, confirmDialog, story } from './dialog.js?v=20261118-4';
-import { enterStage } from './modes.js?v=20261118-4';
-import { preloadMonsters } from './portrait.js?v=20261118-4';
-import { playIntro } from './battleIntro.js?v=20261118-4';
-import { stageOf } from '../data.js?v=20261118-4';
-import { afterBattle, releaseInfo } from '../towerRules.js?v=20261118-4';
-import { portrait, elemIcon, EL } from './portrait.js?v=20261118-4';
-import { analyze } from '../core/jan.js?v=20261118-4';
-import { beats } from '../core/rules.js?v=20261118-4';
-import { Rng } from '../core/rng.js?v=20261118-4';
-import { allowedSlots, rageMult, effStat, CONFIG } from '../core/battle.js?v=20261118-4';
-import { startSeries, resolveSeriesTurn } from '../core/series.js?v=20261118-4';
-import { chooseSlot } from './ai.js?v=20261118-4';
-import { playAttackSe } from '../audio.js?v=20261118-4';
+import { h, sleep, today } from './dom.js?v=20261118-5';
+import { dialog, confirmDialog, story } from './dialog.js?v=20261118-5';
+import { enterStage } from './modes.js?v=20261118-5';
+import { preloadMonsters } from './portrait.js?v=20261118-5';
+import { playIntro } from './battleIntro.js?v=20261118-5';
+import { stageOf } from '../data.js?v=20261118-5';
+import { afterBattle, releaseInfo } from '../towerRules.js?v=20261118-5';
+import { portrait, elemIcon, EL } from './portrait.js?v=20261118-5';
+import { analyze } from '../core/jan.js?v=20261118-5';
+import { beats } from '../core/rules.js?v=20261118-5';
+import { Rng } from '../core/rng.js?v=20261118-5';
+import { allowedSlots, rageMult, effStat, CONFIG } from '../core/battle.js?v=20261118-5';
+import { startSeries, resolveSeriesTurn } from '../core/series.js?v=20261118-5';
+import { chooseSlot } from './ai.js?v=20261118-5';
+import { playAttackSe, playSe, stopBgm } from '../audio.js?v=20261118-5';
 
 const TIMER_SEC = 30;
 // バトルのテンポ（1つの出来事の表示時間 ms）：ゆっくり／じっくり（旧：ゆっくり）／ふつう／はやい（旧：ふつう）／高速（旧：はやい）
@@ -202,7 +202,7 @@ export function match(root, ctx, params) {
   }
   async function beginTurn() {
     setTurn(s.battle.turn);
-    if (watch) { locked = true; say(`${s.fighters.a.name} VS ${s.fighters.b.name}`); await wait(700); if (alive) commit(null); return; }
+    if (watch) { locked = true; if (s.battle.turn === 1) { say(`${s.fighters.a.name} VS ${s.fighters.b.name}`); await wait(700); } else await wait(300); if (alive) commit(null); return; }   // 「VS」は、最初のターンだけ
     renderSkills();
     const ok = allowedSlots(fa(), s.battle.turn);
     if (!ok.length) { locked = true; say(`${fa().name}は動けない…`); tnum.textContent = '--'; sleep(1000).then(() => alive && commit(null)); return; }
@@ -307,7 +307,7 @@ export function match(root, ctx, params) {
         case 'selfDamage': say(`${nm(e.who)}は${e.cause === 'recoil' ? '反動を受けた' : '自分にダメージを受けた'}！`, `${e.n}ダメージ`); setHp(e.who, e.hp, view[e.who]); break;
         case 'hpSet': say(`${nm(e.target)}のHPが0になった！`); setHp(e.target, e.hp, view[e.target]); break;
         case 'judgeWin': say(`${nm(e.who === 'a' ? 'b' : 'a')}は自分の効果で倒れた！`); break;
-        case 'faint': say(`${nm(e.who)}は倒れた！`); break;
+        case 'faint': playSe('se/down'); say(`${nm(e.who)}は倒れた！`); break;
         case 'mutualKO': say(`${CONFIG.MAX_TURNS}ターンが終わった`, '相打ちになった'); break;
         case 'enter': view[e.who] = s.fighters[e.who]; showFighter(e.who, view[e.who]); say(`${e.name}が登場！`); break;
         default: w = 0;
@@ -322,6 +322,10 @@ export function match(root, ctx, params) {
 
   async function finish() {
     const r = s.result;
+    if (r === 'a' || r === 'b') {   // 決着の音：BGMを止めて、勝ち／負け（見ているだけ・2人対戦は、どちらが勝っても勝ちの音）
+      stopBgm(); const mine = pvp ? M : 'a', neutral = watch || params.kind === 'hotseat';
+      playSe(neutral || r === mine ? 'se/win' : 'se/lose');
+    }
     const text = watch ? (r === 'a' ? `${label.a}の勝ち！` : r === 'b' ? `${label.b}の勝ち！` : '引き分け') : (r === 'a' ? 'あなたの勝ち！' : r === 'b' ? 'あなたの負け…' : '引き分け');
     const retry = () => ctx.go('match', { ...params });
     if (pvp) {   // 対人戦：再戦は、両方が押したときだけ（相手の返事を待つ）

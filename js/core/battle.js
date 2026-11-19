@@ -1,5 +1,5 @@
-import { beats, weakAgainst, CONFIG as C } from './rules.js?v=20261118-4';
-export { CONFIG } from './rules.js?v=20261118-4';
+import { beats, weakAgainst, CONFIG as C } from './rules.js?v=20261118-5';
+export { CONFIG } from './rules.js?v=20261118-5';
 
 export function rageMult(turn) {
   return turn < C.RAGE_START ? 1 : 1.5 + C.RAGE_STEP * (turn - C.RAGE_START);

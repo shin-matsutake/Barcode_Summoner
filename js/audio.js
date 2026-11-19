@@ -13,11 +13,11 @@ export const summonSeKey = (luckTier, unique = false) => `se/summon_0${unique ? 
 export const BATTLE_TRACKS = 9;   // BGM_01〜BGM_09
 export const battleBgmKey = n => `BGM/BGM_0${n}`;
 export const pickBattleN = (prev = 0, rand = Math.random) => { let n; do n = 1 + Math.floor(rand() * BATTLE_TRACKS); while (n === prev && BATTLE_TRACKS > 1); return n; };
-// 画面ごとのBGM。null＝いま鳴っている曲のまま（チュートリアルの物語・バトルは、専用の曲ができるまで、そのまま）
+// 画面ごとのBGM。null＝いま鳴っている曲のまま。チュートリアル（物語とバトル）は ccl
 export function bgmFor(screen, params = {}) {
   if (screen === 'soundGate') return null;
-  if (screen === 'story') return null;
-  if (screen === 'match') return params.kind === 'tutorial' ? null : 'battle';
+  if (screen === 'story') return 'BGM/ccl';   // いまの物語は、チュートリアルだけ（タワーの物語ができたら、tower_talk を使い分ける）
+  if (screen === 'match') return params.kind === 'tutorial' ? 'BGM/ccl' : 'battle';
   if (screen === 'tower' || screen === 'towerRoster' || screen === 'towerAdd') return 'BGM/tower';
   if (screen === 'select' && params.mode !== 'code') return 'BGM/tower';   // タワーの出撃えらび
   return 'BGM/Menu';
@@ -69,6 +69,7 @@ function applyBgm() {
   bgmEl.volume = vol('bgm');
   if (bgmEl.paused) bgmEl.play().catch(() => {});
 }
+export function stopBgm() { bgmWant = null; applyBgm(); }   // 決着のジングルのあいだなど、BGMを止める（次の画面で、また鳴る）
 export function playBgm(key) {   // key: 'BGM/Menu' など。'battle' なら、バトルの曲を、前回とは別のものからランダムに
   if (key === 'battle') { lastBattle = pickBattleN(lastBattle); key = battleBgmKey(lastBattle); }
   bgmWant = key; applyBgm();
