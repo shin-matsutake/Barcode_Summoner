@@ -1,7 +1,7 @@
 // 最初の画面：音が出ることを知らせて、音を出すか消音にするかを選んでから、トップへ進む
 // （タップしてから音を鳴らせるので、ブラウザの自動再生の制限にも合う）
-import { h } from './dom.js?v=20261118-5';
-import { setSound } from '../audio.js?v=20261118-5';
+import { h } from './dom.js?v=20261121-3';
+import { setSound } from '../audio.js?v=20261121-3';
 
 export function soundGate(root, ctx) {
   const wrap = h('div', 'gate');

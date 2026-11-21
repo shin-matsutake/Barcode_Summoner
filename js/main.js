@@ -1,13 +1,13 @@
-import { loadData } from './data.js?v=20261118-5';
-import * as store from './storage.js?v=20261118-5';
-import { screens } from './ui/screens.js?v=20261118-5';
-import { closeAllDialogs } from './ui/dialog.js?v=20261118-5';
-import { h } from './ui/dom.js?v=20261118-5';
+import { loadData } from './data.js?v=20261121-3';
+import * as store from './storage.js?v=20261121-3';
+import { screens } from './ui/screens.js?v=20261121-3';
+import { closeAllDialogs } from './ui/dialog.js?v=20261121-3';
+import { h } from './ui/dom.js?v=20261121-3';
 
-import { initBackNav } from './ui/backnav.js?v=20261118-5';
-import { bgFor, setBg } from './ui/bg.js?v=20261118-5';
-import { ensureDexSeed } from './ui/summonFx.js?v=20261118-5';   // 古い保存データから、図鑑の記録を作る   // 背景の画像と、画面ごとの使い分けは、ui/bg.js
-import { bgmFor, playBgm, playSe, setVolumeSource, clearLiveVolume } from './audio.js?v=20261118-5';
+import { initBackNav } from './ui/backnav.js?v=20261121-3';
+import { bgFor, setBg } from './ui/bg.js?v=20261121-3';
+import { ensureDexSeed } from './ui/summonFx.js?v=20261121-3';   // 古い保存データから、図鑑の記録を作る   // 背景の画像と、画面ごとの使い分けは、ui/bg.js
+import { bgmFor, playBgm, playSe, setVolumeSource, clearLiveVolume } from './audio.js?v=20261121-3';
 
 const root = document.getElementById('screen');
 const ctx = { data: null, store, go, session: {} };

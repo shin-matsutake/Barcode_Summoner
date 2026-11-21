@@ -1,19 +1,19 @@
 // バトル画面。勝ち抜き戦（1〜3体）に対応。自分が操作するモードと、CPU同士を観戦するモードがある。
-import { h, sleep, today } from './dom.js?v=20261118-5';
-import { dialog, confirmDialog, story } from './dialog.js?v=20261118-5';
-import { enterStage } from './modes.js?v=20261118-5';
-import { preloadMonsters } from './portrait.js?v=20261118-5';
-import { playIntro } from './battleIntro.js?v=20261118-5';
-import { stageOf } from '../data.js?v=20261118-5';
-import { afterBattle, releaseInfo } from '../towerRules.js?v=20261118-5';
-import { portrait, elemIcon, EL } from './portrait.js?v=20261118-5';
-import { analyze } from '../core/jan.js?v=20261118-5';
-import { beats } from '../core/rules.js?v=20261118-5';
-import { Rng } from '../core/rng.js?v=20261118-5';
-import { allowedSlots, rageMult, effStat, CONFIG } from '../core/battle.js?v=20261118-5';
-import { startSeries, resolveSeriesTurn } from '../core/series.js?v=20261118-5';
-import { chooseSlot } from './ai.js?v=20261118-5';
-import { playAttackSe, playSe, stopBgm } from '../audio.js?v=20261118-5';
+import { h, sleep, today } from './dom.js?v=20261121-3';
+import { dialog, confirmDialog, story } from './dialog.js?v=20261121-3';
+import { enterStage } from './modes.js?v=20261121-3';
+import { preloadMonsters } from './portrait.js?v=20261121-3';
+import { playIntro } from './battleIntro.js?v=20261121-3';
+import { stageOf } from '../data.js?v=20261121-3';
+import { afterBattle, releaseInfo } from '../towerRules.js?v=20261121-3';
+import { portrait, elemIcon, EL } from './portrait.js?v=20261121-3';
+import { analyze } from '../core/jan.js?v=20261121-3';
+import { beats } from '../core/rules.js?v=20261121-3';
+import { Rng } from '../core/rng.js?v=20261121-3';
+import { allowedSlots, rageMult, effStat, CONFIG } from '../core/battle.js?v=20261121-3';
+import { startSeries, resolveSeriesTurn } from '../core/series.js?v=20261121-3';
+import { chooseSlot } from './ai.js?v=20261121-3';
+import { playAttackSe, playSe, stopBgm } from '../audio.js?v=20261121-3';
 
 const TIMER_SEC = 30;
 // バトルのテンポ（1つの出来事の表示時間 ms）：ゆっくり／じっくり（旧：ゆっくり）／ふつう／はやい（旧：ふつう）／高速（旧：はやい）
@@ -295,10 +295,12 @@ export function match(root, ctx, params) {
           break;
         }
         case 'stunned': say(`${nm(e.who)}は動けない！`); break;
+        case 'negated': say(`${nm(e.who)}の技の効果が、無効化された！`); break;
+        case 'revive': { const o = e.who === 'a' ? 'b' : 'a'; say(`${nm(e.who)}は倒れずに復活した！`, `HPが${e.hp}に回復　${nm(o)}のHPが半分に`); setHp(e.who, e.hp, view[e.who]); setHp(o, e.foeHp, view[o]); break; }
         case 'hit': {
           const tgt = e.who === 'a' ? 'b' : 'a', hi = e.type ? { type: e.type, el: e.el } : hitInfo(e), c = EL[hi.el].c;
           if (e.counter) say(`${nm(e.who)}の反撃！`, `${TYPE[hi.type]}攻撃　${e.dmg}ダメージ`);
-          else say(e.copy ? [{ t: `${nm(e.who)}は` }, { t: e.skill, c }, { t: e.extra ? 'の追加攻撃もコピー！' : 'をコピー！' }] : [{ t: `${nm(e.who)}の` }, { t: e.skill, c }, { t: e.extra ? 'の追加攻撃！' : '！' }], `${TYPE[hi.type]}攻撃　${e.dmg}ダメージ${affinityNote(tgt, hi.el)}`);
+          else say(e.copy ? [{ t: `${nm(e.who)}は` }, { t: e.skill, c }, { t: e.extra ? 'の追加攻撃もコピー！' : 'をコピー！' }] : [{ t: `${nm(e.who)}の` }, { t: e.skill, c }, { t: e.extra ? 'の追加攻撃！' : '！' }], `${e.fixed ? '' : TYPE[hi.type] + '攻撃　'}${e.dmg}ダメージ${e.fixed ? '' : affinityNote(tgt, hi.el)}`);
           await advance(e.who);
           if (seTotal.has(ei)) playAttackSe(hi.type, seTotal.get(ei), view[tgt].maxHp);
           hitFx(tgt, e.dmg, hi.type, c); setHp(tgt, e.foeHp, view[tgt]); break;

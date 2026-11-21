@@ -6,9 +6,9 @@
 //           最後の1行では止まる（いきなりバトルに入らない）。ログを開いている間・確認のダイアログの間は、止まる
 //   ログ：ここまでの会話を、さかのぼって読む
 //   音声：audio/voice/<音声ID>.mp3 があれば、セリフに合わせて鳴らす（なければ、鳴らさない）
-import { soundOn } from '../audio.js?v=20261118-5';
-import { h } from './dom.js?v=20261118-5';
-import { confirmDialog } from './dialog.js?v=20261118-5';
+import { soundOn } from '../audio.js?v=20261121-3';
+import { h } from './dom.js?v=20261121-3';
+import { confirmDialog } from './dialog.js?v=20261121-3';
 
 const CHAR_MS = 32;   // 1文字が出る間隔（ミリ秒）
 
@@ -30,8 +30,8 @@ export function story(root, ctx, params = {}) {
 
   const wrap = h('div', 'page story');
   const bar = h('header', 'bar');
-  const back = h('button', 'btn small', '戻る'), skip = h('button', 'btn small', 'スキップ');
-  const logBtn = h('button', 'btn small', 'ログ'), autoBtn = h('button', 'btn small st-auto', 'オート');
+  const back = h('button', 'btn small', '戻る'), skip = h('button', 'btn small', 'SKIP');
+  const logBtn = h('button', 'btn small', 'LOG'), autoBtn = h('button', 'btn small st-auto', 'AUTO');
   const prog = h('span', 'st-prog', '');
   bar.append(back, h('h1', '', act.title), prog);
   const tools = h('div', 'st-tools');
@@ -41,7 +41,7 @@ export function story(root, ctx, params = {}) {
   stage.append(sp.L, sp.R);
   const winWrap = h('div', 'st-winwrap'), win = h('div', 'panel st-win');   // 名前の札は、枠の外に出すので、枠（panel）の外に置く
   const name = h('div', 'st-name'), text = h('div', 'st-text'), next = h('span', 'st-next', '▼');
-  win.append(text, next); winWrap.append(name, tools, win);   // ログ・オート・スキップは、名前の札と同じ行の右端（高さを使わない）
+  win.append(text, next); winWrap.append(name, tools, win);   // LOG・AUTO・SKIP は、メッセージ欄の右下の縁に重ねる（高さを使わない）
   wrap.append(bar, stage, winWrap);
   root.append(wrap);
 
@@ -59,7 +59,7 @@ export function story(root, ctx, params = {}) {
 
   // オート
   const speed = () => ctx.store.get().options.autoSpeed || 'normal';
-  const paintAuto = () => { autoBtn.classList.toggle('on', autoOn); autoBtn.setAttribute('aria-pressed', String(autoOn)); autoBtn.textContent = autoOn ? 'オート中' : 'オート'; };
+  const paintAuto = () => { autoBtn.classList.toggle('on', autoOn); autoBtn.setAttribute('aria-pressed', String(autoOn)); autoBtn.textContent = 'AUTO'; };
   function scheduleAuto(ms) {
     clearTimeout(autoTimer);
     if (!autoOn || !alive || typing || paused) return;

@@ -1,0 +1,1164 @@
+{
+ "version": 1,
+ "monsters": [
+  {
+   "id": 101,
+   "name": "もふもふカーバンクル",
+   "el": "light",
+   "stats": {
+    "hp": 1700,
+    "atk": 215,
+    "mat": 215,
+    "spd": 145
+   },
+   "res": {
+    "phys": 0.3,
+    "mag": 0.3
+   },
+   "unique": {
+    "name": "もふもふ大結界",
+    "el": "light",
+    "type": "phys",
+    "power": 20,
+    "effects": [
+     {
+      "op": "forceLast"
+     },
+     {
+      "op": "copyFoe",
+      "cond": "foeHit"
+     },
+     {
+      "op": "drain",
+      "ratio": 0.3333333333333333,
+      "post": true
+     },
+     {
+      "op": "nextHalf"
+     }
+    ],
+    "text": "必ず後攻になる\nこのターンに受けた相手の攻撃を、追加効果もふくめて、コピーして追加で使う\n与えたダメージの1/3のHPを回復する\n次のターンに受けるダメージを半減する"
+   },
+   "skills": [
+    80,
+    89
+   ],
+   "desc": "",
+   "image": "images/monsters/M101_F.png",
+   "note": "5F用／強さ約45%（その階の通過率の試算 89%）／あなたの元の数値 HP3500・攻450・魔450・速300"
+  },
+  {
+   "id": 102,
+   "name": "機械龍サンドラ",
+   "el": "earth",
+   "stats": {
+    "hp": 3550,
+    "atk": 215,
+    "mat": 130,
+    "spd": 95
+   },
+   "res": {
+    "phys": 0.3,
+    "mag": 0.1
+   },
+   "unique": {
+    "name": "スチーム・ブレス",
+    "el": "wind",
+    "type": "phys",
+    "power": 100,
+    "effects": [
+     {
+      "op": "forceLast"
+     },
+     {
+      "op": "unblockable"
+     },
+     {
+      "op": "extra",
+      "type": "phys",
+      "power": 50,
+      "el": "water"
+     },
+     {
+      "op": "extra",
+      "type": "phys",
+      "power": 50,
+      "el": "fire"
+     },
+     {
+      "op": "nextPower",
+      "n": 100,
+      "cond": "foeSkillEl:water"
+     },
+     {
+      "op": "nextPower",
+      "n": 100,
+      "cond": "foeSkillEl:fire"
+     }
+    ],
+    "text": "必ず後攻になる\nこの攻撃は打ち消されることはない\n相手に水属性威力50の追加物理攻撃と火属性威力50の追加物理攻撃\nこのターンの相手の攻撃が水か火ならば、次のターンの攻撃の威力+100"
+   },
+   "skills": [
+    28,
+    74
+   ],
+   "desc": "",
+   "image": "images/monsters/M102_F.png",
+   "note": "9F用／強さ約63%（その階の通過率の試算 92%）"
+  },
+  {
+   "id": 103,
+   "name": "白鯨",
+   "el": "wind",
+   "stats": {
+    "hp": 4350,
+    "atk": 290,
+    "mat": 85,
+    "spd": 80
+   },
+   "res": {
+    "phys": 0.3,
+    "mag": 0.1
+   },
+   "unique": {
+    "name": "大洋の白き災厄",
+    "el": "wind",
+    "type": "phys",
+    "power": 100,
+    "effects": [
+     {
+      "op": "recoil",
+      "ratio": 0.5,
+      "excludeExtras": true
+     },
+     {
+      "op": "extra",
+      "type": "phys",
+      "power": 100,
+      "el": "water",
+      "tag": "x"
+     },
+     {
+      "op": "drain",
+      "ratio": 0.5,
+      "of": "x",
+      "cond": "postFoeHpHigher"
+     }
+    ],
+    "text": "与えたダメージの半分のダメージを受ける\n攻撃後、相手に水属性威力100の追加物理攻撃を行う\nこの時、相手のHPが自分より多ければ、この追加攻撃で与えたダメージの半分のHPを回復する"
+   },
+   "skills": [
+    75,
+    54
+   ],
+   "desc": "",
+   "image": "images/monsters/M103_F.png",
+   "note": "16F用／強さ約63%（その階の通過率の試算 85%）"
+  },
+  {
+   "id": 104,
+   "name": "九尾の狐",
+   "el": "fire",
+   "stats": {
+    "hp": 2250,
+    "atk": 65,
+    "mat": 225,
+    "spd": 165
+   },
+   "res": {
+    "phys": 0.1,
+    "mag": 0.3
+   },
+   "unique": {
+    "name": "九連狐火",
+    "el": "fire",
+    "type": "mag",
+    "power": 90,
+    "effects": [
+     {
+      "op": "extra",
+      "type": "mag",
+      "power": 90,
+      "el": "dark"
+     },
+     {
+      "op": "heal",
+      "n": 900,
+      "cond": "postFoeHpHigher"
+     },
+     {
+      "op": "foeDamage",
+      "n": 900,
+      "cond": "postFoeHpHigher"
+     }
+    ],
+    "text": "相手に闇属性威力90の追加魔法攻撃\n攻撃後、相手のHPが自分より多ければ、HPを900回復し、相手に900ダメージ与える"
+   },
+   "skills": [
+    49,
+    13
+   ],
+   "desc": "",
+   "image": "images/monsters/M104_F.png",
+   "note": "19F用／強さ約57%（その階の通過率の試算 79%）"
+  },
+  {
+   "id": 105,
+   "name": "機械龍サンドラμ",
+   "el": "earth",
+   "stats": {
+    "hp": 4350,
+    "atk": 405,
+    "mat": 290,
+    "spd": 240
+   },
+   "res": {
+    "phys": 0.3,
+    "mag": 0.2
+   },
+   "unique": {
+    "name": "オーバードライブ・バースト",
+    "el": "earth",
+    "type": "mag",
+    "power": 70,
+    "effects": [
+     {
+      "op": "extra",
+      "type": "phys",
+      "power": 70,
+      "el": "light"
+     },
+     {
+      "op": "extra",
+      "type": "mag",
+      "power": 70,
+      "el": "fire"
+     },
+     {
+      "op": "heal",
+      "n": 300,
+      "cond": "postFoeHpHigher"
+     }
+    ],
+    "text": "相手に光属性威力70の追加物理攻撃と火属性威力70の追加魔法攻撃\n攻撃後、相手のHPが自分より多ければ、HPを300回復する"
+   },
+   "skills": [
+    29,
+    28
+   ],
+   "desc": "",
+   "image": "images/monsters/M105_F.png",
+   "note": "22F用／強さ約83%（その階の通過率の試算 72%）"
+  },
+  {
+   "id": 106,
+   "name": "クマの大五郎",
+   "el": "dark",
+   "stats": {
+    "hp": 6200,
+    "atk": 10,
+    "mat": 275,
+    "spd": 105
+   },
+   "res": {
+    "phys": 0.2,
+    "mag": 0.2
+   },
+   "unique": {
+    "name": "おやすみハグ",
+    "el": "light",
+    "type": "phys",
+    "power": 10,
+    "effects": [
+     {
+      "op": "selfDamageFoeHp"
+     },
+     {
+      "op": "foeDamageSelfTaken",
+      "ratio": 0.9
+     },
+     {
+      "op": "drain",
+      "ratio": 0.3333333333333333,
+      "of": "fixed"
+     },
+     {
+      "op": "nextLast"
+     }
+    ],
+    "text": "相手のHP分のダメージを受ける\nこの技の効果で自分が受けたダメージの9/10のダメージを与える\nこの技の効果で与えたダメージの1/3のHPを回復する\n次のターン必ず後攻になる"
+   },
+   "skills": [
+    83,
+    78
+   ],
+   "desc": "",
+   "image": "images/monsters/M106_F.png",
+   "note": "25F用／強さ約79%（その階の通過率の試算 73%）"
+  },
+  {
+   "id": 107,
+   "name": "幼龍カーバンクル",
+   "el": "light",
+   "stats": {
+    "hp": 3100,
+    "atk": 310,
+    "mat": 310,
+    "spd": 205
+   },
+   "res": {
+    "phys": 0.2,
+    "mag": 0.2
+   },
+   "unique": {
+    "name": "神秘結界",
+    "el": "light",
+    "type": "mag",
+    "power": 40,
+    "effects": [
+     {
+      "op": "forceFirst"
+     },
+     {
+      "op": "nullifyFoe"
+     },
+     {
+      "op": "copyFoe"
+     },
+     {
+      "op": "cooldown",
+      "n": 2
+     }
+    ],
+    "text": "必ず先攻になる\n相手の攻撃を無効化し、無効化した攻撃を、反動や追加効果もふくめて、コピーして追加で使う\nこの技は1度使うと2ターン使用できない"
+   },
+   "skills": [
+    80,
+    89
+   ],
+   "desc": "",
+   "image": "images/monsters/M107_F.png",
+   "note": "階の指定なし／強さ約80%（2周目用の数値のまま）／あなたの元の数値 HP4500・攻450・魔450・速300"
+  },
+  {
+   "id": 901,
+   "name": "シルバーフェンリル",
+   "el": "wind",
+   "stats": {
+    "hp": 2850,
+    "atk": 250,
+    "mat": 80,
+    "spd": 285
+   },
+   "res": {
+    "phys": 0.1,
+    "mag": 0.1
+   },
+   "unique": {
+    "name": "ロイヤルファング",
+    "el": "light",
+    "type": "phys",
+    "power": 90,
+    "effects": [
+     {
+      "op": "extra",
+      "type": "phys",
+      "power": 90,
+      "el": "wind",
+      "stat": "spd"
+     },
+     {
+      "op": "extra",
+      "type": "phys",
+      "power": 50,
+      "el": "dark",
+      "cond": "afterFoeHpHigher"
+     }
+    ],
+    "text": "攻撃後、素早さを攻撃力に変換し、威力90の風属性追加物理攻撃\n攻撃後、相手のHPが自分より多ければ、さらに威力50の闇属性追加物理攻撃"
+   },
+   "skills": [
+    75,
+    42
+   ],
+   "desc": "",
+   "image": "images/monsters/M901_F.png",
+   "note": "7F用／強さ約50%（その階の通過率の試算 97%）"
+  },
+  {
+   "id": 902,
+   "name": "リッチキング",
+   "el": "dark",
+   "stats": {
+    "hp": 2450,
+    "atk": 65,
+    "mat": 220,
+    "spd": 90
+   },
+   "res": {
+    "phys": 0.3,
+    "mag": 0.0
+   },
+   "unique": {
+    "name": "黄泉帰還",
+    "el": "light",
+    "type": "mag",
+    "power": 60,
+    "effects": [
+     {
+      "op": "forceLast"
+     },
+     {
+      "op": "revive",
+      "foeCut": 0.5,
+      "heal": 0.5
+     },
+     {
+      "op": "onKill",
+      "heal": 1000
+     }
+    ],
+    "text": "必ず後攻になる\n先攻の相手の攻撃で倒された場合、倒されずに、相手のHPを半分にし、自分のHPを半分まで回復して、そのまま攻撃する\nこの攻撃で相手を倒した場合、HPを1000回復する"
+   },
+   "skills": [
+    35,
+    83
+   ],
+   "desc": "",
+   "image": "images/monsters/M902_F.png",
+   "note": "10F用／強さ約49%（その階の通過率の試算 92%）"
+  },
+  {
+   "id": 903,
+   "name": "鬼",
+   "el": "dark",
+   "stats": {
+    "hp": 4050,
+    "atk": 475,
+    "mat": 35,
+    "spd": 240
+   },
+   "res": {
+    "phys": 0.0,
+    "mag": 0.0
+   },
+   "unique": {
+    "name": "酒呑狂乱・百鬼夜行",
+    "el": "dark",
+    "type": "phys",
+    "power": 80,
+    "effects": [
+     {
+      "op": "recoil",
+      "ratio": 0.5,
+      "excludeExtras": true
+     },
+     {
+      "op": "extra",
+      "type": "phys",
+      "power": 70,
+      "el": "fire"
+     },
+     {
+      "op": "extra",
+      "type": "phys",
+      "power": 50,
+      "el": "earth"
+     },
+     {
+      "op": "selfStun"
+     },
+     {
+      "op": "nextTake",
+      "mult": 0.3333333333333333
+     }
+    ],
+    "text": "与えたダメージの半分のダメージを受ける\n相手に火属性威力70の追加物理攻撃と土属性威力50の追加物理攻撃\n次のターン行動ができない\n次のターン受けるダメージが1/3になる"
+   },
+   "skills": [
+    34,
+    46
+   ],
+   "desc": "",
+   "image": "images/monsters/M903_F.png",
+   "note": "12F用／強さ約65%（その階の通過率の試算 91%）／あなたの元の数値 HP5500・攻650・魔50・速330"
+  },
+  {
+   "id": 904,
+   "name": "プロフェーテス",
+   "el": "earth",
+   "stats": {
+    "hp": 4000,
+    "atk": 20,
+    "mat": 400,
+    "spd": 80
+   },
+   "res": {
+    "phys": 0.0,
+    "mag": 0.0
+   },
+   "unique": {
+    "name": "偽ノ奇跡・天火降臨",
+    "el": "light",
+    "type": "mag",
+    "power": 60,
+    "effects": [
+     {
+      "op": "extra",
+      "type": "mag",
+      "power": 60,
+      "el": "earth"
+     },
+     {
+      "op": "extra",
+      "type": "mag",
+      "power": 60,
+      "el": "fire"
+     },
+     {
+      "op": "nextPower",
+      "n": 60
+     }
+    ],
+    "text": "相手に土属性威力60の追加魔法攻撃と火属性威力60の追加魔法攻撃\n次のターンの攻撃の威力を60上げる"
+   },
+   "skills": [
+    29,
+    57
+   ],
+   "desc": "",
+   "image": "images/monsters/M904_F.png",
+   "note": "13F用／強さ約73%（その階の通過率の試算 88%）／あなたの元の数値 HP5000・攻25・魔500・速100"
+  },
+  {
+   "id": 905,
+   "name": "テーリオン",
+   "el": "water",
+   "stats": {
+    "hp": 5300,
+    "atk": 400,
+    "mat": 20,
+    "spd": 200
+   },
+   "res": {
+    "phys": 0.0,
+    "mag": 0.0
+   },
+   "unique": {
+    "name": "獣覇権666",
+    "el": "dark",
+    "type": "phys",
+    "power": 60,
+    "effects": [
+     {
+      "op": "extra",
+      "type": "phys",
+      "power": 60,
+      "el": "water"
+     },
+     {
+      "op": "foeDamage",
+      "n": 666
+     },
+     {
+      "op": "selfDamage",
+      "n": 666
+     }
+    ],
+    "text": "相手に水属性威力60の追加物理攻撃\n相手に666ダメージ\n自分に666ダメージ"
+   },
+   "skills": [
+    26,
+    14
+   ],
+   "desc": "",
+   "image": "images/monsters/M905_F.png",
+   "note": "13F用／強さ約75%（その階の通過率の試算 88%）／あなたの元の数値 HP6600・攻500・魔25・速250"
+  },
+  {
+   "id": 906,
+   "name": "ドラコーン",
+   "el": "fire",
+   "stats": {
+    "hp": 3600,
+    "atk": 250,
+    "mat": 270,
+    "spd": 320
+   },
+   "res": {
+    "phys": 0.0,
+    "mag": 0.0
+   },
+   "unique": {
+    "name": "終末黙示",
+    "el": "dark",
+    "type": "mag",
+    "power": 130,
+    "effects": [
+     {
+      "op": "extra",
+      "type": "phys",
+      "power": 130,
+      "el": "wind"
+     },
+     {
+      "op": "extra",
+      "type": "phys",
+      "power": 130,
+      "el": "fire"
+     },
+     {
+      "op": "selfStun"
+     },
+     {
+      "op": "nextDouble"
+     }
+    ],
+    "text": "相手に風属性威力130の追加物理攻撃と火属性威力130の追加物理攻撃\n次のターン行動ができない\n次のターン受けるダメージが倍になる"
+   },
+   "skills": [
+    24,
+    25
+   ],
+   "desc": "",
+   "image": "images/monsters/M906_F.png",
+   "note": "13F用／強さ約49%（その階の通過率の試算 88%）／あなたの元の数値 HP4500・攻315・魔335・速400"
+  },
+  {
+   "id": 907,
+   "name": "マーメイド・プリンセス",
+   "el": "water",
+   "stats": {
+    "hp": 2300,
+    "atk": 60,
+    "mat": 200,
+    "spd": 160
+   },
+   "res": {
+    "phys": 0.1,
+    "mag": 0.3
+   },
+   "unique": {
+    "name": "グラン・オペラ・ファンタジア",
+    "el": "water",
+    "type": "mag",
+    "power": 70,
+    "effects": [
+     {
+      "op": "unblockable"
+     },
+     {
+      "op": "extra",
+      "type": "mag",
+      "power": 60,
+      "el": "light"
+     },
+     {
+      "op": "extra",
+      "type": "mag",
+      "power": 60,
+      "el": "wind",
+      "cond": [
+       "first",
+       "foeHpHigher"
+      ]
+     },
+     {
+      "op": "drain",
+      "ratio": 0.3333333333333333
+     }
+    ],
+    "text": "この攻撃は打ち消されることはない\n相手に光属性威力60の追加魔法攻撃\n先攻なら、相手のHPが自分より多ければ、さらに威力60の風属性追加魔法攻撃\nこのターンに与えたダメージの1/3のHPを回復する"
+   },
+   "skills": [
+    79,
+    27
+   ],
+   "desc": "",
+   "image": "images/monsters/M907_F.png",
+   "note": "14F用／強さ約50%（その階の通過率の試算 90%）"
+  },
+  {
+   "id": 908,
+   "name": "クイーンスライム",
+   "el": "light",
+   "stats": {
+    "hp": 3300,
+    "atk": 265,
+    "mat": 150,
+    "spd": 80
+   },
+   "res": {
+    "phys": 0.3,
+    "mag": 0.3
+   },
+   "unique": {
+    "name": "ぷるぷるボディ",
+    "el": "light",
+    "type": "phys",
+    "power": 50,
+    "effects": [
+     {
+      "op": "nextTake",
+      "mult": 0.3333333333333333,
+      "cond": "first"
+     },
+     {
+      "op": "bonus",
+      "power": "foe",
+      "cond": "last"
+     },
+     {
+      "op": "drain",
+      "ratio": 0.3333333333333333,
+      "cond": "postFoeHpHigher"
+     }
+    ],
+    "text": "先攻なら、次のターン受けるダメージが1/3になる\n後攻なら、受けた攻撃の威力分、自分の攻撃の威力を増加する\n攻撃後、相手のHPが自分より多ければ、与えたダメージの1/3のHPを回復する"
+   },
+   "skills": [
+    82,
+    76
+   ],
+   "desc": "",
+   "image": "images/monsters/M908_F.png",
+   "note": "15F用／強さ約71%（その階の通過率の試算 91%）／あなたの元の数値 HP5050・攻405・魔230・速120"
+  },
+  {
+   "id": 909,
+   "name": "ミミック",
+   "el": "dark",
+   "stats": {
+    "hp": 1600,
+    "atk": 95,
+    "mat": 130,
+    "spd": 95
+   },
+   "res": {
+    "phys": 0.2,
+    "mag": 0.2
+   },
+   "unique": {
+    "name": "シュレーディンガー・パンドラ",
+    "el": "dark",
+    "type": "mag",
+    "power": 50,
+    "effects": [
+     {
+      "op": "forceFirst"
+     },
+     {
+      "op": "negateFoeEffects"
+     },
+     {
+      "op": "foeNoEffectDamage",
+      "ratio": 0.5
+     }
+    ],
+    "text": "必ず先攻になる\n相手の技の効果を無効化し、通常の威力の攻撃にする\n相手の技の効果に回復が含まれている場合、本来回復するはずだったHP分、自分のHPを回復する\n追加効果がない技だった場合、自分のHPの半分のダメージを相手に与える"
+   },
+   "skills": [
+    71,
+    22
+   ],
+   "desc": "",
+   "image": "images/monsters/M909_F.png",
+   "note": "17F用／強さ約15%（その階の通過率の試算 84%）"
+  },
+  {
+   "id": 910,
+   "name": "キングデーモン",
+   "el": "dark",
+   "stats": {
+    "hp": 4500,
+    "atk": 320,
+    "mat": 290,
+    "spd": 160
+   },
+   "res": {
+    "phys": 0.2,
+    "mag": 0.2
+   },
+   "unique": {
+    "name": "終焉黙示録　魔降炎",
+    "el": "fire",
+    "type": "mag",
+    "power": 100,
+    "effects": [
+     {
+      "op": "extra",
+      "type": "phys",
+      "power": 100,
+      "el": "dark"
+     },
+     {
+      "op": "extra",
+      "type": "mag",
+      "power": 50,
+      "el": "light"
+     },
+     {
+      "op": "selfStun"
+     },
+     {
+      "op": "nextTake",
+      "mult": 0.6666666666666666
+     }
+    ],
+    "text": "相手に闇属性威力100の追加物理攻撃と光属性威力50の追加魔法攻撃\n次のターン行動ができない\n次のターン受けるダメージが2/3になる"
+   },
+   "skills": [
+    23,
+    34
+   ],
+   "desc": "",
+   "image": "images/monsters/M910_F.png",
+   "note": "20F用／強さ約74%（その階の通過率の試算 75%）"
+  },
+  {
+   "id": 911,
+   "name": "八咫烏",
+   "el": "fire",
+   "stats": {
+    "hp": 2900,
+    "atk": 240,
+    "mat": 265,
+    "spd": 290
+   },
+   "res": {
+    "phys": 0.1,
+    "mag": 0.1
+   },
+   "unique": {
+    "name": "神威・天照太陽焔",
+    "el": "fire",
+    "type": "mag",
+    "power": 60,
+    "effects": [
+     {
+      "op": "forceFirst"
+     },
+     {
+      "op": "extra",
+      "type": "phys",
+      "power": 60,
+      "el": "wind"
+     },
+     {
+      "op": "extra",
+      "type": "mag",
+      "power": 70,
+      "el": "light"
+     },
+     {
+      "op": "heal",
+      "n": 300,
+      "cond": "postFoeHpHigher"
+     },
+     {
+      "op": "halfNow",
+      "cond": "postFoeHpHigher"
+     }
+    ],
+    "text": "必ず先攻になる\n相手に風属性威力60の追加物理攻撃と光属性威力70の追加魔法攻撃\n攻撃後、相手のHPが自分より多ければ、HPを300回復し、このターン受けるダメージを半分にする"
+   },
+   "skills": [
+    66,
+    60
+   ],
+   "desc": "",
+   "image": "images/monsters/M911_F.png",
+   "note": "21F用／強さ約73%（その階の通過率の試算 64%）"
+  },
+  {
+   "id": 912,
+   "name": "カラドリウス",
+   "el": "wind",
+   "stats": {
+    "hp": 3600,
+    "atk": 215,
+    "mat": 345,
+    "spd": 330
+   },
+   "res": {
+    "phys": 0.0,
+    "mag": 0.2
+   },
+   "unique": {
+    "name": "極光天翔",
+    "el": "wind",
+    "type": "mag",
+    "power": 80,
+    "effects": [
+     {
+      "op": "extra",
+      "type": "phys",
+      "power": 60,
+      "el": "light"
+     },
+     {
+      "op": "extra",
+      "type": "mag",
+      "power": 60,
+      "el": "light",
+      "cond": "afterFoeHpHigher",
+      "tag": "x"
+     },
+     {
+      "op": "drain",
+      "ratio": 1,
+      "of": "x"
+     }
+    ],
+    "text": "相手に光属性威力60の追加物理攻撃\n攻撃後、相手のHPが自分より多ければ、さらに威力60の光属性追加魔法攻撃を与え、この追加攻撃で与えたダメージ分のHPを回復する"
+   },
+   "skills": [
+    31,
+    69
+   ],
+   "desc": "",
+   "image": "images/monsters/M912_F.png",
+   "note": "23F用／強さ約74%（その階の通過率の試算 65%）"
+  },
+  {
+   "id": 913,
+   "name": "クラーケン",
+   "el": "water",
+   "stats": {
+    "hp": 3350,
+    "atk": 230,
+    "mat": 145,
+    "spd": 95
+   },
+   "res": {
+    "phys": 0.3,
+    "mag": 0.1
+   },
+   "unique": {
+    "name": "テンタクル・テンペスト",
+    "el": "water",
+    "type": "mag",
+    "power": 100,
+    "effects": [
+     {
+      "op": "extra",
+      "type": "phys",
+      "power": 80,
+      "el": "water"
+     },
+     {
+      "op": "extra",
+      "type": "phys",
+      "power": 80,
+      "el": "wind"
+     },
+     {
+      "op": "extra",
+      "type": "phys",
+      "power": 80,
+      "el": "dark",
+      "cond": "afterFoeHpHigher"
+     }
+    ],
+    "text": "相手に水属性威力80の追加物理攻撃と風属性威力80の追加物理攻撃\n攻撃後、相手のHPが自分より多ければ、さらに威力80の闇属性追加物理攻撃"
+   },
+   "skills": [
+    73,
+    27
+   ],
+   "desc": "",
+   "image": "images/monsters/M913_F.png",
+   "note": "24F用／強さ約66%（その階の通過率の試算 66%）"
+  },
+  {
+   "id": 914,
+   "name": "聖龍カーバンクル",
+   "el": "light",
+   "stats": {
+    "hp": 3650,
+    "atk": 365,
+    "mat": 365,
+    "spd": 245
+   },
+   "res": {
+    "phys": 0.3,
+    "mag": 0.3
+   },
+   "unique": {
+    "name": "真・神秘結界",
+    "el": "light",
+    "type": "mag",
+    "power": 40,
+    "effects": [
+     {
+      "op": "forceFirst"
+     },
+     {
+      "op": "nullifyFoe"
+     },
+     {
+      "op": "copyFoe",
+      "noRecoil": true
+     },
+     {
+      "op": "cooldown",
+      "n": 2
+     }
+    ],
+    "text": "必ず先攻になる\n相手の攻撃を無効化し、無効化した攻撃を、追加効果もふくめて、コピーして追加で使う\nただし反動は無効化する\nこの技は1度使うと2ターン使用できない"
+   },
+   "skills": [
+    80,
+    89
+   ],
+   "desc": "",
+   "image": "images/monsters/M914_F.png",
+   "note": "26F用／強さ約92%（その階の通過率の試算 40%）／あなたの元の数値 HP6000・攻600・魔600・速400"
+  },
+  {
+   "id": 915,
+   "name": "シルバーフェンリル",
+   "el": "wind",
+   "stats": {
+    "hp": 3400,
+    "atk": 300,
+    "mat": 100,
+    "spd": 340
+   },
+   "res": {
+    "phys": 0.1,
+    "mag": 0.1
+   },
+   "unique": {
+    "name": "ロイヤルファング",
+    "el": "light",
+    "type": "phys",
+    "power": 90,
+    "effects": [
+     {
+      "op": "extra",
+      "type": "phys",
+      "power": 90,
+      "el": "wind",
+      "stat": "spd"
+     },
+     {
+      "op": "extra",
+      "type": "phys",
+      "power": 50,
+      "el": "dark",
+      "cond": "afterFoeHpHigher"
+     }
+    ],
+    "text": "攻撃後、素早さを攻撃力に変換し、威力90の風属性追加物理攻撃\n攻撃後、相手のHPが自分より多ければ、さらに威力50の闇属性追加物理攻撃"
+   },
+   "skills": [
+    75,
+    42
+   ],
+   "desc": "",
+   "image": "images/monsters/M915_F.png",
+   "note": "11F用／強さ約66%（その階の通過率の試算 90%）"
+  },
+  {
+   "id": 916,
+   "name": "鬼",
+   "el": "dark",
+   "stats": {
+    "hp": 4450,
+    "atk": 525,
+    "mat": 40,
+    "spd": 265
+   },
+   "res": {
+    "phys": 0.0,
+    "mag": 0.0
+   },
+   "unique": {
+    "name": "酒呑狂乱・百鬼夜行",
+    "el": "dark",
+    "type": "phys",
+    "power": 80,
+    "effects": [
+     {
+      "op": "recoil",
+      "ratio": 0.5,
+      "excludeExtras": true
+     },
+     {
+      "op": "extra",
+      "type": "phys",
+      "power": 70,
+      "el": "fire"
+     },
+     {
+      "op": "extra",
+      "type": "phys",
+      "power": 50,
+      "el": "earth"
+     },
+     {
+      "op": "selfStun"
+     },
+     {
+      "op": "nextTake",
+      "mult": 0.3333333333333333
+     }
+    ],
+    "text": "与えたダメージの半分のダメージを受ける\n相手に火属性威力70の追加物理攻撃と土属性威力50の追加物理攻撃\n次のターン行動ができない\n次のターン受けるダメージが1/3になる"
+   },
+   "skills": [
+    34,
+    46
+   ],
+   "desc": "",
+   "image": "images/monsters/M916_F.png",
+   "note": "18F用／強さ約75%（その階の通過率の試算 86%）／あなたの元の数値 HP5500・攻650・魔50・速330"
+  },
+  {
+   "id": 917,
+   "name": "シルバーフェンリル",
+   "el": "wind",
+   "stats": {
+    "hp": 3200,
+    "atk": 280,
+    "mat": 90,
+    "spd": 320
+   },
+   "res": {
+    "phys": 0.1,
+    "mag": 0.1
+   },
+   "unique": {
+    "name": "ロイヤルファング",
+    "el": "light",
+    "type": "phys",
+    "power": 90,
+    "effects": [
+     {
+      "op": "extra",
+      "type": "phys",
+      "power": 90,
+      "el": "wind",
+      "stat": "spd"
+     },
+     {
+      "op": "extra",
+      "type": "phys",
+      "power": 50,
+      "el": "dark",
+      "cond": "afterFoeHpHigher"
+     }
+    ],
+    "text": "攻撃後、素早さを攻撃力に変換し、威力90の風属性追加物理攻撃\n攻撃後、相手のHPが自分より多ければ、さらに威力50の闇属性追加物理攻撃"
+   },
+   "skills": [
+    75,
+    42
+   ],
+   "desc": "",
+   "image": "images/monsters/M917_F.png",
+   "note": "26F用／強さ約61%（その階の通過率の試算 40%）"
+  }
+ ]
+}

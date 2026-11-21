@@ -1,5 +1,5 @@
-import { h } from './dom.js?v=20261118-5';
-import { setBg, getBg } from './bg.js?v=20261118-5';
+import { h } from './dom.js?v=20261121-3';
+import { setBg, getBg } from './bg.js?v=20261121-3';
 const layer = () => document.getElementById('dialog');
 
 // メッセージのダイアログ。押されたボタンの value を返す（自動で閉じたときは null）

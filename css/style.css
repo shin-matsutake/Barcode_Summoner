@@ -443,8 +443,11 @@ input:checked+.sw::after{transform:translateX(20px);background:#06263d}
 
 /* ---- 物語（チュートリアル） ---- */
 .story{position:relative}
-.story .bar{margin-bottom:4px;align-items:center}
-.st-prog{margin-left:auto;font:12px ui-monospace,Menlo,Consolas,monospace;color:var(--sub)}
+.story{padding-top:0}
+.story .bar{position:absolute;left:6px;top:6px;z-index:6;margin:0;padding:0;gap:8px;align-items:center;background:none;border:0}   /* 戻る・幕の名前は、立ち絵の上に小さく重ねる */
+.story .bar h1{font-size:12px;margin:0;opacity:.85}
+.story .bar .btn{min-height:28px;padding:0 10px;font-size:11px;background:rgba(5,15,25,.55)}
+.st-prog{display:none}
 .st-stage{position:relative;flex:1;min-height:0;overflow:hidden;container-type:inline-size;--sp-shift:22%}   /* --sp-shift：立ち絵を下へずらす量（顔を文字に近づける。メッセージ欄に隠れる足元ぶん）。0で、ずらさない */
 .st-sp{position:absolute;bottom:0;height:min(100%,150cqw);width:84%;z-index:1;opacity:0;transition:opacity .25s,filter .25s,transform .25s;pointer-events:none}
 .st-sp.on{opacity:1}
@@ -457,14 +460,14 @@ input:checked+.sw::after{transform:translateX(20px);background:#06263d}
 .st-sp.dim{filter:brightness(.42) saturate(.7)}
 .st-sp.on:not(.dim){transform:translateY(-4px)}
 .st-ph{position:absolute;bottom:8%;left:20%;right:20%;padding:30px 8px;text-align:center;border:1px dashed var(--line);color:var(--sub)}
-.st-winwrap{position:relative;flex:none;margin-top:-34px;z-index:3}
-.st-win{padding:18px 14px 12px}
+.st-winwrap{position:relative;flex:none;margin-top:-34px;margin-bottom:20px;z-index:3}   /* 下の余白：LOG/AUTO/SKIP が、画面の下端で切れないように */
+.st-win{padding:20px 14px 14px}
 .st-name{position:absolute;top:-13px;left:14px;padding:3px 14px;font-weight:700;font-size:14px;z-index:2;clip-path:polygon(6px 0,100% 0,calc(100% - 6px) 100%,0 100%)}
 .st-name:empty{display:none}
 .st-name.sideL{background:var(--cyan);color:#06263d}.st-name.sideR{background:var(--orange);color:var(--orange-ink)}.st-name.sideN{background:#cfe3f0;color:#102030}
-.st-text{font-size:16px;line-height:1.75;white-space:pre-wrap;min-height:56px}   /* 2行ぶん。3行の行は、storyView.js が、表示の前に広げる */
+.st-text{font-size:16px;line-height:1.75;white-space:pre-wrap;min-height:112px}   /* 4行ぶんを、いつも確保（端末で、行の折り返しが変わるため）。5行以上の行だけ、storyView.js が、表示の前に広げる */
 .st-win.solo .st-text{font-style:italic;color:#cfe3f0}
-.st-next{position:absolute;right:16px;bottom:10px;color:var(--orange);animation:blink 1s steps(2) infinite}
+.st-next{position:absolute;left:14px;bottom:8px;color:var(--orange);animation:blink 1s steps(2) infinite}
 @keyframes blink{50%{opacity:0}}
 @media (prefers-reduced-motion:reduce){.st-next{animation:none}.st-sp{transition:none}}
 
@@ -561,8 +564,9 @@ input:checked+.sw::after{transform:translateX(20px);background:#06263d}
 .rel-line{color:var(--cyan);margin-top:8px}
 
 /* ---- 物語：ログ・オート・スキップのボタン、ログの表示 ---- */
-.st-tools{position:absolute;right:6px;top:-40px;z-index:4;display:flex;gap:6px}   /* 名前の札と同じ行の右端 */
-.st-tools .btn{min-height:34px;padding:2px 12px;font-size:12px}
+.st-tools{position:absolute;right:10px;bottom:-14px;z-index:4;display:flex;gap:8px}   /* メッセージ欄の右下の縁に、半分重ねる */
+.st-tools .btn{min-height:30px;height:30px;padding:0 12px;border-radius:15px;font-size:11px;font-weight:700;letter-spacing:.06em;--cut:0;border-color:var(--cyan);clip-path:none;overflow:hidden}
+.st-tools .btn::before{clip-path:none;background:#0b2234}.st-tools .st-auto.on::before{background:var(--cyan)}
 .st-auto.on{background:var(--cyan);color:#06263d}.st-auto.on::before{background:var(--cyan)}
 .st-log{max-height:78dvh;display:flex;flex-direction:column;gap:8px;width:min(92%,420px)}
 .st-log-list{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding-right:4px;text-align:left}

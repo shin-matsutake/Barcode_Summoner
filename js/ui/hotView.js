@@ -1,16 +1,16 @@
 // クイックバトル：1台のスマホで、2人で対戦する（端末を渡しながら、選ぶ）
 //   ルール設定 → 1人目：持ち込み・作戦 → 渡す → 2人目：持ち込み・作戦 → 渡す → 1人目：出撃メンバー → 渡す → 2人目：出撃メンバー → オートバトル
 //   作戦＝CPUの考え方（威力重視・ダメージ予想など）。バトルは、2人の作戦で、自動で進む
-import { h, today } from './dom.js?v=20261118-5';
-import { dialog, confirmDialog } from './dialog.js?v=20261118-5';
-import { portrait, elemIcon, EL, preloadMonsters } from './portrait.js?v=20261118-5';
-import { analyze } from '../core/jan.js?v=20261118-5';
-import { createFighter } from '../core/battle.js?v=20261118-5';
-import { pickMonster } from './picker.js?v=20261118-5';
-import { statsGrid, skillList } from './monsterInfo.js?v=20261118-5';
-import { AI_LABELS } from './ai.js?v=20261118-5';
-import { formationPanel, summonPanel } from './ruleui.js?v=20261118-5';
-import { ruleLabel } from '../net/session.js?v=20261118-5';
+import { h, today } from './dom.js?v=20261121-3';
+import { dialog, confirmDialog } from './dialog.js?v=20261121-3';
+import { portrait, elemIcon, EL, preloadMonsters } from './portrait.js?v=20261121-3';
+import { analyze } from '../core/jan.js?v=20261121-3';
+import { createFighter } from '../core/battle.js?v=20261121-3';
+import { pickMonster } from './picker.js?v=20261121-3';
+import { statsGrid, skillList } from './monsterInfo.js?v=20261121-3';
+import { AI_LABELS } from './ai.js?v=20261121-3';
+import { formationPanel, summonPanel } from './ruleui.js?v=20261121-3';
+import { ruleLabel } from '../net/session.js?v=20261121-3';
 
 const bar = (title, onBack, sub) => {
   const b = h('header', 'bar'), back = h('button', 'btn small', '戻る'); back.onclick = onBack;

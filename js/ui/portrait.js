@@ -3,8 +3,8 @@
 // 後ろ向きがないときは正面を使う。顔アップ（アイコン）は、正面の上のほうを拡大して使う。
 // どの絵も、描かれている範囲を測って、枠にぴったり合わせて表示する（sprite.js）。
 // 属性アイコンは images/elements/fire.png（water／fire／earth／wind／light／dark。すべて小文字）
-import { h } from './dom.js?v=20261118-5';
-import { fitArt } from './sprite.js?v=20261118-5';
+import { h } from './dom.js?v=20261121-3';
+import { fitArt } from './sprite.js?v=20261121-3';
 
 export const EL = {
   water: { ja: '水', c: '#3b8bff', g: '#fff' }, fire: { ja: '火', c: '#ff6a3d', g: '#fff' }, earth: { ja: '土', c: '#b07a35', g: '#fff' },

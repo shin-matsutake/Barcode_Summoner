@@ -9,11 +9,11 @@ export async function loadData() {
     if (!res.ok) throw new Error(`${file} を読み込めません`);
     return res.json();
   };
-  const [m, s, t, st, dx] = await Promise.all([get('monsters.json'), get('skills.json'), get('tower.json').catch(() => ({ stages: [] })), get('story.json').catch(() => null), get('dex.json').catch(() => null)]);
+  const [m, s, t, st, dx, un] = await Promise.all([get('monsters.json'), get('skills.json'), get('tower.json').catch(() => ({ stages: [] })), get('story.json').catch(() => null), get('dex.json').catch(() => null), get('uniques.json').catch(() => null)]);
   const monsters = Array.isArray(m) ? m : m.monsters;
   const skills = Array.isArray(s) ? s : s.skills;
   if (!monsters || !skills) throw new Error('データの形式が想定と違います');
-  return { version, monsters, skills, tower: { stages: (t && t.stages) || [] }, story: { cast: (st && st.cast) || {}, acts: (st && st.acts) || [] }, dex: { entries: (dx && dx.entries) || [] } };
+  return { version, monsters, skills, tower: { stages: (t && t.stages) || [] }, story: { cast: (st && st.cast) || {}, acts: (st && st.acts) || [] }, dex: { entries: (dx && dx.entries) || [] }, uniques: (un && un.monsters) || [] };   // uniques：固有モンスター（番号100以上）。まだ召喚・図鑑・タワーにはつないでいない
 }
 // ステージ番号から探す（ステージの数は決め打ちしない）
 export const stageOf = (data, n) => data.tower.stages.find(x => x.stage === n) || null;

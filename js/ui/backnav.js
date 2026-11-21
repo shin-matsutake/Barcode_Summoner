@@ -7,7 +7,7 @@
 //   召喚の演出 … 演出を飛ばす
 //   そのほか … 画面の「戻る」ボタンを押す（なければトップへ）
 // ブラウザの決まりで、最初の操作（タップ）より前には、入口を作れない（作ると、戻るで飛ばされる）。
-import { confirmDialog, toast } from './dialog.js?v=20261118-5';
+import { confirmDialog, toast } from './dialog.js?v=20261121-3';
 
 export function initBackNav(root, ctx) {
   let armed = false, leaving = false, asking = false;

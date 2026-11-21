@@ -1,12 +1,12 @@
 // 対戦する：battleMenu＝形式を選ぶ（リンクバトル／シミュレーション）、simSetup＝シミュレーション（コンピュータ戦）の条件
-import { h } from './dom.js?v=20261118-5';
-import { toast } from './dialog.js?v=20261118-5';
-import { portrait, elemIcon } from './portrait.js?v=20261118-5';
-import { analyze } from '../core/jan.js?v=20261118-5';
-import { parseTeam } from '../core/teamcode.js?v=20261118-5';
-import { AI_LABELS } from './ai.js?v=20261118-5';
-import { randomJan } from './summon.js?v=20261118-5';
-import { formationPanel, summonPanel } from './ruleui.js?v=20261118-5';
+import { h } from './dom.js?v=20261121-3';
+import { toast } from './dialog.js?v=20261121-3';
+import { portrait, elemIcon } from './portrait.js?v=20261121-3';
+import { analyze } from '../core/jan.js?v=20261121-3';
+import { parseTeam } from '../core/teamcode.js?v=20261121-3';
+import { AI_LABELS } from './ai.js?v=20261121-3';
+import { randomJan } from './summon.js?v=20261121-3';
+import { formationPanel, summonPanel } from './ruleui.js?v=20261121-3';
 
 const bar = (title, onBack) => { const b = h('header', 'bar'), back = h('button', 'btn small', '戻る'); back.onclick = onBack; b.append(back, h('h1', '', title)); return b; };
 

@@ -241,8 +241,8 @@ t('勝ち抜き：勝者のHPは持ち越し、負けた側は次の個体が全
 t('勝ち抜き：威力アップ等は持ち越し／行動不能は持ち越さない', () => {
   const buff = sk('light', 'phys', 200, [{ op: 'stat', target: 'self', stat: 'atk', mult: 1.2, duration: 'perm' }, { op: 'nextPower', n: 100 }, { op: 'selfStun' }]);
   const hero = prof('fire', 300, 300, 300, 9000, [buff, plain, plain]);
-  const mk1 = () => prof('earth', 1, 1, 1, 50, [plain, plain, plain]);
-  const s = startSeries([hero], [mk1(), mk1()]); const r = new Rng(1);
+  const mk1 = hp => prof('earth', 1, 1, 1, hp, [plain, plain, plain]);
+  const s = startSeries([hero], [mk1(50), mk1(9000)]); const r = new Rng(1);   // 2体目は、ダメージが相手のHPで止まらないよう、HPを大きくする
   runTurn(s, 0, 0, r);                                              // 1体目を倒す（相手を倒したので行動不能にならない）
   assert.equal(s.fighters.a.stunTurn, -1);
   assert(s.fighters.a.mods.some(m => m.stat === 'atk' && m.until === Infinity)); // 能力アップは継続
@@ -250,7 +250,6 @@ t('勝ち抜き：威力アップ等は持ち越し／行動不能は持ち越�
   const ev = runTurn(s, 1, 0, r);                                    // 次の戦闘の1ターン目：威力+100・ATK1.2倍
   const hit = ev.find(e => e.t === 'hit' && e.who === 'a');
   assert.equal(hit.dmg, Math.round((300 * 1.2 + (100 + 100)) * 2)); // ATK300×1.2（継続）、威力100＋100（次のターン効果）、K=2
-  assert(s.over);
 });
 t('勝ち抜き：行動不能が残っていても、次の戦闘には持ち越さない', () => {
   const hero = prof('fire', 500, 500, 500, 9000, [plain, plain, plain]);
